@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SenangWebs Tour - Demo</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="dist/senangwebs_tour.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            color: white;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #ui-overlay h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+
+        #current-scene {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            pointer-events: auto;
+        }
+
+        #controls button {
+            background: #4CC3D9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        #controls button:hover {
+            background: #3BA8BD;
+        }
+
+        #controls button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 2000;
+            transition: opacity 0.5s;
+        }
+
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #log {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(0,255,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>Loading Virtual Tour...</div>
+    </div>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay">
+        <h1>🏠 SenangWebs Virtual Tour Demo</h1>
+        <div id="current-scene">Current Scene: <span id="scene-name">-</span></div>
+    </div>
+
+    <!-- Event Log -->
+    <div id="log"></div>
+
+    <!-- Controls -->
+    <div id="controls">
+        <button id="btn-living" onclick="navigateToScene('living_room')">Living Room</button>
+        <button id="btn-kitchen" onclick="navigateToScene('kitchen')">Kitchen</button>
+        <button id="btn-bedroom" onclick="navigateToScene('bedroom')">Bedroom</button>
+        <button id="btn-restart" onclick="restartTour()">🔄 Restart</button>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene id="vr-scene" vr-mode-ui="enabled: true">
+        <!-- Camera with cursor -->
+        <a-entity id="camera" camera position="0 1.6 0" look-controls wasd-controls>
+            <a-cursor
+                id="cursor"
+                animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150"
+                animation__fusing="property: fusing; startEvents: fusing; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1500"
+                color="#4CC3D9"
+                fuse="true"
+                fuse-timeout="1500"
+                raycaster="objects: .clickable">
+            </a-cursor>
+        </a-entity>
+
+        <!-- Lighting -->
+        <a-entity light="type: ambient; color: #FFF; intensity: 0.8"></a-entity>
+    </a-scene>
+
+    <script>
+        // Tour Configuration
+        const tourConfig = {
+            settings: {
+                defaultHotspot: {
+                    scale: "1 1 1",
+                    icon: "assets/icons/arrow.png"
+                }
+            },
+            initialScene: "living_room",
+            scenes: {
+                living_room: {
+                    name: "Living Room",
+                    panorama: "https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg",
+                    hotspots: [
+                        {
+                            id: "to_kitchen",
+                            position: { x: 5, y: 0, z: -8 },
+                            action: {
+                                type: "navigateTo",
+                                target: "kitchen"
+                            },
+                            appearance: {
+                                color: "#FF6B6B",
+                                scale: "1.5 1.5 1.5"
+                            },
+                            tooltip: {
+                                text: "🍳 Go to Kitchen"
+                            }
+                        },
+                        {
+                            id: "to_bedroom",
+                            position: { x: -5, y: 0, z: -8 },
+                            action: {
+                                type: "navigateTo",
+                                target: "bedroom"
+                            },
+                            appearance: {
+                                color: "#4ECDC4",
+                                scale: "1.5 1.5 1.5"
+                            },
+                            tooltip: {
+                                text: "🛏️ Go to Bedroom"
+                            }
+                        }
+                    ]
+                },
+                kitchen: {
+                    name: "Kitchen",
+                    panorama: "https://cdn.aframe.io/360-image-gallery-boilerplate/img/cubes.jpg",
+                    hotspots: [
+                        {
+                            id: "to_living_room_from_kitchen",
+                            position: { x: 0, y: 0, z: 10 },
+                            action: {
+                                type: "navigateTo",
+                                target: "living_room"
+                            },
+                            appearance: {
+                                color: "#95E1D3",
+                                scale: "1.5 1.5 1.5"
+                            },
+                            tooltip: {
+                                text: "🏠 Back to Living Room"
+                            }
+                        },
+                        {
+                            id: "to_bedroom_from_kitchen",
+                            position: { x: 8, y: 0, z: 3 },
+                            action: {
+                                type: "navigateTo",
+                                target: "bedroom"
+                            },
+                            appearance: {
+                                color: "#4ECDC4",
+                                scale: "1.5 1.5 1.5"
+                            },
+                            tooltip: {
+                                text: "🛏️ Go to Bedroom"
+                            }
+                        }
+                    ]
+                },
+                bedroom: {
+                    name: "Bedroom",
+                    panorama: "https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg",
+                    hotspots: [
+                        {
+                            id: "to_living_room_from_bedroom",
+                            position: { x: -8, y: 0, z: 5 },
+                            action: {
+                                type: "navigateTo",
+                                target: "living_room"
+                            },
+                            appearance: {
+                                color: "#95E1D3",
+                                scale: "1.5 1.5 1.5"
+                            },
+                            tooltip: {
+                                text: "🏠 Back to Living Room"
+                            }
+                        },
+                        {
+                            id: "to_kitchen_from_bedroom",
+                            position: { x: 8, y: 0, z: 5 },
+                            action: {
+                                type: "navigateTo",
+                                target: "kitchen"
+                            },
+                            appearance: {
+                                color: "#FF6B6B",
+                                scale: "1.5 1.5 1.5"
+                            },
+                            tooltip: {
+                                text: "🍳 Go to Kitchen"
+                            }
+                        }
+                    ]
+                }
+            }
+        };
+
+        // Global tour instance
+        let tour = null;
+
+        // Initialize the tour
+        function initTour() {
+            const sceneEl = document.querySelector('#vr-scene');
+            
+            // Wait for A-Frame to be ready
+            sceneEl.addEventListener('loaded', () => {
+                tour = new SWT.Tour(sceneEl, tourConfig);
+
+                // Set up event listeners
+                tour.addEventListener('tour-started', (e) => {
+                    logEvent('Tour Started', e.detail.sceneId);
+                    hideLoading();
+                    updateCurrentScene(e.detail.sceneId);
+                });
+
+                tour.addEventListener('scene-loading', (e) => {
+                    logEvent('Scene Loading', e.detail.sceneId);
+                    showLoading();
+                });
+
+                tour.addEventListener('scene-loaded', (e) => {
+                    logEvent('Scene Loaded', e.detail.sceneId);
+                    hideLoading();
+                    updateCurrentScene(e.detail.sceneId);
+                });
+
+                tour.addEventListener('hotspot-activated', (e) => {
+                    logEvent('Hotspot Clicked', e.detail.hotspotData.id);
+                });
+
+                // Start the tour
+                tour.start().catch(err => {
+                    console.error('Failed to start tour:', err);
+                    alert('Failed to start tour. Check console for details.');
+                });
+            });
+        }
+
+        // Navigate to a specific scene
+        function navigateToScene(sceneId) {
+            if (tour) {
+                tour.navigateTo(sceneId).catch(err => {
+                    console.error('Navigation failed:', err);
+                });
+            }
+        }
+
+        // Restart the tour
+        function restartTour() {
+            if (tour) {
+                tour.navigateTo(tourConfig.initialScene).catch(err => {
+                    console.error('Restart failed:', err);
+                });
+            }
+        }
+
+        // Update UI with current scene
+        function updateCurrentScene(sceneId) {
+            const sceneData = tourConfig.scenes[sceneId];
+            const sceneName = sceneData ? sceneData.name : sceneId;
+            document.getElementById('scene-name').textContent = sceneName;
+        }
+
+        // Show loading screen
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        // Hide loading screen
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        // Log events
+        const logEntries = [];
+        function logEvent(type, details) {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${type}: ${details}`;
+            logEntries.push(entry);
+            
+            // Keep only last 10 entries
+            if (logEntries.length > 10) {
+                logEntries.shift();
+            }
+
+            const logEl = document.getElementById('log');
+            logEl.innerHTML = logEntries.map(e => `<div class="log-entry">${e}</div>`).join('');
+            
+            // Auto-scroll to bottom
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initTour);
+        } else {
+            initTour();
+        }
+
+        // Log to console
+        console.log('%c🎉 SenangWebs Tour Demo Loaded!', 'color: #4CC3D9; font-size: 20px; font-weight: bold;');
+        console.log('Tour configuration:', tourConfig);
+        console.log('Use the buttons below or click on hotspots to navigate.');
+    </script>
+</body>
+</html>
