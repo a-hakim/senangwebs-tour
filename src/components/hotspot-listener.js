@@ -75,6 +75,40 @@ if (typeof AFRAME !== 'undefined') {
       return `${parts[0] * multiplier} ${parts[1] * multiplier} ${parts[2] * multiplier}`;
     }
   });
+
+  /**
+   * Billboard component - Makes an entity always face the camera
+   */
+  AFRAME.registerComponent('swt-billboard', {
+    schema: {
+      enabled: { type: 'boolean', default: true }
+    },
+
+    init: function () {
+      this.camera = null;
+    },
+
+    tick: function () {
+      if (!this.data.enabled) return;
+
+      // Find camera if not cached
+      if (!this.camera) {
+        this.camera = this.el.sceneEl.camera;
+        if (!this.camera) return;
+      }
+
+      // Get camera world position
+      const cameraPosition = new THREE.Vector3();
+      this.camera.getWorldPosition(cameraPosition);
+
+      // Get this element's world position
+      const elementPosition = new THREE.Vector3();
+      this.el.object3D.getWorldPosition(elementPosition);
+
+      // Make the element look at the camera
+      this.el.object3D.lookAt(cameraPosition);
+    }
+  });
 }
 
 export default 'swt-hotspot-listener';

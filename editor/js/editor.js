@@ -228,8 +228,8 @@ class TourEditor {
     addHotspotAtPosition(position) {
         // Clamp position to within 10-unit radius
         const distance = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
-        if (distance > 10) {
-            const scale = 10 / distance;
+        if (distance > 5) {
+            const scale = 5 / distance;
             position.x *= scale;
             position.y *= scale;
             position.z *= scale;

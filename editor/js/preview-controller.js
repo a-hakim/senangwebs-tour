@@ -105,12 +105,39 @@ class PreviewController {
             hotspots: transformedHotspots
         };
 
+        // Build scenes object with ALL scenes (for navigation to work)
+        const allScenes = {};
+        const editorScenes = this.editor.sceneManager.scenes || [];
+        editorScenes.forEach(s => {
+            const sceneHotspots = (s.hotspots || []).map(h => ({
+                id: h.id,
+                position: h.position,
+                action: {
+                    type: h.type === 'navigation' ? 'navigateTo' : h.type,
+                    target: h.targetSceneId
+                },
+                appearance: {
+                    color: h.color || '#00ff00',
+                    icon: h.icon || null,
+                    scale: h.scale || '1 1 1'
+                },
+                tooltip: {
+                    text: h.title || 'Hotspot'
+                }
+            }));
+
+            allScenes[s.id] = {
+                id: s.id,
+                name: s.name,
+                panorama: s.imageUrl,
+                hotspots: sceneHotspots
+            };
+        });
+
         const tourConfig = {
             title: scene.name,
             initialScene: scene.id,
-            scenes: {
-                [scene.id]: libraryScene
-            },
+            scenes: allScenes,
             settings: {
                 autoRotate: false,
                 showCompass: false
@@ -247,12 +274,55 @@ class PreviewController {
     }
 
     /**
-     * Refresh preview (reload current scene)
+     * Get current camera rotation
      */
-    refresh() {
+    getCameraRotation() {
+        const aframeScene = this.previewContainer?.querySelector('a-scene');
+        if (!aframeScene) return null;
+        
+        const camera = aframeScene.querySelector('[camera]');
+        if (!camera) return null;
+        
+        const rotation = camera.getAttribute('rotation');
+        return rotation ? { ...rotation } : null;
+    }
+
+    /**
+     * Set camera rotation
+     */
+    setCameraRotation(rotation) {
+        if (!rotation) return;
+        
+        const aframeScene = this.previewContainer?.querySelector('a-scene');
+        if (!aframeScene) return;
+        
+        const camera = aframeScene.querySelector('[camera]');
+        if (camera) {
+            // Wait a bit for scene to be ready
+            setTimeout(() => {
+                camera.setAttribute('rotation', rotation);
+                console.log('Camera rotation restored:', rotation);
+            }, 100);
+        }
+    }
+
+    /**
+     * Refresh preview (reload current scene while preserving camera rotation)
+     */
+    async refresh() {
         const scene = this.editor.sceneManager.getCurrentScene();
         if (scene) {
-            this.loadScene(scene);
+            // Save current camera rotation
+            const savedRotation = this.getCameraRotation();
+            console.log('Saving camera rotation:', savedRotation);
+            
+            // Reload scene
+            await this.loadScene(scene);
+            
+            // Restore camera rotation
+            if (savedRotation) {
+                this.setCameraRotation(savedRotation);
+            }
         }
     }
 
@@ -276,40 +346,16 @@ class PreviewController {
     }
 
     /**
-     * Update hotspot marker (update without full refresh to preserve camera)
+     * Update hotspot marker (refresh scene while preserving camera rotation)
      */
-    updateHotspotMarker(index) {
+    async updateHotspotMarker(index) {
         const scene = this.editor.sceneManager.getCurrentScene();
         if (!scene || !this.tour) return;
         
         const hotspot = scene.hotspots[index];
         if (!hotspot) return;
         
-        // Find the hotspot entity in the scene
-        const aframeScene = this.previewContainer.querySelector('a-scene');
-        if (aframeScene) {
-            // The library creates hotspots as entities with class 'swt-hotspot'
-            const hotspotElements = aframeScene.querySelectorAll('.swt-hotspot');
-            const hotspotEl = hotspotElements[index];
-            
-            if (hotspotEl) {
-                // Update color - find the visual element (a-plane or a-image)
-                const visualEl = hotspotEl.querySelector('a-plane, a-image');
-                if (visualEl && visualEl.tagName === 'A-PLANE') {
-                    visualEl.setAttribute('color', hotspot.color || '#00ff00');
-                }
-                
-                // Update position
-                if (hotspot.position) {
-                    hotspotEl.setAttribute('position', `${hotspot.position.x} ${hotspot.position.y} ${hotspot.position.z}`);
-                }
-                
-                // Update tooltip text
-                const textEl = hotspotEl.querySelector('a-text');
-                if (textEl) {
-                    textEl.setAttribute('value', hotspot.title || 'Hotspot');
-                }
-            }
-        }
+        // Refresh the preview to reflect changes, camera rotation will be preserved
+        await this.refresh();
     }
 }

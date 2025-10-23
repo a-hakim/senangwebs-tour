@@ -67,8 +67,10 @@ export class HotspotManager {
       this.tooltipEl.setAttribute('position', `${position.x} ${position.y + offsetY} ${position.z}`);
       this.tooltipEl.setAttribute('visible', 'true');
       
-      // Make tooltip face the camera
-      this.tooltipEl.setAttribute('look-at', '[camera]');
+      // Make tooltip face the camera (using billboard component)
+      if (!this.tooltipEl.hasAttribute('swt-billboard')) {
+        this.tooltipEl.setAttribute('swt-billboard', 'enabled: true');
+      }
     } else {
       this.tooltipEl.setAttribute('visible', 'false');
     }
@@ -130,20 +132,24 @@ export class HotspotManager {
     if (icon && assetEl) {
       visualEl = document.createElement('a-image');
       visualEl.setAttribute('src', `#${assetId}`);
+      // Make images double-sided
+      visualEl.setAttribute('material', 'side', 'double');
     } else {
       // Fallback to a plane with color
       visualEl = document.createElement('a-plane');
       visualEl.setAttribute('color', hotspot.appearance?.color || '#4CC3D9');
       visualEl.setAttribute('width', '1');
       visualEl.setAttribute('height', '1');
+      // Make plane double-sided and always face camera
+      visualEl.setAttribute('material', 'side', 'double');
     }
 
     // Set scale
     const scale = hotspot.appearance?.scale || this.defaultSettings.scale || '1 1 1';
     visualEl.setAttribute('scale', scale);
 
-    // Make it face the camera
-    visualEl.setAttribute('look-at', '[camera]');
+    // Make it always face the camera (billboard effect)
+    visualEl.setAttribute('swt-billboard', 'enabled: true');
 
     // Add cursor interaction
     visualEl.setAttribute('class', 'clickable');
