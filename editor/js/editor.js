@@ -45,9 +45,9 @@ class TourEditor {
         }
         
         // Start auto-save
-        this.storageManager.startAutoSave(() => {
-            this.saveProject();
-        });
+        // this.storageManager.startAutoSave(() => {
+        //     this.saveProject();
+        // });
         
         // Initial render
         this.render();
@@ -317,10 +317,10 @@ class TourEditor {
     /**
      * Update current hotspot property
      */
-    updateCurrentHotspot(property, value) {
+    async updateCurrentHotspot(property, value) {
         const index = this.hotspotEditor.currentHotspotIndex;
         if (this.hotspotEditor.updateHotspot(index, property, value)) {
-            this.previewController.updateHotspotMarker(index);
+            await this.previewController.updateHotspotMarker(index);
             this.uiController.renderHotspotList();
             this.markUnsavedChanges();
         }
@@ -329,7 +329,7 @@ class TourEditor {
     /**
      * Update current hotspot position (X, Y, or Z)
      */
-    updateCurrentHotspotPosition(axis, value) {
+    async updateCurrentHotspotPosition(axis, value) {
         const index = this.hotspotEditor.currentHotspotIndex;
         const hotspot = this.hotspotEditor.getHotspot(index);
         
@@ -355,7 +355,7 @@ class TourEditor {
                 showToast('Position clamped to 10-unit radius', 'info');
             }
             
-            this.previewController.updateHotspotMarker(index);
+            await this.previewController.updateHotspotMarker(index);
             this.uiController.renderHotspotList();
             this.markUnsavedChanges();
         }

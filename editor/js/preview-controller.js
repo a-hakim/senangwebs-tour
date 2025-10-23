@@ -278,32 +278,62 @@ class PreviewController {
      */
     getCameraRotation() {
         const aframeScene = this.previewContainer?.querySelector('a-scene');
-        if (!aframeScene) return null;
+        if (!aframeScene) {
+            console.log('No scene found for getting camera rotation');
+            return null;
+        }
         
         const camera = aframeScene.querySelector('[camera]');
-        if (!camera) return null;
+        if (!camera) {
+            console.log('No camera found for getting rotation');
+            return null;
+        }
         
-        const rotation = camera.getAttribute('rotation');
-        return rotation ? { ...rotation } : null;
+        // Get rotation from object3D which is more reliable
+        const rotation = camera.object3D.rotation;
+        const savedRotation = {
+            x: rotation.x,
+            y: rotation.y,
+            z: rotation.z
+        };
+        
+        console.log('Saved camera rotation:', savedRotation);
+        return savedRotation;
     }
 
     /**
      * Set camera rotation
      */
     setCameraRotation(rotation) {
-        if (!rotation) return;
+        if (!rotation) {
+            console.log('No rotation to restore');
+            return;
+        }
         
         const aframeScene = this.previewContainer?.querySelector('a-scene');
-        if (!aframeScene) return;
+        if (!aframeScene) {
+            console.log('No scene found for setting camera rotation');
+            return;
+        }
         
         const camera = aframeScene.querySelector('[camera]');
-        if (camera) {
-            // Wait a bit for scene to be ready
-            setTimeout(() => {
-                camera.setAttribute('rotation', rotation);
-                console.log('Camera rotation restored:', rotation);
-            }, 100);
+        if (!camera) {
+            console.log('No camera found for setting rotation');
+            return;
         }
+        
+        // Set rotation on object3D directly
+        const setRotation = () => {
+            if (camera.object3D) {
+                camera.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
+                console.log('Camera rotation restored:', rotation);
+            }
+        };
+        
+        // Try immediately and also after a delay to ensure it sticks
+        setRotation();
+        setTimeout(setRotation, 100);
+        setTimeout(setRotation, 300);
     }
 
     /**
