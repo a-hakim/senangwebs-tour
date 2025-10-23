@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SenangWebs Tour Viewer</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="dist/senangwebs_tour.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* Loading Screen */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            z-index: 10000;
+            transition: opacity 0.5s;
+        }
+
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #loadingText {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        /* File Upload Area */
+        #uploadArea {
+            width: 400px;
+            max-width: 90%;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #uploadArea:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        #uploadArea.dragover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+            transform: scale(1.02);
+        }
+
+        #uploadArea h2 {
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        #uploadArea p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #fff;
+            color: #667eea;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Tour Container */
+        #tour-container {
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* UI Overlay */
+        #ui {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            display: none;
+            z-index: 100;
+        }
+
+        #ui.show {
+            display: block;
+        }
+
+        .ui-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        #sceneInfo {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Error Message */
+        #errorMessage {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 38, 38, 0.95);
+            color: #fff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10001;
+            display: none;
+        }
+
+        #errorMessage.show {
+            display: block;
+        }
+
+        #errorMessage h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        #errorMessage p {
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .ui-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+            }
+
+            #uploadArea {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading/Upload Screen -->
+    <div id="loading">
+        <div class="spinner" id="spinner"></div>
+        <div id="loadingText">Loading Tour...</div>
+        
+        <div id="uploadArea">
+            <h2>📦 Load Tour</h2>
+            <p>Drop your tour JSON file here or click to browse</p>
+            <button class="btn" onclick="document.getElementById('fileInput').click()">
+                Choose File
+            </button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMessage">
+        <h3>⚠️ Error</h3>
+        <p id="errorText"></p>
+        <button class="btn" onclick="location.reload()">Reload Page</button>
+    </div>
+
+    <!-- Tour Container -->
+    <div id="tour-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui">
+        <div class="ui-content">
+            <div id="sceneInfo">Virtual Tour</div>
+            <div class="controls">
+                <button class="control-btn" id="resetBtn">🔄 Reset View</button>
+                <button class="control-btn" id="loadNewBtn">📂 Load New</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tour = null;
+        let tourConfig = null;
+
+        // Elements
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const spinner = document.getElementById('spinner');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const ui = document.getElementById('ui');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        // Initialize
+        function init() {
+            setupEventListeners();
+            
+            // Check for tour data in URL hash
+            if (window.location.hash) {
+                try {
+                    const hash = window.location.hash.substring(1);
+                    const data = JSON.parse(decodeURIComponent(hash));
+                    loadTour(data);
+                } catch (error) {
+                    console.error('Failed to parse URL data:', error);
+                    showUploadArea();
+                }
+            } else {
+                showUploadArea();
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // File input
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            // Control buttons
+            document.getElementById('resetBtn')?.addEventListener('click', resetCamera);
+            document.getElementById('loadNewBtn')?.addEventListener('click', () => {
+                if (confirm('Load a new tour? Current tour will be closed.')) {
+                    location.reload();
+                }
+            });
+        }
+
+        // Show upload area
+        function showUploadArea() {
+            loadingText.style.display = 'none';
+            spinner.style.display = 'none';
+            uploadArea.style.display = 'block';
+        }
+
+        // Show loading spinner
+        function showLoading(text = 'Loading Tour...') {
+            loadingText.textContent = text;
+            loadingText.style.display = 'block';
+            spinner.style.display = 'block';
+            uploadArea.style.display = 'none';
+            loading.classList.remove('hidden');
+        }
+
+        // Hide loading
+        function hideLoading() {
+            loading.classList.add('hidden');
+        }
+
+        // Show error
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        // Handle file select
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                loadFromFile(file);
+            }
+        }
+
+        // Handle drag over
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('dragover');
+        }
+
+        // Handle drag leave
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover');
+        }
+
+        // Handle drop
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover');
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                loadFromFile(file);
+            }
+        }
+
+        // Load from file
+        async function loadFromFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showError('Please select a JSON file');
+                return;
+            }
+
+            showLoading('Reading file...');
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                await loadTour(data);
+            } catch (error) {
+                console.error('Failed to load file:', error);
+                showError('Invalid JSON file: ' + error.message);
+                showUploadArea();
+            }
+        }
+
+        // Load tour
+        async function loadTour(config) {
+            try {
+                showLoading('Initializing tour...');
+
+                tourConfig = config;
+
+                // Validate config
+                if (!config.scenes || config.scenes.length === 0) {
+                    throw new Error('No scenes found in tour data');
+                }
+
+                // Create tour instance
+                tour = new SenangWebsTour('tour-container', config);
+
+                // Setup event listeners
+                tour.on('sceneChanged', (sceneId) => {
+                    console.log('Scene changed:', sceneId);
+                    updateSceneInfo();
+                });
+
+                tour.on('ready', () => {
+                    console.log('Tour ready');
+                    hideLoading();
+                    ui.classList.add('show');
+                    updateSceneInfo();
+                });
+
+                tour.on('error', (error) => {
+                    console.error('Tour error:', error);
+                    showError('Tour error: ' + error.message);
+                });
+
+                // Start tour
+                await tour.start();
+
+            } catch (error) {
+                console.error('Failed to load tour:', error);
+                showError('Failed to load tour: ' + error.message);
+                showUploadArea();
+            }
+        }
+
+        // Update scene info
+        function updateSceneInfo() {
+            if (!tour || !tourConfig) return;
+
+            const sceneId = tour.getCurrentSceneId();
+            const scene = tourConfig.scenes.find(s => s.id === sceneId);
+            
+            if (scene) {
+                document.getElementById('sceneInfo').textContent = scene.name || sceneId;
+            }
+        }
+
+        // Reset camera
+        function resetCamera() {
+            const camera = document.querySelector('[camera]');
+            if (camera) {
+                camera.setAttribute('rotation', '0 0 0');
+            }
+        }
+
+        // Start when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

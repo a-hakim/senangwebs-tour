@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SenangWebs Tour Editor</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="../dist/senangwebs_tour.js"></script>
+    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <!-- Top Toolbar -->
+    <header class="toolbar">
+        <div class="toolbar-left">
+            <h1 class="logo">📝 SWT Editor</h1>
+            <div class="project-name-container">
+                <span>Project:</span>
+                <input type="text" id="project-name" class="project-name-input" value="My Virtual Tour" />
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button id="newBtn" class="btn btn-secondary" title="New Project">
+                🆕 New
+            </button>
+            <button id="saveBtn" class="btn btn-primary" title="Save Project (Ctrl+S)">
+                � Save
+            </button>
+            <button id="exportBtn" class="btn btn-success" title="Export JSON">
+                � Export
+            </button>
+            <button id="importBtn" class="btn btn-secondary" title="Import JSON">
+                � Import
+            </button>
+            <button id="helpBtn" class="btn btn-outline" title="Help">
+                ❓
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="main-container">
+        <!-- Left Sidebar - Scene Manager -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Scenes</h2>
+                <button id="addSceneBtn" class="btn btn-primary btn-sm">
+                    + Add Scene
+                </button>
+            </div>
+            <div class="scene-list" id="sceneList">
+                <!-- Scene cards will be dynamically added here -->
+                <div class="empty-state">
+                    <p>No scenes yet</p>
+                    <p class="hint">Click "Add Scene" to upload a 360° panorama</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center - Preview Area -->
+        <main class="preview-area">
+            <div id="preview" class="preview">
+                <!-- A-Frame Scene -->
+                <a-scene embedded>
+                    <a-entity camera look-controls wasd-controls="enabled: false" position="0 1.6 0">
+                        <a-cursor color="#4CC3D9"></a-cursor>
+                    </a-entity>
+                    <a-sky id="previewSky" color="#87CEEB"></a-sky>
+                    <a-entity id="hotspots"></a-entity>
+                </a-scene>
+                
+                <!-- Empty state -->
+                <div class="preview-empty" style="display: none;">
+                    <p>No scene selected</p>
+                    <p>Upload a 360° panorama to start</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Right Sidebar - Properties Panel -->
+    <aside class="properties-panel">
+        <div class="panel-tabs">
+            <button class="tab-btn active" data-tab="hotspot">Hotspot</button>
+            <button class="tab-btn" data-tab="scene">Scene</button>
+            <button class="tab-btn" data-tab="tour">Tour</button>
+        </div>
+        
+        <div class="panel-content">
+            <!-- Hotspot Properties Tab -->
+            <div class="tab-content active" id="hotspotTab">
+                <div class="section">
+                    <h3>Hotspot Properties</h3>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="hotspotTitle" class="form-control" placeholder="Hotspot title">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="hotspotDescription" class="form-control" rows="3" placeholder="Optional description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Scene</label>
+                        <select id="hotspotTarget" class="form-control">
+                            <option value="">Select target scene...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Color</label>
+                        <input type="color" id="hotspotColor" class="form-control" value="#00ff00">
+                    </div>
+                    <div class="form-group">
+                        <label>Position</label>
+                        <input type="text" id="hotspotPosition" class="form-control" placeholder="x y z" readonly>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Hotspot List</h3>
+                    <button id="addHotspotBtn" class="btn btn-primary btn-block">+ Add Hotspot</button>
+                    <button id="clearHotspotsBtn" class="btn btn-secondary btn-block">Clear All</button>
+                    <div id="hotspotList" class="hotspot-list">
+                        <!-- Hotspots will be listed here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scene Properties Tab -->
+            <div class="tab-content" id="sceneTab">
+                <div class="section">
+                    <h3>Scene Properties</h3>
+                    <div class="form-group">
+                        <label>Scene Name</label>
+                        <input type="text" id="sceneName" class="form-control" placeholder="Scene name">
+                    </div>
+                    <div class="form-group">
+                        <label>Scene ID</label>
+                        <input type="text" id="sceneId" class="form-control" placeholder="scene-id" readonly>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tour Settings Tab -->
+            <div class="tab-content" id="tourTab">
+                <div class="section">
+                    <h3>Tour Settings</h3>
+                    <div class="form-group">
+                        <label>Tour Title</label>
+                        <input type="text" id="tourTitle" class="form-control" placeholder="My Virtual Tour">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="tourDescription" class="form-control" rows="3" placeholder="Tour description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Initial Scene</label>
+                        <select id="tourInitialScene" class="form-control">
+                            <option value="">Select initial scene...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="tourAutoRotate">
+                            <span>Auto-rotate camera</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="tourShowCompass">
+                            <span>Show compass</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Hidden file input -->
+    <input type="file" id="file-input" accept="image/*" style="display: none">
+    <!-- Hidden file inputs -->
+    <input type="file" id="sceneUpload" accept="image/*" multiple style="display: none">
+    <input type="file" id="importUpload" accept=".json" style="display: none">
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export Tour</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Your tour is ready to export. Choose an export option:</p>
+                <div class="export-info">
+                    <p><strong>JSON Only:</strong> Export tour configuration (for use with SWT library)</p>
+                    <p><strong>Viewer HTML:</strong> Export standalone HTML viewer with embedded configuration</p>
+                </div>
+                <textarea id="exportPreview" class="export-preview" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="copyJsonBtn" class="btn btn-secondary">📋 Copy JSON</button>
+                <button id="exportJsonBtn" class="btn btn-primary">💾 Download JSON</button>
+                <button id="exportViewerBtn" class="btn btn-success">🌐 Export Viewer HTML</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>SenangWebs Tour Editor - Help</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Getting Started</h4>
+                <ol>
+                    <li><strong>Add Scenes:</strong> Click "+ Add Scene" to upload 360° panorama images</li>
+                    <li><strong>Place Hotspots:</strong> Click "+ Add Hotspot" then click on the preview to place</li>
+                    <li><strong>Configure:</strong> Select hotspots to edit their properties and target scenes</li>
+                    <li><strong>Export:</strong> Click "Export" to download your tour configuration</li>
+                </ol>
+                
+                <h4>Working with Scenes</h4>
+                <ul>
+                    <li>Drag and drop scene cards to reorder them</li>
+                    <li>Click a scene card to load it in the preview</li>
+                    <li>Edit scene name and ID in the Scene properties tab</li>
+                </ul>
+                
+                <h4>Hotspot Tips</h4>
+                <ul>
+                    <li>Set target scene to create navigation hotspots</li>
+                    <li>Use color to distinguish different hotspot types</li>
+                    <li>Add descriptive titles for better user experience</li>
+                    <li>Duplicate hotspots to save time</li>
+                </ul>
+                
+                <h4>Keyboard Shortcuts</h4>
+                <ul>
+                    <li><kbd>Ctrl/Cmd + S</kbd> - Save project</li>
+                    <li><kbd>Ctrl/Cmd + E</kbd> - Export tour</li>
+                </ul>
+                
+                <h4>Using Exported Tours</h4>
+                <p>The exported JSON can be used with:</p>
+                <ul>
+                    <li><strong>SWT Library:</strong> Load it programmatically in your web app</li>
+                    <li><strong>SWT Viewer:</strong> Open viewer.html and load your JSON file</li>
+                    <li><strong>Standalone HTML:</strong> Use "Export Viewer HTML" for a complete package</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/storage-manager.js"></script>
+    <script src="js/scene-manager.js"></script>
+    <script src="js/hotspot-editor.js"></script>
+    <script src="js/preview-controller.js"></script>
+    <script src="js/ui-controller.js"></script>
+    <script src="js/export-manager.js"></script>
+    <script src="js/editor.js"></script>
+</body>
+</html>

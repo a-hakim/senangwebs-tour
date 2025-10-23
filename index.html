@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-card h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4CC3D9;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #3ab3c9;
+        }
+        .btn-success {
+            background: #4CAF50;
+        }
+        .btn-success:hover {
+            background: #45a049;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        ul {
+            line-height: 1.8;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎉 SenangWebs Tour - Integration Complete!</h1>
+    
+    <div class="test-card">
+        <h2>✅ Installation Status</h2>
+        <div class="status success">
+            <strong>Success!</strong> All components have been created successfully.
+        </div>
+        <ul>
+            <li>✅ Core Library: <code>dist/senangwebs_tour.js</code></li>
+            <li>✅ Visual Editor: <code>editor/index.html</code></li>
+            <li>✅ Standalone Viewer: <code>viewer.html</code></li>
+            <li>✅ Documentation: <code>INTEGRATION_GUIDE.md</code></li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>🚀 Quick Start</h2>
+        <div class="status info">
+            <strong>Recommended:</strong> Start with the Visual Editor to create your first tour
+        </div>
+        <a href="editor/index.html" class="btn btn-success">🎨 Open Visual Editor</a>
+        <a href="viewer.html" class="btn">👁️ Open Viewer</a>
+        <a href="example.html" class="btn">📺 View Demo</a>
+    </div>
+
+    <div class="test-card">
+        <h2>📋 What You Can Do</h2>
+        <h3>With the Editor:</h3>
+        <ol>
+            <li>Upload 360° panorama images</li>
+            <li>Place interactive hotspots visually</li>
+            <li>Configure navigation between scenes</li>
+            <li>Customize hotspot colors and titles</li>
+            <li>Export as JSON or standalone HTML</li>
+        </ol>
+        
+        <h3>With the Viewer:</h3>
+        <ol>
+            <li>Load exported tour JSON files</li>
+            <li>Navigate immersive 360° tours</li>
+            <li>Share tours without coding</li>
+        </ol>
+    </div>
+
+    <div class="test-card">
+        <h2>📝 Workflow Example</h2>
+        <ol>
+            <li>Open <strong>Editor</strong> (click button above)</li>
+            <li>Click <code>+ Add Scene</code> and upload panorama images</li>
+            <li>Click <code>+ Add Hotspot</code> then click on the preview to place</li>
+            <li>Set hotspot target scene and customize properties</li>
+            <li>Click <code>Export</code> button</li>
+            <li>Choose <code>Export Viewer HTML</code> for standalone tour</li>
+            <li>Share the exported HTML file - Done! 🎉</li>
+        </ol>
+    </div>
+
+    <div class="test-card">
+        <h2>🔧 File Structure</h2>
+        <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto;">
+senangwebs_tour/
+├── dist/                      # Built library
+│   ├── senangwebs_tour.js
+│   └── senangwebs_tour.min.js
+├── editor/                    # Visual editor
+│   ├── index.html
+│   ├── css/
+│   │   ├── editor.css
+│   │   └── components.css
+│   └── js/
+│       ├── utils.js
+│       ├── storage-manager.js
+│       ├── scene-manager.js
+│       ├── hotspot-editor.js
+│       ├── preview-controller.js
+│       ├── ui-controller.js
+│       ├── export-manager.js
+│       └── editor.js
+├── viewer.html                # Standalone viewer
+├── example.html               # Full demo
+├── example-simple.html        # Simple demo
+└── INTEGRATION_GUIDE.md       # Complete guide
+        </pre>
+    </div>
+
+    <div class="test-card">
+        <h2>📚 Documentation</h2>
+        <ul>
+            <li><a href="INTEGRATION_GUIDE.md">Complete Integration Guide</a></li>
+            <li><a href="README.md">Library Documentation</a></li>
+            <li><a href="QUICKSTART.md">Quick Start Guide</a></li>
+            <li><a href="blueprint-gui-editor.md">Editor Blueprint</a></li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>💡 Tips</h2>
+        <ul>
+            <li>Editor auto-saves to localStorage every 30 seconds</li>
+            <li>Use drag-and-drop to reorder scenes</li>
+            <li>Exported viewer HTML includes everything - no dependencies needed</li>
+            <li>JSON export is compatible with the SWT library for custom integration</li>
+            <li>For best results, use 4096x2048 equirectangular panoramas</li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>✨ Features</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <h4>Editor</h4>
+                <ul style="font-size: 14px;">
+                    <li>✅ Visual hotspot placement</li>
+                    <li>✅ Drag-drop scene ordering</li>
+                    <li>✅ Real-time preview</li>
+                    <li>✅ Auto-save</li>
+                    <li>✅ Export options</li>
+                    <li>✅ Thumbnail generation</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Viewer</h4>
+                <ul style="font-size: 14px;">
+                    <li>✅ Drag-drop JSON loading</li>
+                    <li>✅ Full navigation</li>
+                    <li>✅ Mobile friendly</li>
+                    <li>✅ No dependencies</li>
+                    <li>✅ Standalone</li>
+                    <li>✅ Beautiful UI</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-card" style="background: #e3f2fd;">
+        <h2>🎯 Ready to Start?</h2>
+        <p style="font-size: 18px; margin: 15px 0;">
+            Click the button below to open the Visual Editor and create your first 360° virtual tour!
+        </p>
+        <a href="editor/index.html" class="btn btn-success" style="font-size: 18px; padding: 15px 30px;">
+            🚀 Launch Editor
+        </a>
+    </div>
+</body>
+</html>
