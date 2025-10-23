@@ -112,6 +112,19 @@ class TourEditor {
             this.updateCurrentHotspot('color', e.target.value);
         });
 
+        // Hotspot position inputs
+        document.getElementById('hotspotPosX')?.addEventListener('input', debounce((e) => {
+            this.updateCurrentHotspotPosition('x', parseFloat(e.target.value) || 0);
+        }, 300));
+        
+        document.getElementById('hotspotPosY')?.addEventListener('input', debounce((e) => {
+            this.updateCurrentHotspotPosition('y', parseFloat(e.target.value) || 0);
+        }, 300));
+        
+        document.getElementById('hotspotPosZ')?.addEventListener('input', debounce((e) => {
+            this.updateCurrentHotspotPosition('z', parseFloat(e.target.value) || 0);
+        }, 300));
+
         // Scene properties
         document.getElementById('sceneId')?.addEventListener('input', debounce((e) => {
             this.updateCurrentScene('id', sanitizeId(e.target.value));
@@ -213,6 +226,19 @@ class TourEditor {
      * Add hotspot at position
      */
     addHotspotAtPosition(position) {
+        // Clamp position to within 10-unit radius
+        const distance = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
+        if (distance > 10) {
+            const scale = 10 / distance;
+            position.x *= scale;
+            position.y *= scale;
+            position.z *= scale;
+            position.x = parseFloat(position.x.toFixed(2));
+            position.y = parseFloat(position.y.toFixed(2));
+            position.z = parseFloat(position.z.toFixed(2));
+            console.log('Position clamped to 10-unit radius:', position);
+        }
+        
         console.log('Adding hotspot at position:', position);
         const hotspot = this.hotspotEditor.addHotspot(position);
         if (hotspot) {
@@ -301,6 +327,41 @@ class TourEditor {
     }
 
     /**
+     * Update current hotspot position (X, Y, or Z)
+     */
+    updateCurrentHotspotPosition(axis, value) {
+        const index = this.hotspotEditor.currentHotspotIndex;
+        const hotspot = this.hotspotEditor.getHotspot(index);
+        
+        if (hotspot) {
+            if (!hotspot.position) {
+                hotspot.position = { x: 0, y: 0, z: 0 };
+            }
+            
+            // Clamp value to within 10-unit radius
+            hotspot.position[axis] = value;
+            
+            // Calculate distance from origin and clamp to radius 10
+            const pos = hotspot.position;
+            const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+            if (distance > 10) {
+                const scale = 10 / distance;
+                pos.x *= scale;
+                pos.y *= scale;
+                pos.z *= scale;
+                
+                // Update the input field with clamped value
+                document.getElementById(`hotspotPos${axis.toUpperCase()}`).value = pos[axis].toFixed(2);
+                showToast('Position clamped to 10-unit radius', 'info');
+            }
+            
+            this.previewController.updateHotspotMarker(index);
+            this.uiController.renderHotspotList();
+            this.markUnsavedChanges();
+        }
+    }
+
+    /**
      * Update current scene property
      */
     updateCurrentScene(property, value) {
@@ -334,12 +395,23 @@ class TourEditor {
         // Update preview
         if (currentScene) {
             console.log('Rendering preview for scene:', currentScene.name);
+            // Hide empty state
+            const emptyState = document.querySelector('.preview-empty');
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+            
             this.previewController.loadScene(currentScene);
             if (currentHotspot) {
                 this.previewController.highlightHotspot(this.hotspotEditor.currentHotspotIndex);
             }
         } else {
             console.log('No current scene to render');
+            // Show empty state
+            const emptyState = document.querySelector('.preview-empty');
+            if (emptyState) {
+                emptyState.style.display = 'flex';
+            }
         }
     }
 

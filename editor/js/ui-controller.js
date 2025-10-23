@@ -224,7 +224,9 @@ class UIController {
             document.getElementById('hotspotDescription').value = '';
             document.getElementById('hotspotTarget').value = '';
             document.getElementById('hotspotColor').value = '#00ff00';
-            document.getElementById('hotspotPosition').value = '';
+            document.getElementById('hotspotPosX').value = '';
+            document.getElementById('hotspotPosY').value = '';
+            document.getElementById('hotspotPosZ').value = '';
             return;
         }
 
@@ -232,7 +234,12 @@ class UIController {
         document.getElementById('hotspotDescription').value = hotspot.description || '';
         document.getElementById('hotspotTarget').value = hotspot.targetSceneId || '';
         document.getElementById('hotspotColor').value = hotspot.color || '#00ff00';
-        document.getElementById('hotspotPosition').value = positionToString(hotspot.position);
+        
+        // Update position inputs
+        const pos = hotspot.position || { x: 0, y: 0, z: 0 };
+        document.getElementById('hotspotPosX').value = pos.x;
+        document.getElementById('hotspotPosY').value = pos.y;
+        document.getElementById('hotspotPosZ').value = pos.z;
 
         // Update target dropdown
         this.updateTargetSceneOptions();

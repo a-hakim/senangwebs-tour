@@ -155,13 +155,6 @@ async function copyToClipboard(text) {
 }
 
 /**
- * Confirm dialog
- */
-function confirm(message) {
-    return window.confirm(message);
-}
-
-/**
  * Debounce function
  */
 function debounce(func, wait) {

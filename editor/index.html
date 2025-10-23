@@ -60,17 +60,8 @@
         <!-- Center - Preview Area -->
         <main class="preview-area">
             <div id="preview" class="preview">
-                <!-- A-Frame Scene -->
-                <a-scene embedded>
-                    <a-entity camera look-controls wasd-controls="enabled: false" position="0 1.6 0">
-                        <a-cursor color="#4CC3D9"></a-cursor>
-                    </a-entity>
-                    <a-sky id="previewSky" color="#87CEEB"></a-sky>
-                    <a-entity id="hotspots"></a-entity>
-                </a-scene>
-                
-                <!-- Empty state -->
-                <div class="preview-empty" style="display: none;">
+                <!-- SWT library will create the A-Frame scene here -->
+                <div class="preview-empty">
                     <p>No scene selected</p>
                     <p>Upload a 360° panorama to start</p>
                 </div>
@@ -111,7 +102,20 @@
                     </div>
                     <div class="form-group">
                         <label>Position</label>
-                        <input type="text" id="hotspotPosition" class="form-control" placeholder="x y z" readonly>
+                        <div class="position-inputs">
+                            <div class="position-input-group">
+                                <label class="position-label">X</label>
+                                <input type="number" id="hotspotPosX" class="form-control position-input" step="0.1" placeholder="0">
+                            </div>
+                            <div class="position-input-group">
+                                <label class="position-label">Y</label>
+                                <input type="number" id="hotspotPosY" class="form-control position-input" step="0.1" placeholder="0">
+                            </div>
+                            <div class="position-input-group">
+                                <label class="position-label">Z</label>
+                                <input type="number" id="hotspotPosZ" class="form-control position-input" step="0.1" placeholder="0">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 

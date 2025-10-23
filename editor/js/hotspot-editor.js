@@ -133,6 +133,17 @@ class HotspotEditor {
     }
 
     /**
+     * Get hotspot by index
+     */
+    getHotspot(index) {
+        const scene = this.editor.sceneManager.getCurrentScene();
+        if (!scene || index < 0 || index >= scene.hotspots.length) {
+            return null;
+        }
+        return scene.hotspots[index];
+    }
+
+    /**
      * Update hotspot position
      */
     updateHotspotPosition(index, position) {
