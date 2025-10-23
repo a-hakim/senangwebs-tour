@@ -85,12 +85,15 @@ export class HotspotManager {
       this.createTooltip();
     }
 
-    // First, preload all hotspot icons
+    // First, preload all hotspot icons (with error handling)
     const iconPromises = hotspots.map((hotspot, index) => {
       const icon = hotspot.appearance?.icon || this.defaultSettings.icon;
       if (icon) {
         const assetId = `hotspot-icon-${index}`;
-        return this.assetManager.preloadImage(icon, assetId);
+        return this.assetManager.preloadImage(icon, assetId).catch(err => {
+          console.warn(`Failed to load icon for hotspot ${index}, will use color instead`);
+          return null; // Continue even if icon fails to load
+        });
       }
       return Promise.resolve();
     });
@@ -116,17 +119,23 @@ export class HotspotManager {
     const pos = hotspot.position;
     hotspotEl.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
 
-    // Create the visual element (image or plane)
-    const visualEl = document.createElement('a-image');
-    
-    // Set icon
+    // Set icon or fallback to plane with color
     const icon = hotspot.appearance?.icon || this.defaultSettings.icon;
-    if (icon) {
-      const assetId = `hotspot-icon-${index}`;
+    const assetId = `hotspot-icon-${index}`;
+    const assetEl = icon ? document.getElementById(assetId) : null;
+    
+    let visualEl;
+    
+    // Check if icon was successfully loaded
+    if (icon && assetEl) {
+      visualEl = document.createElement('a-image');
       visualEl.setAttribute('src', `#${assetId}`);
     } else {
       // Fallback to a plane with color
+      visualEl = document.createElement('a-plane');
       visualEl.setAttribute('color', hotspot.appearance?.color || '#4CC3D9');
+      visualEl.setAttribute('width', '1');
+      visualEl.setAttribute('height', '1');
     }
 
     // Set scale
