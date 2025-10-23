@@ -215,7 +215,7 @@ body {
 .properties-panel {
     background: var(--bg-medium);
     border-top: 1px solid var(--border-color);
-    height: 300px;
+    height: 360px;
     display: flex;
     flex-direction: column;
 }
@@ -255,10 +255,16 @@ body {
 
 .tab-content {
     display: none;
+    padding: 16px;
+    flex-direction: column;
+    overflow: auto;
+    height: 320px;
+    gap: 16px;
 }
 
 .tab-content.active {
-    display: block;
+    display: flex;
+    
 }
 
 .no-selection {

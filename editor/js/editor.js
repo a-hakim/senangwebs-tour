@@ -213,10 +213,14 @@ class TourEditor {
      * Add hotspot at position
      */
     addHotspotAtPosition(position) {
+        console.log('Adding hotspot at position:', position);
         const hotspot = this.hotspotEditor.addHotspot(position);
         if (hotspot) {
+            console.log('Hotspot added successfully:', hotspot);
             this.render();
             this.markUnsavedChanges();
+        } else {
+            console.error('Failed to add hotspot');
         }
     }
 
@@ -325,6 +329,7 @@ class TourEditor {
         this.uiController.updateHotspotProperties(currentHotspot);
         this.uiController.updateTourProperties(this.config);
         this.uiController.updateInitialSceneOptions();
+        this.uiController.updateTargetSceneOptions(); // Always update target scene dropdown
         
         // Update preview
         if (currentScene) {

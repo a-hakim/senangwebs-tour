@@ -74,12 +74,16 @@ class PreviewController {
      */
     setupClickHandler() {
         this.aframeScene.addEventListener('click', (evt) => {
+            console.log('Preview clicked', { placementMode: this.editor.hotspotEditor.placementMode });
+            
             if (!this.editor.hotspotEditor.placementMode) {
                 return;
             }
 
             const intersection = evt.detail.intersection;
             if (!intersection) {
+                console.warn('No intersection found');
+                showToast('Click on the panorama image', 'warning');
                 return;
             }
 
@@ -90,6 +94,7 @@ class PreviewController {
                 z: parseFloat(point.z.toFixed(2))
             };
 
+            console.log('Hotspot position:', position);
             this.editor.addHotspotAtPosition(position);
         });
     }
