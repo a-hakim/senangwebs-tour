@@ -128,6 +128,27 @@ body {
 }
 
 /* Preview Container */
+.preview-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-dark);
+    position: relative;
+    overflow: hidden;
+}
+
+.preview {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.preview a-scene {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
 .preview-container {
     flex: 1;
     display: flex;

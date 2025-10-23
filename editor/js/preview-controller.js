@@ -43,8 +43,24 @@ class PreviewController {
         });
 
         this.camera = this.aframeScene.querySelector('[camera]');
-        this.sky = this.aframeScene.querySelector('a-sky');
+        this.sky = this.aframeScene.querySelector('#previewSky');
         this.hotspotsContainer = this.aframeScene.querySelector('#hotspots');
+
+        if (!this.sky) {
+            console.error('Sky element not found');
+            return false;
+        }
+
+        if (!this.hotspotsContainer) {
+            console.error('Hotspots container not found');
+            return false;
+        }
+
+        console.log('Preview initialized:', {
+            camera: !!this.camera,
+            sky: !!this.sky,
+            hotspots: !!this.hotspotsContainer
+        });
 
         // Setup click handler for hotspot placement
         this.setupClickHandler();
@@ -83,12 +99,19 @@ class PreviewController {
      */
     loadScene(scene) {
         if (!this.isInitialized || !scene) {
+            console.warn('Cannot load scene:', { initialized: this.isInitialized, scene: !!scene });
             return;
         }
 
+        console.log('Loading scene:', scene.name);
+
         // Update sky
         if (this.sky && scene.imageUrl) {
+            console.log('Setting sky src to image');
+            // For data URLs, set directly as src
             this.sky.setAttribute('src', scene.imageUrl);
+            // Also set as material if needed
+            this.sky.setAttribute('material', 'shader: flat');
         }
 
         // Clear and reload hotspots

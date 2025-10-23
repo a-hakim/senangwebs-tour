@@ -27,7 +27,12 @@ class TourEditor {
         console.log('Initializing SenangWebs Tour Editor...');
         
         // Initialize preview
-        await this.previewController.init();
+        const previewInit = await this.previewController.init();
+        if (!previewInit) {
+            console.error('Failed to initialize preview controller');
+            showToast('Failed to initialize preview', 'error');
+            return;
+        }
         
         // Setup event listeners
         this.setupEventListeners();
@@ -219,8 +224,12 @@ class TourEditor {
      * Select scene by index
      */
     selectScene(index) {
+        console.log('Selecting scene:', index);
         if (this.sceneManager.setCurrentScene(index)) {
+            console.log('Scene selected successfully, rendering...');
             this.render();
+        } else {
+            console.warn('Failed to select scene:', index);
         }
     }
 
@@ -319,10 +328,13 @@ class TourEditor {
         
         // Update preview
         if (currentScene) {
+            console.log('Rendering preview for scene:', currentScene.name);
             this.previewController.loadScene(currentScene);
             if (currentHotspot) {
                 this.previewController.highlightHotspot(this.hotspotEditor.currentHotspotIndex);
             }
+        } else {
+            console.log('No current scene to render');
         }
     }
 
