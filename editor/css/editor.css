@@ -256,15 +256,71 @@ body {
 .tab-content {
     display: none;
     padding: 16px;
-    flex-direction: column;
     overflow: auto;
     height: 320px;
-    gap: 16px;
 }
 
 .tab-content.active {
     display: flex;
     
+}
+
+#hotspotTab {
+    gap: 32px;
+}
+
+#hotspotAll {
+    display: flex;
+    gap: 32px;
+    flex-grow: 1;
+}
+
+#hotspotActions {
+    width: 140px;
+}
+
+#hotspotList {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hotspot-item {
+    padding: 6px;
+    border: 1px solid #ffffff1a;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: row;
+    justify-items: center;
+    align-items: center;
+    gap: 6px;
+}
+
+.hotspot-item:hover {
+    background: #ffffff0a;
+    cursor: pointer;
+}
+
+.hotspot-item .hotspot-color {
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+}
+
+.hotspot-item .hotspot-info {
+    flex-grow: 1;
+}
+
+.hotspot-item .hotspot-actions {
+    display: flex;
+    gap: 4px;
+}
+
+#hotspotProperties {
+    max-width: 320;
+    height: 288px;
+    overflow-y: auto;
 }
 
 .no-selection {
@@ -697,7 +753,6 @@ input[type="color"] {
 
 /* Hotspot list */
 .hotspot-list {
-    margin-top: 15px;
     max-height: 300px;
     overflow-y: auto;
 }
@@ -711,13 +766,15 @@ input[type="color"] {
 .position-inputs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 16px;
 }
 
 .position-input-group {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-direction: row;
+    justify-items: center;
+    align-items: center;
+    gap: 6px;
 }
 
 .position-label {
@@ -726,11 +783,12 @@ input[type="color"] {
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin: 0 !important;
 }
 
 .position-input {
-    padding: 6px 8px !important;
-    font-size: 13px;
+    padding: 8px 12px !important;
+    font-size: 14px;
     text-align: center;
     font-family: 'Courier New', monospace;
 }
@@ -738,4 +796,35 @@ input[type="color"] {
 .position-input::-webkit-inner-spin-button,
 .position-input::-webkit-outer-spin-button {
     opacity: 1;
+}
+
+.scene-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    padding-top: 32px !important;
+}
+
+.scene-card .drag-handle {
+    width: 100%;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0px;
+}
+
+.scene-card img {
+    width: 100%;
+    border-radius: 6px;
+    aspect-ratio: 2/1;
+    object-fit: cover;
+    margin-bottom: 8px;
+}
+
+.scene-info {
+    width: 100%;
 }

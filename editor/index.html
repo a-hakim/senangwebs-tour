@@ -80,7 +80,16 @@
         <div class="panel-content">
             <!-- Hotspot Properties Tab -->
             <div class="tab-content active" id="hotspotTab">
-                <div class="section">
+                <div class="section" id="hotspotAll">
+                    <div id="hotspotActions">
+                        <button id="addHotspotBtn" class="btn btn-primary btn-block">+ Add Hotspot</button>
+                        <button id="clearHotspotsBtn" class="btn btn-secondary btn-block">Clear All</button>
+                    </div>
+                    <div id="hotspotList" class="hotspot-list">
+                        <!-- Hotspots will be listed here -->
+                    </div>
+                </div>
+                <div class="section" id="hotspotProperties">
                     <h3>Hotspot Properties</h3>
                     <div class="form-group">
                         <label>Title</label>
@@ -88,7 +97,7 @@
                     </div>
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea id="hotspotDescription" class="form-control" rows="3" placeholder="Optional description"></textarea>
+                        <textarea id="hotspotDescription" class="form-control" rows="1" placeholder="Optional description"></textarea>
                     </div>
                     <div class="form-group">
                         <label>Target Scene</label>
@@ -96,6 +105,7 @@
                             <option value="">Select target scene...</option>
                         </select>
                     </div>
+                    <div style="display: flex; gap: 16px;">
                     <div class="form-group">
                         <label>Color</label>
                         <input type="color" id="hotspotColor" class="form-control" value="#00ff00">
@@ -117,14 +127,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="section">
-                    <h3>Hotspot List</h3>
-                    <button id="addHotspotBtn" class="btn btn-primary btn-block">+ Add Hotspot</button>
-                    <button id="clearHotspotsBtn" class="btn btn-secondary btn-block">Clear All</button>
-                    <div id="hotspotList" class="hotspot-list">
-                        <!-- Hotspots will be listed here -->
                     </div>
                 </div>
             </div>
