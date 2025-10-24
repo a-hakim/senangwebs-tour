@@ -1,4 +1,5 @@
 // Export Manager - Handles JSON generation for SWT library
+import { downloadTextAsFile, showModal } from './utils.js';
 
 class ExportManager {
     constructor(editor) {

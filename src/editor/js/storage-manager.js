@@ -1,4 +1,5 @@
 // Storage Manager - Handles LocalStorage operations
+import { downloadTextAsFile, showToast } from './utils.js';
 
 class ProjectStorageManager {
     constructor() {

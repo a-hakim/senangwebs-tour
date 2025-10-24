@@ -202,6 +202,8 @@ function deepClone(obj) {
 export {
     generateId,
     sanitizeId,
+    generateThumbnail,
+    loadImageAsDataUrl,
     showToast,
     showModal,
     hideModal,

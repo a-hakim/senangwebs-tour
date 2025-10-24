@@ -1,4 +1,5 @@
 // Hotspot Editor - Handles hotspot placement and editing
+import { generateId, showToast } from './utils.js';
 
 class HotspotEditor {
     constructor(editor) {
@@ -30,7 +31,7 @@ class HotspotEditor {
         // Update button state
         const btn = document.getElementById('addHotspotBtn');
         if (btn) {
-            btn.textContent = '🎯 Click on Preview...';
+            btn.textContent = 'Click on Preview...';
             btn.classList.add('btn-active');
         }
         

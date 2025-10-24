@@ -1,4 +1,5 @@
 // Scene Manager - Handles scene operations
+import { generateThumbnail, loadImageAsDataUrl, sanitizeId, showToast } from './utils.js';
 
 class SceneManagerEditor {
     constructor(editor) {

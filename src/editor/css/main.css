@@ -168,14 +168,18 @@ body {
 }
 
 .btn-add {
-    padding: 6px 12px;
     background: var(--accent-primary);
     color: white;
+    padding: 8px 16px;
     border: none;
-    border-radius: 4px;
-    font-size: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .btn-add:hover {
@@ -192,17 +196,16 @@ body {
     background: var(--bg-tertiary);
     border: 2px solid transparent;
     border-radius: 8px;
-    padding: 12px;
     margin-bottom: 12px;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    overflow: hidden;
 }
 
 .scene-card img {
     width: 100%;
     aspect-ratio: 2/1;
-    border-radius: 6px;
     object-fit: cover;
 }
 
@@ -235,6 +238,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    margin: 6px 8px;
 }
 
 .scene-name {
@@ -251,7 +255,7 @@ body {
 .scene-actions {
     display: flex;
     gap: 4px;
-    margin-top: 8px;
+    margin: 6px 8px;
 }
 
 .btn-icon-small {
@@ -293,12 +297,17 @@ body {
     top: 8px;
     left: 8px;
     cursor: move;
-    color: var(--text-muted);
-    padding: 4px;
-    background: rgba(0, 0, 0, 0.5);
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.75);
     border-radius: 4px;
-    font-size: 12px;
     z-index: 10;
+    cursor: move;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    fill: var(--text-secondary);
 }
 
 /* Canvas Area */
@@ -312,7 +321,7 @@ body {
 .toolbar {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    padding: 10px 20px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -320,6 +329,8 @@ body {
 
 .toolbar-tabs {
     display: flex;
+    width: 100%;
+    justify-content: space-evenly;
     gap: 4px;
 }
 
@@ -904,13 +915,6 @@ body {
 
 .dragging {
     opacity: 0.5;
-}
-
-.drag-handle {
-    cursor: move;
-    color: var(--text-muted);
-    padding: 4px;
-    margin-right: 8px;
 }
 
 /* Scrollbar Styling */
