@@ -342,6 +342,9 @@ class TourEditor {
             // Scene changed, so we need to reload it with fresh camera
             this.lastRenderedSceneIndex = -1;
             
+            // Reset hotspot selection when switching scenes
+            this.hotspotEditor.currentHotspotIndex = -1;
+            
             // Get the new scene and load with camera reset
             const scene = this.sceneManager.getCurrentScene();
             if (scene) {
@@ -352,6 +355,8 @@ class TourEditor {
             // Update UI
             this.uiController.renderSceneList();
             this.uiController.updateSceneProperties(scene);
+            this.uiController.renderHotspotList(); // Update hotspot list for the selected scene
+            this.uiController.updateHotspotProperties(null); // Clear hotspot properties
             this.uiController.updateInitialSceneOptions();
             this.uiController.updateTargetSceneOptions();
         } else {
