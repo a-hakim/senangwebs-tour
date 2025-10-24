@@ -2,6 +2,9 @@
 
 class TourEditor {
     constructor() {
+        console.log('🏗️ TourEditor constructor called');
+        console.trace('Constructor call stack');
+        
         this.config = {
             title: 'My Virtual Tour',
             description: '',
@@ -19,6 +22,7 @@ class TourEditor {
         
         this.hasUnsavedChanges = false;
         this.lastRenderedSceneIndex = -1; // Track which scene is currently loaded in preview
+        this.listenersSetup = false; // Flag to prevent duplicate event listeners
     }
 
     /**
@@ -61,6 +65,30 @@ class TourEditor {
      * Setup event listeners
      */
     setupEventListeners() {
+        // Prevent duplicate listener setup
+        if (this.listenersSetup) {
+            console.log('⚠️ Event listeners already setup, skipping...');
+            return;
+        }
+        
+        console.log('⚙️ Setting up event listeners...');
+        
+        // Check for duplicate IDs in DOM
+        const addSceneBtns = document.querySelectorAll('#addSceneBtn');
+        const sceneUploads = document.querySelectorAll('#sceneUpload');
+        const importBtns = document.querySelectorAll('#importBtn');
+        const importUploads = document.querySelectorAll('#importUpload');
+        
+        console.log(`🔍 DOM Check:
+  - addSceneBtn elements: ${addSceneBtns.length}
+  - sceneUpload elements: ${sceneUploads.length}
+  - importBtn elements: ${importBtns.length}
+  - importUpload elements: ${importUploads.length}`);
+        
+        if (addSceneBtns.length > 1 || sceneUploads.length > 1 || importBtns.length > 1 || importUploads.length > 1) {
+            console.error('❌ DUPLICATE IDS FOUND IN DOM! This will cause double-trigger issues.');
+        }
+        
         // Toolbar buttons
         document.getElementById('newBtn')?.addEventListener('click', () => this.newProject());
         document.getElementById('saveBtn')?.addEventListener('click', () => this.saveProject());
@@ -70,12 +98,24 @@ class TourEditor {
 
         // Scene management
         document.getElementById('addSceneBtn')?.addEventListener('click', () => {
-            document.getElementById('sceneUpload').click();
+            console.log('Add Scene button clicked');
+            const sceneUpload = document.getElementById('sceneUpload');
+            if (sceneUpload) {
+                sceneUpload.click();
+            }
         });
         
         document.getElementById('sceneUpload')?.addEventListener('change', (e) => {
-            this.handleSceneUpload(e.target.files);
-            e.target.value = ''; // Reset input
+            console.log('📁 Scene upload change event triggered, files:', e.target.files ? e.target.files.length : 0);
+            if (e.target.files && e.target.files.length > 0) {
+                this.handleSceneUpload(e.target.files);
+                // Reset value after a delay to prevent triggering another change event
+                // This allows users to re-select the same file if needed
+                setTimeout(() => {
+                    e.target.value = '';
+                    console.log('📁 Scene upload input reset');
+                }, 100);
+            }
         });
 
         // Hotspot management
@@ -206,9 +246,14 @@ class TourEditor {
 
         // Import file input
         document.getElementById('importUpload')?.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
+            console.log('📥 Import upload change event triggered, files:', e.target.files ? e.target.files.length : 0);
+            if (e.target.files && e.target.files.length > 0) {
                 this.handleImportFile(e.target.files[0]);
-                e.target.value = '';
+                // Reset value after a delay to prevent triggering another change event
+                setTimeout(() => {
+                    e.target.value = '';
+                    console.log('📥 Import upload input reset');
+                }, 100);
             }
         });
 
@@ -219,28 +264,42 @@ class TourEditor {
                 e.returnValue = '';
             }
         });
+        
+        // Mark listeners as setup
+        this.listenersSetup = true;
+        console.log('Event listeners setup complete');
     }
 
     /**
      * Handle scene upload
      */
     async handleSceneUpload(files) {
-        if (!files || files.length === 0) return;
+        console.log('=== handleSceneUpload START ===');
+        console.log('Files received:', files ? files.length : 0);
+        
+        if (!files || files.length === 0) {
+            console.log('No files, returning');
+            return;
+        }
 
         this.uiController.setLoading(true);
 
         for (const file of files) {
+            console.log('Processing file:', file.name, 'type:', file.type);
             if (!file.type.startsWith('image/')) {
                 showToast(`${file.name} is not an image`, 'error');
                 continue;
             }
 
-            await this.sceneManager.addScene(file);
+            const scene = await this.sceneManager.addScene(file);
+            console.log('Scene added, result:', scene ? scene.id : 'failed');
         }
 
+        console.log('All files processed. Total scenes now:', this.sceneManager.getAllScenes().length);
         this.uiController.setLoading(false);
         this.render();
         this.markUnsavedChanges();
+        console.log('=== handleSceneUpload END ===');
     }
 
     /**
@@ -433,11 +492,19 @@ class TourEditor {
         
         // Update the scene's image URL
         if (this.sceneManager.updateScene(index, 'imageUrl', imageUrl)) {
+            // Also update thumbnail to match new image
+            const scene = this.sceneManager.getCurrentScene();
+            if (scene) {
+                scene.thumbnail = imageUrl; // Use same URL for thumbnail
+            }
+            
+            // Update scene list to show new thumbnail
+            this.uiController.renderSceneList();
+            
             // Force scene reload by resetting tracker
             this.lastRenderedSceneIndex = -1;
             
             // Reload the preview with the new image
-            const scene = this.sceneManager.getCurrentScene();
             if (scene) {
                 await this.previewController.loadScene(scene);
                 this.lastRenderedSceneIndex = index;
@@ -564,7 +631,11 @@ class TourEditor {
      * Import project
      */
     importProject() {
-        document.getElementById('importUpload').click();
+        console.log('Import button clicked');
+        const importUpload = document.getElementById('importUpload');
+        if (importUpload) {
+            importUpload.click();
+        }
     }
 
     /**

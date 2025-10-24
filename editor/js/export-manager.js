@@ -11,6 +11,9 @@ class ExportManager {
     generateJSON() {
         const scenes = this.editor.sceneManager.getAllScenes();
         const config = this.editor.config;
+        
+        console.log('ExportManager.generateJSON - scenes count:', scenes.length);
+        console.log('Scenes data:', scenes);
 
         // Build scenes array
         const scenesData = scenes.map(scene => ({
@@ -28,6 +31,8 @@ class ExportManager {
                 icon: hotspot.icon || ''
             }))
         }));
+        
+        console.log('Generated scenes data:', scenesData);
 
         // Determine initial scene
         let initialSceneId = config.initialSceneId;
