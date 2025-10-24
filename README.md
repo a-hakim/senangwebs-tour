@@ -52,7 +52,7 @@ npm install senangwebs_tour
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="dist/swt.min.js"></script>
 </head>
 <body>
