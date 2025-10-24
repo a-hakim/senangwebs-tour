@@ -290,3 +290,6 @@ class ExportManager {
         }
     }
 }
+
+
+export default ExportManager;

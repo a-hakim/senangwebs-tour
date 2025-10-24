@@ -235,3 +235,5 @@ class HotspotEditor {
         return true;
     }
 }
+
+export default HotspotEditor;

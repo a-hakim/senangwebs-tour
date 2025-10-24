@@ -179,3 +179,5 @@ class SceneManagerEditor {
         console.log(`📥 Scenes loaded. Total: ${this.scenes.length}`);
     }
 }
+
+export default SceneManagerEditor;

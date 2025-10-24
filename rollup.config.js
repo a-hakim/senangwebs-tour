@@ -1,6 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import postcss from 'rollup-plugin-postcss';
+import postcssImport from 'postcss-import';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -32,7 +33,7 @@ export default [
       terser()
     ]
   },
-  // Editor - JavaScript bundle
+  // Editor - JavaScript bundle (development)
   {
     input: 'src/editor/editor-entry.js',
     output: {
@@ -67,7 +68,8 @@ export default [
       postcss({
         extract: true,
         minimize: false,
-        sourceMap: true
+        sourceMap: true,
+        plugins: [postcssImport()]
       })
     ]
   },
@@ -81,7 +83,8 @@ export default [
       postcss({
         extract: true,
         minimize: true,
-        sourceMap: false
+        sourceMap: false,
+        plugins: [postcssImport()]
       })
     ]
   }

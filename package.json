@@ -26,8 +26,12 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-virtual": "^3.0.2",
+    "concat-with-sourcemaps": "^1.1.0",
+    "postcss-import": "^16.1.1",
     "rollup": "^4.9.6",
-    "rollup-plugin-postcss": "^4.0.2"
+    "rollup-plugin-postcss": "^4.0.2",
+    "terser": "^5.44.0"
   },
   "peerDependencies": {
     "aframe": "^1.4.0"

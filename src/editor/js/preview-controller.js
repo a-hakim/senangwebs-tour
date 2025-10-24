@@ -515,3 +515,6 @@ class PreviewController {
         await this.refresh();
     }
 }
+
+
+export default PreviewController;

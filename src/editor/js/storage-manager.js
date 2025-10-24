@@ -1,6 +1,6 @@
 // Storage Manager - Handles LocalStorage operations
 
-class StorageManager {
+class ProjectStorageManager {
     constructor() {
         this.storageKey = 'swt_project';
         this.autoSaveInterval = null;
@@ -134,3 +134,5 @@ class StorageManager {
         });
     }
 }
+
+export default ProjectStorageManager;

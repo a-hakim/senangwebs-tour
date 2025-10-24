@@ -13,7 +13,7 @@ class TourEditor {
             showCompass: false
         };
         
-        this.storageManager = new StorageManager();
+        this.storageManager = new ProjectStorageManager();
         this.sceneManager = new SceneManagerEditor(this);
         this.hotspotEditor = new HotspotEditor(this);
         this.previewController = new PreviewController(this);
@@ -679,3 +679,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.editor = new TourEditor();
     await window.editor.init();
 });
+
+
+export default TourEditor;
