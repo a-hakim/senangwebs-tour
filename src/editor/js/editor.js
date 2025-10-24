@@ -2,8 +2,6 @@
 
 class TourEditor {
     constructor() {
-        console.log('🏗️ TourEditor constructor called');
-        console.trace('Constructor call stack');
         
         this.config = {
             title: 'My Virtual Tour',
@@ -29,9 +27,7 @@ class TourEditor {
      * Initialize editor
      */
     async init() {
-        console.log('Initializing SenangWebs Tour Editor...');
-        
-        // Initialize preview
+// Initialize preview
         const previewInit = await this.previewController.init();
         if (!previewInit) {
             console.error('Failed to initialize preview controller');
@@ -56,9 +52,7 @@ class TourEditor {
         
         // Initial render
         this.render();
-        
-        console.log('Editor initialized successfully');
-        showToast('Editor ready', 'success');
+showToast('Editor ready', 'success');
     }
 
     /**
@@ -67,25 +61,14 @@ class TourEditor {
     setupEventListeners() {
         // Prevent duplicate listener setup
         if (this.listenersSetup) {
-            console.log('⚠️ Event listeners already setup, skipping...');
-            return;
+return;
         }
-        
-        console.log('⚙️ Setting up event listeners...');
-        
-        // Check for duplicate IDs in DOM
+// Check for duplicate IDs in DOM
         const addSceneBtns = document.querySelectorAll('#addSceneBtn');
         const sceneUploads = document.querySelectorAll('#sceneUpload');
         const importBtns = document.querySelectorAll('#importBtn');
         const importUploads = document.querySelectorAll('#importUpload');
-        
-        console.log(`🔍 DOM Check:
-  - addSceneBtn elements: ${addSceneBtns.length}
-  - sceneUpload elements: ${sceneUploads.length}
-  - importBtn elements: ${importBtns.length}
-  - importUpload elements: ${importUploads.length}`);
-        
-        if (addSceneBtns.length > 1 || sceneUploads.length > 1 || importBtns.length > 1 || importUploads.length > 1) {
+if (addSceneBtns.length > 1 || sceneUploads.length > 1 || importBtns.length > 1 || importUploads.length > 1) {
             console.error('❌ DUPLICATE IDS FOUND IN DOM! This will cause double-trigger issues.');
         }
         
@@ -98,23 +81,20 @@ class TourEditor {
 
         // Scene management
         document.getElementById('addSceneBtn')?.addEventListener('click', () => {
-            console.log('Add Scene button clicked');
-            const sceneUpload = document.getElementById('sceneUpload');
+const sceneUpload = document.getElementById('sceneUpload');
             if (sceneUpload) {
                 sceneUpload.click();
             }
         });
         
         document.getElementById('sceneUpload')?.addEventListener('change', (e) => {
-            console.log('📁 Scene upload change event triggered, files:', e.target.files ? e.target.files.length : 0);
-            if (e.target.files && e.target.files.length > 0) {
+if (e.target.files && e.target.files.length > 0) {
                 this.handleSceneUpload(e.target.files);
                 // Reset value after a delay to prevent triggering another change event
                 // This allows users to re-select the same file if needed
                 setTimeout(() => {
                     e.target.value = '';
-                    console.log('📁 Scene upload input reset');
-                }, 100);
+}, 100);
             }
         });
 
@@ -246,14 +226,12 @@ class TourEditor {
 
         // Import file input
         document.getElementById('importUpload')?.addEventListener('change', (e) => {
-            console.log('📥 Import upload change event triggered, files:', e.target.files ? e.target.files.length : 0);
-            if (e.target.files && e.target.files.length > 0) {
+if (e.target.files && e.target.files.length > 0) {
                 this.handleImportFile(e.target.files[0]);
                 // Reset value after a delay to prevent triggering another change event
                 setTimeout(() => {
                     e.target.value = '';
-                    console.log('📥 Import upload input reset');
-                }, 100);
+}, 100);
             }
         });
 
@@ -267,40 +245,31 @@ class TourEditor {
         
         // Mark listeners as setup
         this.listenersSetup = true;
-        console.log('Event listeners setup complete');
-    }
+}
 
     /**
      * Handle scene upload
      */
     async handleSceneUpload(files) {
-        console.log('=== handleSceneUpload START ===');
-        console.log('Files received:', files ? files.length : 0);
         
         if (!files || files.length === 0) {
-            console.log('No files, returning');
-            return;
+return;
         }
 
         this.uiController.setLoading(true);
 
         for (const file of files) {
-            console.log('Processing file:', file.name, 'type:', file.type);
-            if (!file.type.startsWith('image/')) {
+if (!file.type.startsWith('image/')) {
                 showToast(`${file.name} is not an image`, 'error');
                 continue;
             }
 
             const scene = await this.sceneManager.addScene(file);
-            console.log('Scene added, result:', scene ? scene.id : 'failed');
-        }
-
-        console.log('All files processed. Total scenes now:', this.sceneManager.getAllScenes().length);
-        this.uiController.setLoading(false);
+}
+this.uiController.setLoading(false);
         this.render();
         this.markUnsavedChanges();
-        console.log('=== handleSceneUpload END ===');
-    }
+}
 
     /**
      * Add hotspot at position
@@ -316,14 +285,10 @@ class TourEditor {
             position.x = parseFloat(position.x.toFixed(2));
             position.y = parseFloat(position.y.toFixed(2));
             position.z = parseFloat(position.z.toFixed(2));
-            console.log('Position clamped to 10-unit radius:', position);
-        }
-        
-        console.log('Adding hotspot at position:', position);
-        const hotspot = this.hotspotEditor.addHotspot(position);
+}
+const hotspot = this.hotspotEditor.addHotspot(position);
         if (hotspot) {
-            console.log('Hotspot added successfully:', hotspot);
-            // Force scene reload to show new hotspot
+// Force scene reload to show new hotspot
             this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
@@ -336,10 +301,8 @@ class TourEditor {
      * Select scene by index
      */
     selectScene(index) {
-        console.log('Selecting scene:', index);
-        if (this.sceneManager.setCurrentScene(index)) {
-            console.log('Scene selected successfully, rendering...');
-            // Scene changed, so we need to reload it with fresh camera
+if (this.sceneManager.setCurrentScene(index)) {
+// Scene changed, so we need to reload it with fresh camera
             this.lastRenderedSceneIndex = -1;
             
             // Reset hotspot selection when switching scenes
@@ -360,8 +323,7 @@ class TourEditor {
             this.uiController.updateInitialSceneOptions();
             this.uiController.updateTargetSceneOptions();
         } else {
-            console.warn('Failed to select scene:', index);
-        }
+}
     }
 
     /**
@@ -541,8 +503,7 @@ class TourEditor {
         
         // Update preview
         if (currentScene) {
-            console.log('Rendering preview for scene:', currentScene.name);
-            // Hide empty state
+// Hide empty state
             const emptyState = document.querySelector('.preview-empty');
             if (emptyState) {
                 emptyState.style.display = 'none';
@@ -551,20 +512,17 @@ class TourEditor {
             // Only reload scene if it changed
             const currentSceneIndex = this.sceneManager.currentSceneIndex;
             if (currentSceneIndex !== this.lastRenderedSceneIndex) {
-                console.log('Scene changed, reloading preview with camera preservation');
-                // Load scene with camera rotation preservation enabled (default)
+// Load scene with camera rotation preservation enabled (default)
                 this.previewController.loadScene(currentScene);
                 this.lastRenderedSceneIndex = currentSceneIndex;
             } else {
-                console.log('Same scene, skipping reload');
-            }
+}
             
             if (currentHotspot) {
                 this.previewController.highlightHotspot(this.hotspotEditor.currentHotspotIndex);
             }
         } else {
-            console.log('No current scene to render');
-            // Show empty state
+// Show empty state
             const emptyState = document.querySelector('.preview-empty');
             if (emptyState) {
                 emptyState.style.display = 'flex';
@@ -636,8 +594,7 @@ class TourEditor {
      * Import project
      */
     importProject() {
-        console.log('Import button clicked');
-        const importUpload = document.getElementById('importUpload');
+const importUpload = document.getElementById('importUpload');
         if (importUpload) {
             importUpload.click();
         }
@@ -679,6 +636,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.editor = new TourEditor();
     await window.editor.init();
 });
-
 
 export default TourEditor;

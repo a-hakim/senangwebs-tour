@@ -11,10 +11,6 @@ class ExportManager {
     generateJSON() {
         const scenes = this.editor.sceneManager.getAllScenes();
         const config = this.editor.config;
-        
-        console.log('ExportManager.generateJSON - scenes count:', scenes.length);
-        console.log('Scenes data:', scenes);
-
         // Build scenes array
         const scenesData = scenes.map(scene => ({
             id: scene.id,
@@ -31,10 +27,7 @@ class ExportManager {
                 icon: hotspot.icon || ''
             }))
         }));
-        
-        console.log('Generated scenes data:', scenesData);
-
-        // Determine initial scene
+// Determine initial scene
         let initialSceneId = config.initialSceneId;
         if (!initialSceneId && scenes.length > 0) {
             initialSceneId = scenes[0].id;
@@ -203,13 +196,11 @@ class ExportManager {
                 
                 // Listen to events
                 tour.on('sceneChanged', (sceneId) => {
-                    console.log('Scene changed:', sceneId);
-                    updateSceneInfo();
+updateSceneInfo();
                 });
                 
                 tour.on('ready', () => {
-                    console.log('Tour ready');
-                    document.getElementById('loading').classList.add('hidden');
+document.getElementById('loading').classList.add('hidden');
                     document.getElementById('ui').style.display = 'flex';
                     updateSceneInfo();
                 });
@@ -290,6 +281,5 @@ class ExportManager {
         }
     }
 }
-
 
 export default ExportManager;

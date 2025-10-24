@@ -20,18 +20,14 @@ class PreviewController {
 
         // Wait for A-Frame to be loaded
         if (typeof AFRAME === 'undefined') {
-            console.log('Waiting for A-Frame to load...');
-            await this.waitForLibrary('AFRAME', 5000);
+await this.waitForLibrary('AFRAME', 5000);
         }
 
         // Wait for SWT library to be loaded
         if (typeof SWT === 'undefined') {
-            console.log('Waiting for SWT library to load...');
-            await this.waitForLibrary('SWT', 5000);
+await this.waitForLibrary('SWT', 5000);
         }
-
-        console.log('Preview initialized successfully');
-        this.isInitialized = true;
+this.isInitialized = true;
         return true;
     }
 
@@ -47,32 +43,24 @@ class PreviewController {
             }
             await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
-        console.log(`${libraryName} loaded successfully`);
-    }
+}
 
     /**
      * Load scene into preview using SWT library
      */
     async loadScene(scene, preserveCameraRotation = true) {
         if (!this.isInitialized || !scene) {
-            console.warn('Cannot load scene:', { initialized: this.isInitialized, scene: !!scene });
-            return;
+return;
         }
-
-        console.log('Loading scene into preview:', scene.name);
-
-        // Save camera rotation before destroying scene
+// Save camera rotation before destroying scene
         let savedRotation = null;
         if (preserveCameraRotation) {
             savedRotation = this.getCameraRotation();
-            console.log('Saving camera rotation before reload:', savedRotation);
-        }
+}
 
         // Destroy existing tour if any
         if (this.tour) {
-            console.log('Destroying existing tour');
-            this.tour.destroy();
+this.tour.destroy();
             this.tour = null;
         }
 
@@ -159,29 +147,23 @@ class PreviewController {
 
             aframeScene.addEventListener('loaded', () => {
                 clearTimeout(timeout);
-                console.log('A-Frame scene loaded');
-                resolve();
+resolve();
             });
         });
 
         try {
             // Create new tour instance
-            console.log('Creating tour with config:', tourConfig);
-            this.tour = new SWT.Tour(aframeScene, tourConfig);
+this.tour = new SWT.Tour(aframeScene, tourConfig);
 
             // Set up event listeners
             this.tour.addEventListener('tour-started', (e) => {
-                console.log('Preview tour started:', e.detail);
-            });
+});
 
             this.tour.addEventListener('scene-loaded', (e) => {
-                console.log('Preview scene loaded:', e.detail);
-            });
+});
 
             this.tour.addEventListener('hotspot-activated', (e) => {
-                console.log('Preview hotspot clicked:', e.detail);
-                
-                // Find the hotspot index by ID and select it
+// Find the hotspot index by ID and select it
                 const hotspotId = e.detail?.hotspotId;
                 if (hotspotId) {
                     const scene = this.editor.sceneManager.getCurrentScene();
@@ -196,12 +178,9 @@ class PreviewController {
 
             // Start the tour
             await this.tour.start();
-            console.log('Preview tour started successfully');
-            
-            // Restore camera rotation if preserved
+// Restore camera rotation if preserved
             if (savedRotation && preserveCameraRotation) {
-                console.log('Restoring camera rotation:', savedRotation);
-                this.setCameraRotation(savedRotation);
+this.setCameraRotation(savedRotation);
             }
             
             // Setup click handler after a short delay to ensure A-Frame is ready
@@ -220,14 +199,12 @@ class PreviewController {
      */
     setupClickHandler() {
         if (!this.tour) {
-            console.warn('Tour not initialized, cannot setup click handler');
-            return;
+return;
         }
 
         const aframeScene = this.previewContainer.querySelector('a-scene');
         if (!aframeScene) {
-            console.warn('A-Frame scene not found in preview');
-            setTimeout(() => this.setupClickHandler(), 200); // Retry
+setTimeout(() => this.setupClickHandler(), 200); // Retry
             return;
         }
 
@@ -238,9 +215,7 @@ class PreviewController {
 
         // Create and store the click handler
         this.clickHandler = (evt) => {
-            console.log('Preview clicked', { placementMode: this.editor.hotspotEditor.placementMode });
-            
-            if (!this.editor.hotspotEditor.placementMode) {
+if (!this.editor.hotspotEditor.placementMode) {
                 return;
             }
 
@@ -253,8 +228,7 @@ class PreviewController {
                 const sky = aframeScene.querySelector('a-sky');
                 
                 if (!camera || !sky) {
-                    console.warn('Camera or sky not found');
-                    showToast('Scene not ready, please try again', 'warning');
+showToast('Scene not ready, please try again', 'warning');
                     return;
                 }
 
@@ -277,8 +251,7 @@ class PreviewController {
                 if (intersects.length > 0) {
                     intersection = intersects[0];
                 } else {
-                    console.warn('No intersection found with raycasting');
-                    showToast('Click on the panorama image', 'warning');
+showToast('Click on the panorama image', 'warning');
                     return;
                 }
             }
@@ -289,13 +262,9 @@ class PreviewController {
                 y: parseFloat(point.y.toFixed(2)),
                 z: parseFloat(point.z.toFixed(2))
             };
-
-            console.log('Hotspot position:', position);
-            this.editor.addHotspotAtPosition(position);
+this.editor.addHotspotAtPosition(position);
         };
-
-        console.log('Setting up click handler for hotspot placement');
-        aframeScene.addEventListener('click', this.clickHandler);
+aframeScene.addEventListener('click', this.clickHandler);
     }
 
     /**
@@ -304,14 +273,12 @@ class PreviewController {
     getCameraRotation() {
         const aframeScene = this.previewContainer?.querySelector('a-scene');
         if (!aframeScene) {
-            console.log('No scene found for getting camera rotation');
-            return null;
+return null;
         }
         
         const camera = aframeScene.querySelector('[camera]');
         if (!camera) {
-            console.log('No camera found for getting rotation');
-            return null;
+return null;
         }
         
         // Get rotation from object3D which is more reliable
@@ -321,9 +288,7 @@ class PreviewController {
             y: rotation.y,
             z: rotation.z
         };
-        
-        console.log('Saved camera rotation:', savedRotation);
-        return savedRotation;
+return savedRotation;
     }
 
     /**
@@ -331,28 +296,24 @@ class PreviewController {
      */
     setCameraRotation(rotation) {
         if (!rotation) {
-            console.log('No rotation to restore');
-            return;
+return;
         }
         
         const aframeScene = this.previewContainer?.querySelector('a-scene');
         if (!aframeScene) {
-            console.log('No scene found for setting camera rotation');
-            return;
+return;
         }
         
         const camera = aframeScene.querySelector('[camera]');
         if (!camera) {
-            console.log('No camera found for setting rotation');
-            return;
+return;
         }
         
         // Set rotation on object3D directly
         const setRotation = () => {
             if (camera.object3D) {
                 camera.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
-                console.log('Camera rotation restored:', rotation);
-            }
+}
         };
         
         // Try immediately and also after a delay to ensure it sticks
@@ -369,9 +330,7 @@ class PreviewController {
         if (scene) {
             // Save current camera rotation
             const savedRotation = this.getCameraRotation();
-            console.log('Saving camera rotation:', savedRotation);
-            
-            // Reload scene
+// Reload scene
             await this.loadScene(scene);
             
             // Restore camera rotation
@@ -396,20 +355,17 @@ class PreviewController {
      */
     pointCameraToHotspot(hotspotPosition) {
         if (!hotspotPosition) {
-            console.warn('No hotspot position provided');
-            return;
+return;
         }
 
         const aframeScene = this.previewContainer?.querySelector('a-scene');
         if (!aframeScene) {
-            console.warn('No A-Frame scene found');
-            return;
+return;
         }
 
         const camera = aframeScene.querySelector('[camera]');
         if (!camera || !camera.object3D) {
-            console.warn('Camera not found');
-            return;
+return;
         }
 
         // Get camera position (usually at origin 0,0,0)
@@ -434,9 +390,7 @@ class PreviewController {
 
         // Apply smooth rotation with animation
         this.animateCameraRotation(camera, { x: pitch, y: yaw, z: 0 });
-        
-        console.log('Camera pointing to hotspot:', { position: hotspotPosition, rotation: { pitch, yaw } });
-    }
+}
 
     /**
      * Animate camera rotation smoothly
@@ -498,8 +452,7 @@ class PreviewController {
     highlightHotspot(index) {
         // The library handles hotspot visualization
         // This is kept for API compatibility
-        console.log('Hotspot highlighted:', index);
-    }
+}
 
     /**
      * Update hotspot marker (refresh scene while preserving camera rotation)
@@ -515,6 +468,5 @@ class PreviewController {
         await this.refresh();
     }
 }
-
 
 export default PreviewController;

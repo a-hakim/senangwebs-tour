@@ -11,8 +11,7 @@ class SceneManagerEditor {
      * Add new scene
      */
     async addScene(file) {
-        console.log('SceneManager.addScene called with file:', file.name);
-        try {
+try {
             // Generate thumbnail
             const thumbnail = await generateThumbnail(file);
             
@@ -29,9 +28,7 @@ class SceneManagerEditor {
             
             this.scenes.push(scene);
             this.currentSceneIndex = this.scenes.length - 1;
-            
-            console.log('Scene added successfully. Total scenes:', this.scenes.length);
-            showToast(`Scene "${scene.name}" added successfully`, 'success');
+showToast(`Scene "${scene.name}" added successfully`, 'success');
             return scene;
         } catch (error) {
             console.error('Failed to add scene:', error);
@@ -172,12 +169,9 @@ class SceneManagerEditor {
      * Load scenes from data
      */
     loadScenes(scenesData) {
-        console.log('📥 SceneManager.loadScenes called with data:', scenesData);
-        console.trace('loadScenes call stack');
         this.scenes = scenesData || [];
         this.currentSceneIndex = this.scenes.length > 0 ? 0 : -1;
-        console.log(`📥 Scenes loaded. Total: ${this.scenes.length}`);
-    }
+}
 }
 
 export default SceneManagerEditor;

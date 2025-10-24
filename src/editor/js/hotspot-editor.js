@@ -35,8 +35,7 @@ class HotspotEditor {
         }
         
         showToast('Click on the 360° preview to place hotspot', 'info', 5000);
-        console.log('Hotspot placement mode enabled');
-        return true;
+return true;
     }
 
     /**
@@ -59,9 +58,7 @@ class HotspotEditor {
             btn.textContent = '+ Add Hotspot';
             btn.classList.remove('btn-active');
         }
-        
-        console.log('Hotspot placement mode disabled');
-    }
+}
 
     /**
      * Add hotspot at position
