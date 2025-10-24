@@ -7,20 +7,20 @@
 }
 
 :root {
-    --bg-primary: #0a0a0a;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #2a2a2a;
-    --bg-hover: #333333;
-    --border-color: #3a3a3a;
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0a0;
-    --text-muted: #666666;
-    --accent-primary: #3b82f6;
-    --accent-hover: #2563eb;
-    --accent-cyan: #06b6d4;
-    --success: #10b981;
-    --danger: #ef4444;
-    --warning: #f59e0b;
+    --bg-primary: #09090B;     /* darker */
+    --bg-secondary: #18181B;   /* dark (brand.dark) */
+    --bg-tertiary: #1F1F22;    /* slightly lighter for panels */
+    --bg-hover: #232426;       /* hover state for dark surfaces */
+    --border-color: #2A2A2D;   /* subtle border on dark bg */
+    --text-primary: #FFFFFF;   /* readable on dark backgrounds */
+    --text-secondary: #A7CFC6; /* soft mint/teal for secondary text */
+    --text-muted: #7A8086;     /* muted gray for helper text */
+    --accent-primary: #00FF99; /* brand primary */
+    --accent-hover:  #00D882; /* ~15% darker than primary for hover */
+    --accent-cyan:   #00D1E6; /* cyan/teal accent (mix of primary + blue tone) */
+    --success: #006045; /* green success tone (derived from primary) */
+    --danger:  #EF4444; /* standard danger red */
+    --warning: #F59E0B; /* standard warning orange */
 }
 
 body {
@@ -115,7 +115,7 @@ body {
 
 .btn-primary {
     background: var(--accent-primary);
-    color: white;
+    color: var(--bg-primary);
 }
 
 .btn-primary:hover {
@@ -169,7 +169,7 @@ body {
 
 .btn-add {
     background: var(--accent-primary);
-    color: white;
+    color: var(--bg-primary);
     padding: 8px 16px;
     border: none;
     border-radius: 6px;
@@ -353,7 +353,7 @@ body {
 
 .tab.active {
     background: var(--accent-primary);
-    color: white;
+    color: var(--bg-primary);
 }
 
 .toolbar-controls {
