@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Test</title>
+    <title>SenangWebs Tour - 360° Virtual Tour System</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -67,18 +67,21 @@
     </style>
 </head>
 <body>
-    <h1>🎉 SenangWebs Tour - Integration Complete!</h1>
+    <h1>🎉 SenangWebs Tour (SWT)</h1>
+    <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+        A powerful 360° virtual tour system with visual editor and viewer library
+    </p>
     
     <div class="test-card">
-        <h2>✅ Installation Status</h2>
+        <h2>✅ System Components</h2>
         <div class="status success">
-            <strong>Success!</strong> All components have been created successfully.
+            <strong>Ready!</strong> All components are built and ready to use.
         </div>
         <ul>
-            <li>✅ Core Library: <code>dist/senangwebs_tour.js</code></li>
-            <li>✅ Visual Editor: <code>editor.html</code></li>
-            <li>✅ Standalone Viewer: <code>viewer.html</code></li>
-            <li>✅ Documentation: <code>INTEGRATION_GUIDE.md</code></li>
+            <li>✅ <strong>Viewer Library:</strong> <code>dist/swt.js</code> (26KB) / <code>swt.min.js</code> (12KB)</li>
+            <li>✅ <strong>Editor Bundle:</strong> <code>dist/swt-editor.js</code> (89KB) / <code>swt-editor.min.js</code> (38KB)</li>
+            <li>✅ <strong>Editor Styles:</strong> <code>dist/swt-editor.css</code> (39KB) / <code>swt-editor.min.css</code> (25KB)</li>
+            <li>✅ <strong>Examples:</strong> Editor, Viewer, Demos in <code>examples/</code> folder</li>
         </ul>
     </div>
 
@@ -94,20 +97,34 @@
 
     <div class="test-card">
         <h2>📋 What You Can Do</h2>
-        <h3>With the Editor:</h3>
+        <h3>🎨 With the Visual Editor:</h3>
         <ol>
-            <li>Upload 360° panorama images</li>
-            <li>Place interactive hotspots visually</li>
-            <li>Configure navigation between scenes</li>
-            <li>Customize hotspot colors and titles</li>
-            <li>Export as JSON or standalone HTML</li>
+            <li>Upload 360° panorama images (supports multiple files)</li>
+            <li>Visual hotspot placement with click-to-place interface</li>
+            <li>Real-time preview with A-Frame WebVR</li>
+            <li>Drag-and-drop scene reordering</li>
+            <li>Customize hotspot colors, positions, and tooltips</li>
+            <li>Auto-save to localStorage (every 30 seconds)</li>
+            <li>Export as JSON or standalone HTML viewer</li>
+            <li>Camera auto-points to selected hotspots</li>
         </ol>
         
-        <h3>With the Viewer:</h3>
+        <h3>👁️ With the Viewer:</h3>
         <ol>
-            <li>Load exported tour JSON files</li>
-            <li>Navigate immersive 360° tours</li>
-            <li>Share tours without coding</li>
+            <li>Drag-and-drop JSON tour files to load instantly</li>
+            <li>Immersive 360° navigation experience</li>
+            <li>Full mobile and VR headset support</li>
+            <li>Share tours without any dependencies</li>
+            <li>Works completely offline once loaded</li>
+        </ol>
+
+        <h3>💻 With the Library (Code):</h3>
+        <ol>
+            <li>Embed tours in your own applications</li>
+            <li>Full programmatic control via JavaScript API</li>
+            <li>Event-driven architecture (tour-started, scene-loaded, etc.)</li>
+            <li>Lightweight (12KB minified)</li>
+            <li>Built on A-Frame WebVR framework</li>
         </ol>
     </div>
 
@@ -125,80 +142,138 @@
     </div>
 
     <div class="test-card">
-        <h2>🔧 File Structure</h2>
+        <h2>🔧 Project Structure</h2>
         <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto;">
 senangwebs_tour/
-├── dist/                      # Built library
-│   ├── senangwebs_tour.js
-│   └── senangwebs_tour.min.js
-├── editor/                    # Visual editor
-│   ├── index.html
-│   ├── css/
-│   │   ├── editor.css
-│   │   └── components.css
-│   └── js/
-│       ├── utils.js
-│       ├── storage-manager.js
-│       ├── scene-manager.js
-│       ├── hotspot-editor.js
-│       ├── preview-controller.js
-│       ├── ui-controller.js
-│       ├── export-manager.js
-│       └── editor.js
-├── viewer.html                # Standalone viewer
-├── example.html               # Full demo
-├── example-simple.html        # Simple demo
-└── INTEGRATION_GUIDE.md       # Complete guide
+├── dist/                       # Built files (npm run build)
+│   ├── swt.js                 # Viewer library (dev, 26KB)
+│   ├── swt.min.js             # Viewer library (prod, 12KB)
+│   ├── swt-editor.js          # Editor bundle (dev, 89KB)
+│   ├── swt-editor.min.js      # Editor bundle (prod, 38KB)
+│   ├── swt-editor.css         # Editor styles (dev, 39KB)
+│   └── swt-editor.min.css     # Editor styles (prod, 25KB)
+├── src/                        # Source files
+│   ├── editor/                # Visual editor source (ES6)
+│   │   ├── index.html         # Editor interface
+│   │   ├── editor-entry.js    # Editor JS entry point
+│   │   ├── editor-entry.css   # Editor CSS entry point
+│   │   ├── css/               # Editor styles (main, components, editor)
+│   │   └── js/                # Editor modules
+│   │       ├── utils.js       # Utility functions (exported)
+│   │       ├── storage-manager.js    # LocalStorage handler
+│   │       ├── scene-manager.js      # Scene CRUD operations
+│   │       ├── hotspot-editor.js     # Hotspot management
+│   │       ├── preview-controller.js # A-Frame preview
+│   │       ├── ui-controller.js      # DOM rendering
+│   │       ├── export-manager.js     # JSON/HTML export
+│   │       ├── editor.js             # Main coordinator
+│   │       └── ui-init.js            # Initialization
+│   ├── components/            # A-Frame components
+│   │   └── hotspot-listener.js
+│   ├── index.js               # Library entry point
+│   ├── AssetManager.js        # Preload panoramas
+│   ├── SceneManager.js        # Sky transitions
+│   └── HotspotManager.js      # Hotspot entities
+├── examples/                   # Example files
+│   ├── editor.html            # Editor demo
+│   ├── example.html           # Full demo
+│   ├── example-simple.html    # Minimal example
+│   ├── viewer.html            # Standalone viewer
+│   └── test.html              # Library tests
+├── index.html                  # This page
+├── package.json               # NPM configuration
+├── rollup.config.js           # Build configuration
+└── README.md                   # Documentation
         </pre>
     </div>
 
     <div class="test-card">
         <h2>📚 Documentation</h2>
         <ul>
-            <li><a href="INTEGRATION_GUIDE.md">Complete Integration Guide</a></li>
-            <li><a href="README.md">Library Documentation</a></li>
-            <li><a href="QUICKSTART.md">Quick Start Guide</a></li>
-            <li><a href="blueprint-gui-editor.md">Editor Blueprint</a></li>
+            <li><strong><a href="README.md">README.md</a></strong> - Main documentation with API reference</li>
+            <li><strong><a href="RESTRUCTURING.md">RESTRUCTURING.md</a></strong> - Project restructuring guide</li>
+            <li><strong><a href=".github/copilot-instructions.md">copilot-instructions.md</a></strong> - AI agent development guide</li>
+            <li><strong>Examples:</strong> Check <code>examples/</code> folder for working demos</li>
         </ul>
-    </div>
 
-    <div class="test-card">
-        <h2>💡 Tips</h2>
+        <h3>🏗️ Build System:</h3>
         <ul>
-            <li>Editor auto-saves to localStorage every 30 seconds</li>
-            <li>Use drag-and-drop to reorder scenes</li>
-            <li>Exported viewer HTML includes everything - no dependencies needed</li>
-            <li>JSON export is compatible with the SWT library for custom integration</li>
-            <li>For best results, use 4096x2048 equirectangular panoramas</li>
+            <li><code>npm run build</code> - Build all (viewer + editor)</li>
+            <li><code>npm run dev</code> - Watch mode for development</li>
+            <li><code>npm run serve</code> - Local server on port 8080 (required for CORS)</li>
         </ul>
     </div>
 
     <div class="test-card">
-        <h2>✨ Features</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <h2>🌟 Key Features</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
-                <h4>Editor</h4>
+                <h4>🎨 Editor</h4>
                 <ul style="font-size: 14px;">
-                    <li>✅ Visual hotspot placement</li>
-                    <li>✅ Drag-drop scene ordering</li>
-                    <li>✅ Real-time preview</li>
-                    <li>✅ Auto-save</li>
-                    <li>✅ Export options</li>
+                    <li>✅ Visual click-to-place hotspots</li>
+                    <li>✅ Real-time A-Frame preview</li>
+                    <li>✅ Drag-drop scene reordering</li>
+                    <li>✅ Camera auto-point to hotspots</li>
+                    <li>✅ Auto-save (localStorage)</li>
                     <li>✅ Thumbnail generation</li>
+                    <li>✅ Import/Export JSON</li>
+                    <li>✅ Standalone HTML export</li>
+                    <li>✅ No console debug clutter</li>
+                    <li>✅ ES6 module architecture</li>
                 </ul>
             </div>
             <div>
-                <h4>Viewer</h4>
+                <h4>📦 Viewer Library</h4>
                 <ul style="font-size: 14px;">
-                    <li>✅ Drag-drop JSON loading</li>
-                    <li>✅ Full navigation</li>
-                    <li>✅ Mobile friendly</li>
-                    <li>✅ No dependencies</li>
-                    <li>✅ Standalone</li>
-                    <li>✅ Beautiful UI</li>
+                    <li>✅ Lightweight (12KB minified)</li>
+                    <li>✅ UMD format (global SWT)</li>
+                    <li>✅ Event-driven API</li>
+                    <li>✅ Manager pattern (Asset, Scene, Hotspot)</li>
+                    <li>✅ Data-driven & stateless</li>
+                    <li>✅ A-Frame integration</li>
+                    <li>✅ Mobile & VR support</li>
+                    <li>✅ Smooth transitions</li>
+                    <li>✅ Custom hotspot styles</li>
+                    <li>✅ Proper sourcemaps</li>
                 </ul>
             </div>
         </div>
+    </div>
+
+    <div class="test-card">
+        <h2>💡 Tips & Best Practices</h2>
+        <ul>
+            <li><strong>Image Format:</strong> Use 4096x2048 equirectangular panoramas for best quality</li>
+            <li><strong>File Size:</strong> Editor uses Data URLs (base64) - be mindful of localStorage limits (~5-10MB)</li>
+            <li><strong>Local Server:</strong> Always use <code>npm run serve</code> - A-Frame requires proper CORS</li>
+            <li><strong>Auto-Save:</strong> Editor saves to localStorage automatically, but export regularly</li>
+            <li><strong>Browser DevTools:</strong> Press <kbd>Ctrl+Alt+I</kbd> in A-Frame scenes for visual inspector</li>
+            <li><strong>Hotspot Placement:</strong> Click on sky to place, positions are clamped to 10-unit radius sphere</li>
+            <li><strong>Export Options:</strong> JSON for custom integration, HTML for standalone sharing</li>
+            <li><strong>Camera Rotation:</strong> Preserved when switching hotspots (not scenes)</li>
+            <li><strong>Scene Navigation:</strong> Use arrow keys or click hotspots in preview</li>
+            <li><strong>Error Handling:</strong> Check browser console for <code>console.error()</code> messages</li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>🔧 Technical Architecture</h2>
+        <h3>Viewer Library (src/):</h3>
+        <ul>
+            <li><strong>Manager Pattern:</strong> AssetManager, SceneManager, HotspotManager</li>
+            <li><strong>Event System:</strong> Custom emit() for tour-started, scene-loaded, hotspot-activated</li>
+            <li><strong>A-Frame Integration:</strong> Direct DOM entity manipulation (not an A-Frame component)</li>
+            <li><strong>Build:</strong> Rollup → UMD → dist/swt.js (26KB) / swt.min.js (12KB)</li>
+        </ul>
+
+        <h3>Editor (src/editor/):</h3>
+        <ul>
+            <li><strong>Six-Controller Pattern:</strong> editor, scene-manager, hotspot-editor, preview-controller, ui-controller, export-manager</li>
+            <li><strong>Storage:</strong> ProjectStorageManager (localStorage, key: 'swt_project')</li>
+            <li><strong>Preview:</strong> Creates SWT.Tour instance, handles camera rotation, raycasting</li>
+            <li><strong>Build:</strong> Rollup → IIFE + PostCSS → dist/swt-editor.js (89KB) / swt-editor.min.js (38KB)</li>
+            <li><strong>Architecture:</strong> ES6 modules with exports, concatenated by Rollup</li>
+        </ul>
     </div>
 
     <div class="test-card" style="background: #e3f2fd;">
