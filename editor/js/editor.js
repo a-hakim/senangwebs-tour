@@ -18,6 +18,7 @@ class TourEditor {
         this.exportManager = new ExportManager(this);
         
         this.hasUnsavedChanges = false;
+        this.lastRenderedSceneIndex = -1; // Track which scene is currently loaded in preview
     }
 
     /**
@@ -247,6 +248,8 @@ class TourEditor {
         const hotspot = this.hotspotEditor.addHotspot(position);
         if (hotspot) {
             console.log('Hotspot added successfully:', hotspot);
+            // Force scene reload to show new hotspot
+            this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
         } else {
@@ -261,7 +264,21 @@ class TourEditor {
         console.log('Selecting scene:', index);
         if (this.sceneManager.setCurrentScene(index)) {
             console.log('Scene selected successfully, rendering...');
-            this.render();
+            // Scene changed, so we need to reload it with fresh camera
+            this.lastRenderedSceneIndex = -1;
+            
+            // Get the new scene and load with camera reset
+            const scene = this.sceneManager.getCurrentScene();
+            if (scene) {
+                this.previewController.loadScene(scene, false); // Don't preserve camera when switching scenes
+                this.lastRenderedSceneIndex = index;
+            }
+            
+            // Update UI
+            this.uiController.renderSceneList();
+            this.uiController.updateSceneProperties(scene);
+            this.uiController.updateInitialSceneOptions();
+            this.uiController.updateTargetSceneOptions();
         } else {
             console.warn('Failed to select scene:', index);
         }
@@ -272,8 +289,19 @@ class TourEditor {
      */
     selectHotspot(index) {
         if (this.hotspotEditor.setCurrentHotspot(index)) {
-            this.render();
+            // Get the selected hotspot
+            const hotspot = this.hotspotEditor.getHotspot(index);
+            
+            // Update UI without reloading the scene
+            this.uiController.renderHotspotList();
+            this.uiController.updateHotspotProperties(hotspot);
+            this.uiController.updateTargetSceneOptions();
             this.uiController.switchTab('hotspot');
+            
+            // Point camera to the hotspot for better UX
+            if (hotspot && hotspot.position) {
+                this.previewController.pointCameraToHotspot(hotspot.position);
+            }
         }
     }
 
@@ -292,6 +320,8 @@ class TourEditor {
      */
     removeHotspot(index) {
         if (this.hotspotEditor.removeHotspot(index)) {
+            // Force scene reload to remove hotspot
+            this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
         }
@@ -303,6 +333,8 @@ class TourEditor {
     duplicateHotspot(index) {
         const hotspot = this.hotspotEditor.duplicateHotspot(index);
         if (hotspot) {
+            // Force scene reload to show duplicated hotspot
+            this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
         }
@@ -385,10 +417,14 @@ class TourEditor {
         
         // Update the scene's image URL
         if (this.sceneManager.updateScene(index, 'imageUrl', imageUrl)) {
+            // Force scene reload by resetting tracker
+            this.lastRenderedSceneIndex = -1;
+            
             // Reload the preview with the new image
             const scene = this.sceneManager.getCurrentScene();
             if (scene) {
                 await this.previewController.loadScene(scene);
+                this.lastRenderedSceneIndex = index;
                 showToast('Scene image updated', 'success');
             }
             this.markUnsavedChanges();
@@ -424,7 +460,17 @@ class TourEditor {
                 emptyState.style.display = 'none';
             }
             
-            this.previewController.loadScene(currentScene);
+            // Only reload scene if it changed
+            const currentSceneIndex = this.sceneManager.currentSceneIndex;
+            if (currentSceneIndex !== this.lastRenderedSceneIndex) {
+                console.log('Scene changed, reloading preview with camera preservation');
+                // Load scene with camera rotation preservation enabled (default)
+                this.previewController.loadScene(currentScene);
+                this.lastRenderedSceneIndex = currentSceneIndex;
+            } else {
+                console.log('Same scene, skipping reload');
+            }
+            
             if (currentHotspot) {
                 this.previewController.highlightHotspot(this.hotspotEditor.currentHotspotIndex);
             }
@@ -435,6 +481,7 @@ class TourEditor {
             if (emptyState) {
                 emptyState.style.display = 'flex';
             }
+            this.lastRenderedSceneIndex = -1;
         }
     }
 

@@ -54,13 +54,20 @@ class PreviewController {
     /**
      * Load scene into preview using SWT library
      */
-    async loadScene(scene) {
+    async loadScene(scene, preserveCameraRotation = true) {
         if (!this.isInitialized || !scene) {
             console.warn('Cannot load scene:', { initialized: this.isInitialized, scene: !!scene });
             return;
         }
 
         console.log('Loading scene into preview:', scene.name);
+
+        // Save camera rotation before destroying scene
+        let savedRotation = null;
+        if (preserveCameraRotation) {
+            savedRotation = this.getCameraRotation();
+            console.log('Saving camera rotation before reload:', savedRotation);
+        }
 
         // Destroy existing tour if any
         if (this.tour) {
@@ -173,11 +180,29 @@ class PreviewController {
 
             this.tour.addEventListener('hotspot-activated', (e) => {
                 console.log('Preview hotspot clicked:', e.detail);
+                
+                // Find the hotspot index by ID and select it
+                const hotspotId = e.detail?.hotspotId;
+                if (hotspotId) {
+                    const scene = this.editor.sceneManager.getCurrentScene();
+                    if (scene) {
+                        const hotspotIndex = scene.hotspots.findIndex(h => h.id === hotspotId);
+                        if (hotspotIndex >= 0) {
+                            this.editor.selectHotspot(hotspotIndex);
+                        }
+                    }
+                }
             });
 
             // Start the tour
             await this.tour.start();
             console.log('Preview tour started successfully');
+            
+            // Restore camera rotation if preserved
+            if (savedRotation && preserveCameraRotation) {
+                console.log('Restoring camera rotation:', savedRotation);
+                this.setCameraRotation(savedRotation);
+            }
             
             // Setup click handler after a short delay to ensure A-Frame is ready
             setTimeout(() => {
@@ -364,6 +389,107 @@ class PreviewController {
         if (camera) {
             camera.setAttribute('rotation', '0 0 0');
         }
+    }
+
+    /**
+     * Point camera to hotspot position
+     */
+    pointCameraToHotspot(hotspotPosition) {
+        if (!hotspotPosition) {
+            console.warn('No hotspot position provided');
+            return;
+        }
+
+        const aframeScene = this.previewContainer?.querySelector('a-scene');
+        if (!aframeScene) {
+            console.warn('No A-Frame scene found');
+            return;
+        }
+
+        const camera = aframeScene.querySelector('[camera]');
+        if (!camera || !camera.object3D) {
+            console.warn('Camera not found');
+            return;
+        }
+
+        // Get camera position (usually at origin 0,0,0)
+        const cameraPos = camera.object3D.position;
+        
+        // Calculate direction vector from camera to hotspot
+        const direction = new THREE.Vector3(
+            hotspotPosition.x - cameraPos.x,
+            hotspotPosition.y - cameraPos.y,
+            hotspotPosition.z - cameraPos.z
+        );
+
+        // Calculate spherical coordinates (yaw and pitch)
+        const distance = direction.length();
+        
+        // Pitch (up/down rotation around X-axis) - in degrees
+        const pitch = Math.asin(direction.y / distance) * (180 / Math.PI);
+        
+        // Yaw (left/right rotation around Y-axis) - in degrees
+        // Using atan2 to get correct quadrant
+        const yaw = Math.atan2(direction.x, direction.z) * (180 / Math.PI);
+
+        // Apply smooth rotation with animation
+        this.animateCameraRotation(camera, { x: pitch, y: yaw, z: 0 });
+        
+        console.log('Camera pointing to hotspot:', { position: hotspotPosition, rotation: { pitch, yaw } });
+    }
+
+    /**
+     * Animate camera rotation smoothly
+     */
+    animateCameraRotation(camera, targetRotation, duration = 800) {
+        if (!camera || !camera.object3D) return;
+
+        const startRotation = {
+            x: camera.object3D.rotation.x * (180 / Math.PI),
+            y: camera.object3D.rotation.y * (180 / Math.PI),
+            z: camera.object3D.rotation.z * (180 / Math.PI)
+        };
+
+        // Handle angle wrapping for smooth rotation
+        let deltaY = targetRotation.y - startRotation.y;
+        
+        // Normalize to -180 to 180 range
+        while (deltaY > 180) deltaY -= 360;
+        while (deltaY < -180) deltaY += 360;
+        
+        const endRotationY = startRotation.y + deltaY;
+
+        const startTime = Date.now();
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Ease-in-out function for smooth animation
+            const eased = progress < 0.5
+                ? 2 * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+            // Interpolate rotation
+            const currentRotation = {
+                x: startRotation.x + (targetRotation.x - startRotation.x) * eased,
+                y: startRotation.y + (endRotationY - startRotation.y) * eased,
+                z: startRotation.z + (targetRotation.z - startRotation.z) * eased
+            };
+
+            // Apply rotation (convert degrees to radians)
+            camera.object3D.rotation.set(
+                currentRotation.x * (Math.PI / 180),
+                currentRotation.y * (Math.PI / 180),
+                currentRotation.z * (Math.PI / 180)
+            );
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        animate();
     }
 
     /**
