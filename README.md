@@ -2,18 +2,18 @@
 
 A powerful, data-driven 360° virtual tour system for A-Frame WebVR with a visual editor and standalone viewer.
 
-## 🌟 Features
+## Features
 
-- **🎨 Visual Editor** - Drag-and-drop interface for creating tours without coding
-- **📦 Viewer Library** - Lightweight JavaScript library for embedding tours (12KB minified)
-- **🎯 Standalone Viewer** - Drag-and-drop JSON player, no dependencies needed
-- **📱 Mobile-Friendly** - Full touch and VR headset support
-- **💾 Auto-Save** - Projects automatically saved to localStorage
-- **🎨 Customizable** - Custom hotspot colors, icons, and tooltips
-- **📤 Export Options** - JSON or self-contained HTML files
-- **🔒 Offline-First** - Works without internet connection
+- **Visual Editor** - Drag-and-drop interface for creating tours without coding
+- **Viewer Library** - Lightweight JavaScript library for embedding tours (12KB minified)
+- **Standalone Viewer** - Drag-and-drop JSON player, no dependencies needed
+- **Mobile-Friendly** - Full touch and VR headset support
+- **Auto-Save** - Projects automatically saved to localStorage
+- **Customizable** - Custom hotspot colors, icons, and tooltips
+- **Export Options** - JSON or self-contained HTML files
+- **Offline-First** - Works without internet connection
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 senangwebs_tour/
@@ -41,7 +41,7 @@ senangwebs_tour/
 └── index.html                  # Project landing page
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Use the Visual Editor
 
@@ -112,7 +112,7 @@ senangwebs_tour/
 </html>
 ```
 
-## 🛠️ Building from Source
+## Building from Source
 
 ```bash
 # Install dependencies
@@ -135,7 +135,7 @@ npm run serve
 - `dist/swt-editor.js` & `swt-editor.min.js` - Editor bundle (IIFE format)
 - `dist/swt-editor.css` & `swt-editor.min.css` - Editor styles
 
-## 📚 API Documentation
+## API Documentation
 
 ### Constructor
 
@@ -199,7 +199,7 @@ new SWT.Tour(aframeSceneEl, tourConfig)
 - `hotspot-activated` - Fired when a hotspot is clicked
   - `detail: { hotspotId, sceneId, action }`
 
-## 🎨 Editor Features
+## Editor Features
 
 - **Visual Hotspot Placement** - Click-to-place interface with raycasting
 - **Real-time Preview** - See changes immediately in A-Frame preview
@@ -212,7 +212,7 @@ new SWT.Tour(aframeSceneEl, tourConfig)
   - **JSON Export** - Configuration file for use with SWT library
   - **Viewer Export** - Standalone HTML with embedded tour (no dependencies)
 
-## 🖥️ Browser Compatibility
+## Browser Compatibility
 
 - Chrome 90+ (recommended)
 - Firefox 88+
@@ -220,7 +220,7 @@ new SWT.Tour(aframeSceneEl, tourConfig)
 - Edge 90+
 - Mobile browsers with WebGL support
 
-## 📖 Documentation Files
+## Documentation Files
 
 - `README.md` - This file, main documentation
 - `RESTRUCTURING.md` - Project restructuring guide
@@ -228,15 +228,15 @@ new SWT.Tour(aframeSceneEl, tourConfig)
 - `blueprint.md` - Library architecture blueprint
 - `blueprint-gui-editor.md` - Editor architecture blueprint
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📝 License
+## License
 
 MIT License - see LICENSE file for details
 
-## 🆘 Support
+## Support
 
 - **Issues**: Open an issue on GitHub
 - **Documentation**: See `examples/` folder for working demos

@@ -2,7 +2,7 @@
   "name": "senangwebs_tour",
   "version": "1.0.0",
   "type": "module",
-  "description": "SenangWebs Tour (SWT) - Core engine for creating interactive, data-driven virtual tours in A-Frame",
+  "description": "VR 360° virtual tour system with visual editor and viewer library",
   "main": "dist/swt.js",
   "files": [
     "dist/",
