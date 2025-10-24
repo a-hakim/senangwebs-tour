@@ -133,6 +133,10 @@ class TourEditor {
         document.getElementById('sceneName')?.addEventListener('input', debounce((e) => {
             this.updateCurrentScene('name', e.target.value);
         }, 300));
+        
+        document.getElementById('sceneImageUrl')?.addEventListener('input', debounce((e) => {
+            this.updateCurrentSceneImage(e.target.value);
+        }, 300));
 
         // Tour properties
         document.getElementById('tourTitle')?.addEventListener('input', debounce((e) => {
@@ -368,6 +372,25 @@ class TourEditor {
         const index = this.sceneManager.currentSceneIndex;
         if (this.sceneManager.updateScene(index, property, value)) {
             this.uiController.renderSceneList();
+            this.markUnsavedChanges();
+        }
+    }
+
+    /**
+     * Update current scene image URL
+     */
+    async updateCurrentSceneImage(imageUrl) {
+        const index = this.sceneManager.currentSceneIndex;
+        if (index < 0) return;
+        
+        // Update the scene's image URL
+        if (this.sceneManager.updateScene(index, 'imageUrl', imageUrl)) {
+            // Reload the preview with the new image
+            const scene = this.sceneManager.getCurrentScene();
+            if (scene) {
+                await this.previewController.loadScene(scene);
+                showToast('Scene image updated', 'success');
+            }
             this.markUnsavedChanges();
         }
     }

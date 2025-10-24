@@ -252,11 +252,13 @@ class UIController {
         if (!scene) {
             document.getElementById('sceneId').value = '';
             document.getElementById('sceneName').value = '';
+            document.getElementById('sceneImageUrl').value = '';
             return;
         }
 
         document.getElementById('sceneId').value = scene.id || '';
         document.getElementById('sceneName').value = scene.name || '';
+        document.getElementById('sceneImageUrl').value = scene.imageUrl || '';
     }
 
     /**
