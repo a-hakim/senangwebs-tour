@@ -1235,6 +1235,88 @@
                     }
                 });
             }
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + S to save
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    if (editor) editor.saveProject();
+                }
+                
+                // Ctrl/Cmd + E to export
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                    e.preventDefault();
+                    if (editor) editor.exportManager.showExportPreview();
+                }
+                
+                // ESC to close modals
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal.show').forEach(modal => {
+                        modal.classList.remove('show');
+                    });
+                }
+            });
+            
+            // Preview button - just focuses on the preview area
+            const previewBtn = document.getElementById('previewBtn');
+            if (previewBtn) {
+                previewBtn.addEventListener('click', () => {
+                    const preview = document.getElementById('preview');
+                    if (preview) {
+                        preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+            
+            // Modal background click to close
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
+            });
+            
+            // Tab switching functionality
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    
+                    // Update tab buttons
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update tab content
+                    tabContents.forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    const targetContent = document.getElementById(targetTab + 'Tab');
+                    if (targetContent) {
+                        targetContent.style.display = 'block';
+                    }
+                    
+                    // Update panel title
+                    const panelTitle = document.getElementById('panelTitle');
+                    if (panelTitle) {
+                        switch(targetTab) {
+                            case 'scene':
+                                panelTitle.textContent = 'Scene Properties';
+                                break;
+                            case 'hotspot':
+                                panelTitle.textContent = 'Hotspot Properties';
+                                break;
+                            case 'tour':
+                                panelTitle.textContent = 'Tour Settings';
+                                break;
+                        }
+                    }
+                });
+            });
         });
     </script>
 </body>
