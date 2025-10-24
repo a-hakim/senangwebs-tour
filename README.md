@@ -2,6 +2,33 @@
 
 A powerful, data-driven virtual tour library for A-Frame WebVR experiences.
 
+## Project Structure
+
+```
+senangwebs_tour/
+├── dist/                    # Built files (generated)
+│   ├── swt.js              # Viewer library (dev)
+│   ├── swt.min.js          # Viewer library (production)
+│   ├── swt-editor.js       # Editor bundle (dev)
+│   ├── swt-editor.min.js   # Editor bundle (production)
+│   ├── swt-editor.css      # Editor styles (dev)
+│   └── swt-editor.min.css  # Editor styles (production)
+├── src/                     # Source files
+│   ├── editor/             # Visual editor source
+│   │   ├── index.html      # Editor interface
+│   │   ├── css/            # Editor styles
+│   │   └── js/             # Editor modules
+│   ├── components/         # A-Frame components
+│   ├── index.js            # Library entry point
+│   └── *Manager.js         # Core managers
+├── examples/               # Example files
+│   ├── example.html        # Full demo
+│   ├── example-simple.html # Minimal example
+│   ├── viewer.html         # Standalone viewer
+│   └── test.html           # Library tests
+└── index.html              # Project landing page
+```
+
 ## Installation
 
 ### Via npm (coming soon)
@@ -11,7 +38,12 @@ npm install senangwebs_tour
 
 ### Via CDN
 ```html
-<script src="path/to/dist/senangwebs_tour.min.js"></script>
+<!-- Viewer Library -->
+<script src="dist/swt.min.js"></script>
+
+<!-- Editor (if needed) -->
+<link rel="stylesheet" href="dist/swt-editor.min.css">
+<script src="dist/swt-editor.min.js"></script>
 ```
 
 ## Quick Start
@@ -21,7 +53,7 @@ npm install senangwebs_tour
 <html>
 <head>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="dist/senangwebs_tour.min.js"></script>
+    <script src="dist/swt.min.js"></script>
 </head>
 <body>
     <a-scene id="vr-scene">

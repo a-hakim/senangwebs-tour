@@ -110,7 +110,7 @@ class ExportManager {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${jsonData.title}</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="dist/senangwebs_tour.min.js"></script>
+    <script src="dist/swt.min.js"></script>
     <style>
         body {
             margin: 0;

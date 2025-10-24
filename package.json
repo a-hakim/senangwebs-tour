@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "description": "SenangWebs Tour (SWT) - Core engine for creating interactive, data-driven virtual tours in A-Frame",
-  "main": "dist/senangwebs_tour.js",
+  "main": "dist/swt.js",
+  "files": [
+    "dist/",
+    "src/"
+  ],
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
@@ -14,14 +18,16 @@
     "virtual-tour",
     "360",
     "panorama",
-    "vr"
+    "vr",
+    "editor"
   ],
   "author": "SenangWebs",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^4.9.6"
+    "rollup": "^4.9.6",
+    "rollup-plugin-postcss": "^4.0.2"
   },
   "peerDependencies": {
     "aframe": "^1.4.0"
