@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SWT Virtual Tour Editor</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="../dist/senangwebs_tour.js"></script>
     <style>
         * {
             margin: 0;
@@ -201,6 +203,14 @@
             margin-bottom: 12px;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
+        }
+
+        .scene-card img {
+            width: 100%;
+            aspect-ratio: 2/1;
+            border-radius: 6px;
+            object-fit: cover;
         }
 
         .scene-card:hover {
@@ -265,6 +275,37 @@
         .btn-icon-small:hover {
             background: var(--bg-tertiary);
             color: var(--text-primary);
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            cursor: move;
+            color: var(--text-muted);
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 10;
         }
 
         /* Canvas Area */
@@ -358,6 +399,37 @@
             position: relative;
         }
 
+        .preview-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .preview-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #preview {
+            width: 100%;
+            height: 100%;
+        }
+
+        .preview-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+        }
+
+        .preview-empty p {
+            margin: 4px 0;
+        }
+
         .canvas-viewport {
             width: 100%;
             max-width: 1200px;
@@ -394,6 +466,21 @@
         .hotspot-marker.selected {
             border-width: 4px;
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state p {
+            margin: 8px 0;
+        }
+
+        .empty-state .hint {
+            font-size: 12px;
+            color: var(--text-muted);
         }
 
         /* Properties Panel */
@@ -525,6 +612,12 @@
             text-align: center;
         }
 
+        .hotspot-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
         .hotspot-list {
             display: flex;
             flex-direction: column;
@@ -558,21 +651,29 @@
             height: 24px;
             border-radius: 4px;
             border: 2px solid var(--border-color);
+            flex-shrink: 0;
         }
 
         .hotspot-info {
             flex: 1;
+            min-width: 0;
         }
 
         .hotspot-title {
             font-size: 14px;
             font-weight: 500;
             color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .hotspot-target {
             font-size: 12px;
             color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .hotspot-actions {
@@ -594,6 +695,229 @@
         .btn-delete:hover {
             background: var(--danger);
             color: white;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .toast.info {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .modal-body h4:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .modal-body ul, .modal-body ol {
+            margin-bottom: 12px;
+            padding-left: 24px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+
+        .modal-body kbd {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .export-info {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .export-info p {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .export-info p:last-child {
+            margin-bottom: 0;
+        }
+
+        .export-preview {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+            resize: vertical;
+        }
+
+        .btn-active {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .drag-handle {
+            cursor: move;
+            color: var(--text-muted);
+            padding: 4px;
+            margin-right: 8px;
         }
 
         /* Scrollbar Styling */
@@ -636,20 +960,23 @@
             </div>
             <div class="project-info">
                 <span class="project-label">Project:</span>
-                <span class="project-name">My Virtual Tour</span>
+                <input type="text" id="project-name" class="project-name" value="My Virtual Tour" style="background: transparent; border: none; color: var(--text-primary); font-size: 14px; font-weight: 500; outline: none;">
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-secondary">
+            <button class="btn btn-secondary" id="newBtn" title="New Project">
+                New
+            </button>
+            <button class="btn btn-secondary" id="importBtn" title="Import JSON">
                 Import
             </button>
-            <button class="btn btn-secondary">
+            <button class="btn btn-secondary" id="exportBtn" title="Export JSON">
                 Export
             </button>
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" id="previewBtn" title="Preview Tour">
                 Preview
             </button>
-            <button class="btn btn-success">
+            <button class="btn btn-success" id="saveBtn" title="Save Project (Ctrl+S)">
                 Save
             </button>
         </div>
@@ -661,123 +988,149 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2 class="sidebar-title">Scenes</h2>
-                <button class="btn-add" onclick="addScene()">+ Add Scene</button>
+                <button class="btn-add" id="addSceneBtn">+ Add Scene</button>
             </div>
-            <div class="scenes-list" id="scenesList">
-                <div class="scene-card active" onclick="selectScene(1)">
-                    <div class="scene-thumbnail">
-                        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/127.0.0.1_5500_editor_index.html%28iPad%20Pro%29%20%282%29-J8uVrfoMIRSa41wYEpaJpEApllaQIg.png" alt="Presentation1">
-                    </div>
-                    <div class="scene-info">
-                        <div class="scene-name">Presentation1</div>
-                        <div class="scene-meta">2 hotspots</div>
-                    </div>
-                    <div class="scene-actions">
-                        <button class="btn-icon-small">✏️ Edit</button>
-                        <button class="btn-icon-small">🗑️ Delete</button>
-                    </div>
-                </div>
-                <div class="scene-card" onclick="selectScene(2)">
-                    <div class="scene-thumbnail">
-                        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/127.0.0.1_5500_editor_index.html%28iPad%20Pro%29%20%282%29-J8uVrfoMIRSa41wYEpaJpEApllaQIg.png" alt="yishyan hapi coat2">
-                    </div>
-                    <div class="scene-info">
-                        <div class="scene-name">yishyan hapi coat2</div>
-                        <div class="scene-meta">1 hotspot</div>
-                    </div>
-                    <div class="scene-actions">
-                        <button class="btn-icon-small">Edit</button>
-                        <button class="btn-icon-small">Delete</button>
-                    </div>
+            <div class="scenes-list" id="sceneList">
+                <div class="empty-state">
+                    <p>No scenes yet</p>
+                    <p class="hint">Click "Add Scene" to upload a 360° panorama</p>
                 </div>
             </div>
         </aside>
 
         <!-- Canvas Area -->
         <div class="canvas-area">
-            <div class="toolbar">
-                <div class="toolbar-tabs">
-                    <button class="tab" onclick="switchTab('scene')">Scene</button>
-                    <button class="tab active" onclick="switchTab('hotspot')">Hotspot</button>
-                    <button class="tab" onclick="switchTab('tour')">Tour</button>
-                </div>
-            </div>
+            
             <div class="preview-container">
-                <div class="preview-area" id="previewViewport">
+                <div class="preview-area" id="preview">
+                    <div class="preview-empty">
+                        <p>No scene selected</p>
+                        <p>Upload a 360° panorama to start</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Properties Panel -->
         <aside class="properties-panel">
-            <div class="panel-header">
-                <h2 class="panel-title" id="panelTitle">Hotspot Properties</h2>
+            <div class="toolbar">
+                <div class="toolbar-tabs">
+                    <button class="tab" data-tab="scene">Scene</button>
+                    <button class="tab active" data-tab="hotspot">Hotspot</button>
+                    <button class="tab" data-tab="tour">Tour</button>
+                </div>
             </div>
+
             <div class="panel-content" id="panelContent">
-                <!-- Hotspot List -->
-                <div class="hotspot-list">
-                    <div class="hotspot-item" onclick="selectHotspot(1)">
-                        <div class="hotspot-color" style="background: #ff00ff;"></div>
-                        <div class="hotspot-info">
-                            <div class="hotspot-title">New Hotspot d</div>
-                            <div class="hotspot-target">→ yishyan hapi coat2</div>
+                <!-- Hotspot Tab Content -->
+                <div class="tab-content active" id="hotspotTab">
+                    <div class="section" id="hotspotAll">
+                        <div class="hotspot-controls">
+                            <button class="btn btn-primary" id="addHotspotBtn" style="width: 100%;">+ Add Hotspot</button>
+                            <button class="btn btn-secondary" id="clearHotspotsBtn" style="width: 100%;">Clear All</button>
                         </div>
-                        <div class="hotspot-actions">
-                            <button class="btn-delete">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="hotspot-item active" onclick="selectHotspot(2)">
-                        <div class="hotspot-color" style="background: #ff00ff;"></div>
-                        <div class="hotspot-info">
-                            <div class="hotspot-title">New Hotspot</div>
-                            <div class="hotspot-target">→ yishyan hapi coat2</div>
-                        </div>
-                        <div class="hotspot-actions">
-                            <button class="btn-delete">🗑️</button>
+                        
+                        <div class="hotspot-list" id="hotspotList">
+                            <!-- Hotspots will be listed here dynamically -->
                         </div>
                     </div>
-                </div>
+                    
+                    <div class="section" id="hotspotProperties" style="display: none;">
+                        <h3 style="font-size: 14px; margin-bottom: 16px; color: var(--text-secondary);">Hotspot Properties</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input type="text" id="hotspotTitle" class="form-input" placeholder="Hotspot title">
+                        </div>
 
-                <button class="btn btn-primary" style="width: 100%; margin-bottom: 20px;" onclick="addHotspot()">+ Add Hotspot</button>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="hotspotDescription" class="form-input form-textarea" placeholder="Optional description"></textarea>
+                        </div>
 
-                <!-- Hotspot Properties Form -->
-                <div class="form-group">
-                    <label class="form-label">Title</label>
-                    <input type="text" class="form-input" value="New Hotspot" placeholder="Enter hotspot title">
-                </div>
+                        <div class="form-group">
+                            <label class="form-label">Target Scene</label>
+                            <select id="hotspotTarget" class="form-select">
+                                <option value="">Select target scene...</option>
+                            </select>
+                        </div>
 
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-input form-textarea" placeholder="Optional description"></textarea>
-                </div>
+                        <div class="form-group">
+                            <label class="form-label">Color</label>
+                            <div class="color-picker-group">
+                                <input type="color" id="hotspotColor" class="color-preview" value="#00ff00" style="width: 40px; height: 40px; border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+                                <input type="text" class="form-input color-input" id="hotspotColorText" value="#00ff00" placeholder="#00ff00">
+                            </div>
+                        </div>
 
-                <div class="form-group">
-                    <label class="form-label">Target Scene</label>
-                    <select class="form-select">
-                        <option>Presentation1</option>
-                        <option selected>yishyan hapi coat2</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Color</label>
-                    <div class="color-picker-group">
-                        <div class="color-preview" style="background: #ff00ff;"></div>
-                        <input type="text" class="form-input color-input" value="#ff00ff">
+                        <div class="form-group">
+                            <label class="form-label">Position</label>
+                            <div class="position-grid">
+                                <input type="number" id="hotspotPosX" class="form-input position-input" step="0.1" placeholder="X">
+                                <input type="number" id="hotspotPosY" class="form-input position-input" step="0.1" placeholder="Y">
+                                <input type="number" id="hotspotPosZ" class="form-input position-input" step="0.1" placeholder="Z">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Position</label>
-                    <div class="position-grid">
-                        <div>
-                            <input type="text" class="form-input position-input" value="-0.83" placeholder="X">
+                <!-- Scene Tab Content -->
+                <div class="tab-content" id="sceneTab" style="display: none;">
+                    <div class="section">
+                        <h3 style="font-size: 14px; margin-bottom: 16px; color: var(--text-secondary);">Scene Properties</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Scene Name</label>
+                            <input type="text" id="sceneName" class="form-input" placeholder="Scene name">
                         </div>
-                        <div>
-                            <input type="text" class="form-input position-input" value="0.73" placeholder="Y">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Scene ID</label>
+                            <input type="text" id="sceneId" class="form-input" placeholder="scene-id" readonly>
                         </div>
-                        <div>
-                            <input type="text" class="form-input position-input" value="-4.88" placeholder="Z">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Image URL</label>
+                            <input type="text" id="sceneImageUrl" class="form-input" placeholder="https://example.com/image.jpg">
+                            <small style="color: var(--text-muted); margin-top: 4px; display: block; font-size: 11px;">Enter a URL or keep the uploaded image data URL</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tour Tab Content -->
+                <div class="tab-content" id="tourTab" style="display: none;">
+                    <div class="section">
+                        <h3 style="font-size: 14px; margin-bottom: 16px; color: var(--text-secondary);">Tour Settings</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tour Title</label>
+                            <input type="text" id="tourTitle" class="form-input" placeholder="My Virtual Tour">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="tourDescription" class="form-input form-textarea" placeholder="Tour description"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Initial Scene</label>
+                            <select id="tourInitialScene" class="form-select">
+                                <option value="">Select initial scene...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-checkbox">
+                                <input type="checkbox" id="tourAutoRotate">
+                                <label for="tourAutoRotate">Auto-rotate camera</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-checkbox">
+                                <input type="checkbox" id="tourShowCompass">
+                                <label for="tourShowCompass">Show compass</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -785,101 +1138,191 @@
         </aside>
     </main>
 
+    <!-- Hidden file inputs -->
+    <input type="file" id="sceneUpload" accept="image/*" multiple style="display: none">
+    <input type="file" id="importUpload" accept=".json" style="display: none">
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export Tour</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Your tour is ready to export. Choose an export option:</p>
+                <div class="export-info">
+                    <p><strong>JSON Only:</strong> Export tour configuration (for use with SWT library)</p>
+                    <p><strong>Viewer HTML:</strong> Export standalone HTML viewer with embedded configuration</p>
+                </div>
+                <textarea id="exportPreview" class="export-preview" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="copyJsonBtn" class="btn btn-secondary">📋 Copy JSON</button>
+                <button id="exportJsonBtn" class="btn btn-primary">💾 Download JSON</button>
+                <button id="exportViewerBtn" class="btn btn-success">🌐 Export Viewer HTML</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>SenangWebs Tour Editor - Help</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Getting Started</h4>
+                <ol>
+                    <li><strong>Add Scenes:</strong> Click "+ Add Scene" to upload 360° panorama images</li>
+                    <li><strong>Place Hotspots:</strong> Click "+ Add Hotspot" then click on the preview to place</li>
+                    <li><strong>Configure:</strong> Select hotspots to edit their properties and target scenes</li>
+                    <li><strong>Export:</strong> Click "Export" to download your tour configuration</li>
+                </ol>
+                
+                <h4>Working with Scenes</h4>
+                <ul>
+                    <li>Drag and drop scene cards to reorder them</li>
+                    <li>Click a scene card to load it in the preview</li>
+                    <li>Edit scene name and ID in the Scene properties tab</li>
+                </ul>
+                
+                <h4>Hotspot Tips</h4>
+                <ul>
+                    <li>Set target scene to create navigation hotspots</li>
+                    <li>Use color to distinguish different hotspot types</li>
+                    <li>Add descriptive titles for better user experience</li>
+                </ul>
+                
+                <h4>Keyboard Shortcuts</h4>
+                <ul>
+                    <li><kbd>Ctrl/Cmd + S</kbd> - Save project</li>
+                    <li><kbd>Ctrl/Cmd + E</kbd> - Export tour</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/storage-manager.js"></script>
+    <script src="js/scene-manager.js"></script>
+    <script src="js/hotspot-editor.js"></script>
+    <script src="js/preview-controller.js"></script>
+    <script src="js/ui-controller.js"></script>
+    <script src="js/export-manager.js"></script>
+    <script src="js/editor.js"></script>
     <script>
-        let currentZoom = 100;
-        let currentTab = 'hotspot';
-
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+        // Initialize editor when page loads
+        let editor;
+        window.addEventListener('DOMContentLoaded', async () => {
+            editor = new TourEditor();
+            await editor.init();
             
-            const panelTitle = document.getElementById('panelTitle');
-            const panelContent = document.getElementById('panelContent');
-
-
+            // Setup color picker sync
+            const colorPicker = document.getElementById('hotspotColor');
+            const colorText = document.getElementById('hotspotColorText');
             
-            if (tab === 'scene') {
-                panelTitle.textContent = 'Scene Properties';
-                panelContent.innerHTML = `
-                    <div class="form-group">
-                        <label class="form-label">Scene Name</label>
-                        <input type="text" class="form-input" value="Presentation1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Scene ID</label>
-                        <input type="text" class="form-input" value="presentation1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Image URL</label>
-                        <input type="text" class="form-input" value="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAC9A...">
-                    </div>
-                `;
-            } else if (tab === 'tour') {
-                panelTitle.textContent = 'Tour Settings';
-                panelContent.innerHTML = `
-                    <div class="form-group">
-                        <label class="form-label">Tour Title</label>
-                        <input type="text" class="form-input" value="My Virtual Tour">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-input form-textarea" placeholder="Tour description"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Initial Scene</label>
-                        <select class="form-select">
-                            <option>Select initial scene...</option>
-                            <option selected>Presentation1</option>
-                            <option>yishyan hapi coat2</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-checkbox">
-                            <input type="checkbox" id="autoRotate">
-                            <label for="autoRotate">Auto-rotate camera</label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-checkbox">
-                            <input type="checkbox" id="showCompass">
-                            <label for="showCompass">Show compass</label>
-                        </div>
-                    </div>
-                `;
+            if (colorPicker && colorText) {
+                colorPicker.addEventListener('input', (e) => {
+                    colorText.value = e.target.value;
+                });
+                
+                colorText.addEventListener('input', (e) => {
+                    if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                        colorPicker.value = e.target.value;
+                    }
+                });
             }
-        }
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + S to save
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    if (editor) editor.saveProject();
+                }
+                
+                // Ctrl/Cmd + E to export
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                    e.preventDefault();
+                    if (editor) editor.exportManager.showExportPreview();
+                }
+                
+                // ESC to close modals
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal.show').forEach(modal => {
+                        modal.classList.remove('show');
+                    });
+                }
+            });
+            
+            // Preview button - just focuses on the preview area
+            const previewBtn = document.getElementById('previewBtn');
+            if (previewBtn) {
+                previewBtn.addEventListener('click', () => {
+                    const preview = document.getElementById('preview');
+                    if (preview) {
+                        preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+            
+            // Modal background click to close
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
+            });
+        });
 
-        function zoomIn() {
-            currentZoom = Math.min(200, currentZoom + 10);
-            document.getElementById('zoomValue').textContent = currentZoom + '%';
-            document.getElementById('canvasViewport').style.transform = `scale(${currentZoom / 100})`;
-        }
-
-        function zoomOut() {
-            currentZoom = Math.max(50, currentZoom - 10);
-            document.getElementById('zoomValue').textContent = currentZoom + '%';
-            document.getElementById('canvasViewport').style.transform = `scale(${currentZoom / 100})`;
-        }
-
-        function selectScene(id) {
-            document.querySelectorAll('.scene-card').forEach(card => card.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-        }
-
-        function selectHotspot(id) {
-            document.querySelectorAll('.hotspot-marker').forEach(marker => marker.classList.remove('selected'));
-            document.querySelectorAll('.hotspot-item').forEach(item => item.classList.remove('active'));
-            event.currentTarget.classList.add(event.currentTarget.classList.contains('hotspot-marker') ? 'selected' : 'active');
-        }
-
-        function addScene() {
-            alert('Add Scene functionality would be implemented here');
-        }
-
-        function addHotspot() {
-            alert('Add Hotspot functionality would be implemented here');
-        }
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    
+                    // Update tab buttons
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update tab content
+                    tabContents.forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    const targetContent = document.getElementById(targetTab + 'Tab');
+                    if (targetContent) {
+                        targetContent.style.display = 'block';
+                    }
+                    
+                    // Update panel title
+                    const panelTitle = document.getElementById('panelTitle');
+                    if (panelTitle) {
+                        switch(targetTab) {
+                            case 'scene':
+                                panelTitle.textContent = 'Scene Properties';
+                                break;
+                            case 'hotspot':
+                                panelTitle.textContent = 'Hotspot Properties';
+                                break;
+                            case 'tour':
+                                panelTitle.textContent = 'Tour Settings';
+                                break;
+                        }
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

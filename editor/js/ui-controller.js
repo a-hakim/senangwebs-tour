@@ -18,6 +18,17 @@ class UIController {
         const scenes = this.editor.sceneManager.getAllScenes();
         const currentIndex = this.editor.sceneManager.currentSceneIndex;
 
+        if (scenes.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.innerHTML = `
+                <p>No scenes yet</p>
+                <p class="hint">Click "Add Scene" to upload a 360° panorama</p>
+            `;
+            this.sceneList.appendChild(empty);
+            return;
+        }
+
         scenes.forEach((scene, index) => {
             const card = this.createSceneCard(scene, index, index === currentIndex);
             this.sceneList.appendChild(card);
@@ -177,22 +188,28 @@ class UIController {
 
         const info = document.createElement('div');
         info.className = 'hotspot-info';
-        info.textContent = hotspot.title || 'Untitled Hotspot';
+        
+        const title = document.createElement('div');
+        title.className = 'hotspot-title';
+        title.textContent = hotspot.title || 'Untitled Hotspot';
+        
+        const target = document.createElement('div');
+        target.className = 'hotspot-target';
+        if (hotspot.targetSceneId) {
+            const targetScene = this.editor.sceneManager.getSceneById(hotspot.targetSceneId);
+            target.textContent = targetScene ? `→ ${targetScene.name}` : `→ ${hotspot.targetSceneId}`;
+        } else {
+            target.textContent = 'No target';
+        }
+        
+        info.appendChild(title);
+        info.appendChild(target);
 
         const actions = document.createElement('div');
         actions.className = 'hotspot-actions';
 
-        const duplicateBtn = document.createElement('button');
-        duplicateBtn.className = 'btn-icon';
-        duplicateBtn.innerHTML = '📋';
-        duplicateBtn.title = 'Duplicate';
-        duplicateBtn.onclick = (e) => {
-            e.stopPropagation();
-            this.editor.duplicateHotspot(index);
-        };
-
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-icon';
+        deleteBtn.className = 'btn-delete';
         deleteBtn.innerHTML = '🗑️';
         deleteBtn.title = 'Delete';
         deleteBtn.onclick = (e) => {
@@ -200,7 +217,6 @@ class UIController {
             this.editor.removeHotspot(index);
         };
 
-        actions.appendChild(duplicateBtn);
         actions.appendChild(deleteBtn);
 
         item.appendChild(color);
@@ -218,22 +234,41 @@ class UIController {
      * Update properties panel for hotspot
      */
     updateHotspotProperties(hotspot) {
+        const hotspotAll = document.getElementById('hotspotAll');
+        const hotspotProperties = document.getElementById('hotspotProperties');
+        
         if (!hotspot) {
+            // No hotspot selected - show list, hide properties
+            if (hotspotAll) hotspotAll.style.display = 'block';
+            if (hotspotProperties) hotspotProperties.style.display = 'none';
+            
             // Clear form
             document.getElementById('hotspotTitle').value = '';
             document.getElementById('hotspotDescription').value = '';
             document.getElementById('hotspotTarget').value = '';
             document.getElementById('hotspotColor').value = '#00ff00';
+            const colorText = document.getElementById('hotspotColorText');
+            if (colorText) colorText.value = '#00ff00';
             document.getElementById('hotspotPosX').value = '';
             document.getElementById('hotspotPosY').value = '';
             document.getElementById('hotspotPosZ').value = '';
             return;
         }
 
+        // Hotspot selected - show both list and properties
+        if (hotspotAll) hotspotAll.style.display = 'block';
+        if (hotspotProperties) hotspotProperties.style.display = 'block';
+
         document.getElementById('hotspotTitle').value = hotspot.title || '';
         document.getElementById('hotspotDescription').value = hotspot.description || '';
         document.getElementById('hotspotTarget').value = hotspot.targetSceneId || '';
         document.getElementById('hotspotColor').value = hotspot.color || '#00ff00';
+        
+        // Update color text input if it exists
+        const colorText = document.getElementById('hotspotColorText');
+        if (colorText) {
+            colorText.value = hotspot.color || '#00ff00';
+        }
         
         // Update position inputs
         const pos = hotspot.position || { x: 0, y: 0, z: 0 };
@@ -270,6 +305,12 @@ class UIController {
         document.getElementById('tourInitialScene').value = config.initialSceneId || '';
         document.getElementById('tourAutoRotate').checked = config.autoRotate || false;
         document.getElementById('tourShowCompass').checked = config.showCompass || false;
+        
+        // Also update project name in header if it exists
+        const projectName = document.getElementById('project-name');
+        if (projectName) {
+            projectName.value = config.title || '';
+        }
     }
 
     /**

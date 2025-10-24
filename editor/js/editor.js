@@ -40,9 +40,9 @@ class TourEditor {
         
         // Load saved project if exists
         if (this.storageManager.hasProject()) {
-            if (confirm('Load previously saved project?')) {
+            // if (confirm('Load previously saved project?')) {
                 this.loadProject();
-            }
+            // }
         }
         
         // Start auto-save
@@ -143,6 +143,22 @@ class TourEditor {
         document.getElementById('tourTitle')?.addEventListener('input', debounce((e) => {
             this.config.title = e.target.value;
             this.markUnsavedChanges();
+            // Sync with project name in header if it exists
+            const projectName = document.getElementById('project-name');
+            if (projectName && projectName.value !== e.target.value) {
+                projectName.value = e.target.value;
+            }
+        }, 300));
+        
+        // Project name in header (sync with tour title)
+        document.getElementById('project-name')?.addEventListener('input', debounce((e) => {
+            this.config.title = e.target.value;
+            this.markUnsavedChanges();
+            // Sync with tour title if it exists
+            const tourTitle = document.getElementById('tourTitle');
+            if (tourTitle && tourTitle.value !== e.target.value) {
+                tourTitle.value = e.target.value;
+            }
         }, 300));
         
         document.getElementById('tourDescription')?.addEventListener('input', debounce((e) => {
