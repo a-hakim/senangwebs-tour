@@ -295,7 +295,7 @@ body {
 .drag-handle {
     position: absolute;
     top: 8px;
-    left: 8px;
+    right: 8px;
     cursor: move;
     padding: 8px;
     background: rgba(0, 0, 0, 0.75);
