@@ -8,7 +8,7 @@ export default [
   {
     input: 'src/index.js',
     output: {
-      file: 'dist/senangwebs_tour.js',
+      file: 'dist/swt.js',
       format: 'umd',
       name: 'SWT',
       sourcemap: true
@@ -21,7 +21,7 @@ export default [
   {
     input: 'src/index.js',
     output: {
-      file: 'dist/senangwebs_tour.min.js',
+      file: 'dist/swt.min.js',
       format: 'umd',
       name: 'SWT',
       sourcemap: false
