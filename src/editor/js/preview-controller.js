@@ -72,7 +72,7 @@ this.tour.destroy();
         const aframeScene = document.createElement('a-scene');
         aframeScene.id = 'preview-scene';
         aframeScene.setAttribute('embedded', '');
-        aframeScene.setAttribute('vr-mode-ui', 'enabled: false');
+        aframeScene.setAttribute('vr-mode-ui', 'enabled: false;');
         this.previewContainer.appendChild(aframeScene);
 
         // Build tour config for this single scene

@@ -45,8 +45,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (previewBtn) {
         previewBtn.addEventListener('click', () => {
             const preview = document.getElementById('preview');
-            if (preview) {
-                preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const canvas = document.getElementById('canvasArea');
+            if (preview && canvas) {
+                canvas.classList.toggle('preview-active');
+                // refresh preview
+                if (window.editor && window.editor.previewController) {
+                    window.editor.previewController.refresh();
+                }
             }
         });
     }

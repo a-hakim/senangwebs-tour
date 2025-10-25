@@ -140,6 +140,7 @@ body {
 .editor-main {
     display: flex;
     height: calc(100vh - 60px);
+    position: relative;
 }
 
 /* Sidebar */
@@ -316,6 +317,15 @@ body {
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
+}
+
+.canvas-area.preview-active {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100%;
+    z-index: 100;
 }
 
 .toolbar {
