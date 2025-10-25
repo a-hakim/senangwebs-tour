@@ -53,7 +53,11 @@ this.isInitialized = true;
         if (!this.isInitialized || !scene) {
 return;
         }
-// Save camera rotation before destroying scene
+
+        // Show loading animation
+        this.showLoading();
+
+        // Save camera rotation before destroying scene
         let savedRotation = null;
         if (preserveCameraRotation) {
             savedRotation = this.getCameraRotation();
@@ -67,6 +71,10 @@ this.tour.destroy();
 
         // Clear preview container
         this.previewContainer.innerHTML = '';
+
+        // Create loading overlay (will be removed after scene loads)
+        const loadingOverlay = this.createLoadingOverlay();
+        this.previewContainer.appendChild(loadingOverlay);
 
         // Create A-Frame scene
         const aframeScene = document.createElement('a-scene');
@@ -179,7 +187,11 @@ this.tour = new SWT.Tour(aframeScene, tourConfig);
 
             // Start the tour
             await this.tour.start();
-// Restore camera rotation if preserved
+
+            // Hide loading animation after scene loads
+            this.hideLoading();
+
+            // Restore camera rotation if preserved
             if (savedRotation && preserveCameraRotation) {
 this.setCameraRotation(savedRotation);
             }
@@ -192,6 +204,8 @@ this.setCameraRotation(savedRotation);
         } catch (error) {
             console.error('Failed to load preview:', error);
             showToast('Failed to load preview: ' + error.message, 'error');
+            // Hide loading on error
+            this.hideLoading();
         }
     }
 
@@ -467,6 +481,45 @@ return;
         
         // Refresh the preview to reflect changes, camera rotation will be preserved
         await this.refresh();
+    }
+
+    /**
+     * Create loading overlay element
+     */
+    createLoadingOverlay() {
+        const overlay = document.createElement('div');
+        overlay.className = 'preview-loading';
+        overlay.innerHTML = `
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading scene...</div>
+        `;
+        return overlay;
+    }
+
+    /**
+     * Show loading animation
+     */
+    showLoading() {
+        const existing = this.previewContainer?.querySelector('.preview-loading');
+        if (existing) {
+            existing.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Hide loading animation
+     */
+    hideLoading() {
+        const loading = this.previewContainer?.querySelector('.preview-loading');
+        if (loading) {
+            loading.classList.add('hidden');
+            // Remove after transition
+            setTimeout(() => {
+                if (loading.parentNode) {
+                    loading.parentNode.removeChild(loading);
+                }
+            }, 300);
+        }
     }
 }
 
