@@ -1,6 +1,7 @@
 # Custom Editor Development Guide
 
 This guide explains how to build your own custom tour editor using the SWT editor components (`swt-editor.js`).
+![SenangWebs Tour Preview](https://raw.githubusercontent.com/a-hakim/senangwebs-tour/master/swt_preview.png)
 
 ## Overview
 
