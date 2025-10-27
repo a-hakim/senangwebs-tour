@@ -248,8 +248,6 @@ new SWT.Tour(aframeSceneEl, tourConfig)
 - **Real-time Preview** - See changes immediately in A-Frame preview
 - **Scene Management** - Add, remove, reorder scenes with drag-and-drop
 - **Hotspot Properties** - Customize position, color, target, tooltip
-- **Camera Auto-Point** - Camera automatically points to selected hotspots
-- **Project Persistence** - Auto-save to localStorage
 - **Import/Export** - Load and save tour configurations
 - **Dual Export Modes:**
   - **JSON Export** - Configuration file for use with SWT library
