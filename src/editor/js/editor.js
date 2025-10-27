@@ -58,11 +58,21 @@ class TourEditor {
         // Setup event listeners
         this.setupEventListeners();
         
-        // Load saved project if exists
+        // Load saved project if exists (but only if it has valid data)
         if (this.storageManager.hasProject()) {
-            // if (confirm('Load previously saved project?')) {
-                this.loadProject();
-            // }
+            try {
+                const projectData = this.storageManager.loadProject();
+                if (projectData && projectData.scenes && projectData.scenes.length > 0) {
+                    this.loadProject();
+                } else {
+                    // Invalid or empty project, clear it
+                    console.error('Invalid or empty project data, clearing storage');
+                    this.storageManager.clearProject();
+                }
+            } catch (error) {
+                console.error('Error loading saved project:', error);
+                this.storageManager.clearProject();
+            }
         }
         
         // Start auto-save if enabled
@@ -72,8 +82,11 @@ class TourEditor {
             }, this.options.autoSaveInterval);
         }
         
-        // Initial render
-        this.render();
+        // Initial render (only if no project was loaded)
+        if (this.sceneManager.getScenes().length === 0) {
+            this.render();
+        }
+        
         showToast('Editor ready', 'success');
         
         return true;

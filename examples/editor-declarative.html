@@ -60,9 +60,9 @@
             </aside>
 
             <!-- Canvas Area -->
-            <div class="canvas-area" id="canvasArea" data-swt-preview-area>
+            <div class="canvas-area" id="canvasArea">
                 <div class="preview-container">
-                    <div class="preview-area" id="preview">
+                    <div class="preview-area" id="preview" data-swt-preview-area>
                         <div class="preview-empty">
                             <p>No scene selected</p>
                             <p>Upload a 360° panorama to start</p>
@@ -242,17 +242,47 @@
     <!-- Scripts -->
     <script src="../dist/swt-editor.js"></script>
     
-    <!-- 
-        Note: No additional JavaScript required!
-        The editor automatically initializes via data-swt-auto-init="true"
+    <script>
+        // Helper function to clear corrupted storage if needed
+        // Automatically clears invalid data on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if there's a force-clear parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('clear') === 'true') {
+                localStorage.clear();
+                console.log('🧹 Storage cleared via URL parameter');
+                // Remove the parameter from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
         
-        To access the editor instance programmatically:
-        <script>
-            window.addEventListener('DOMContentLoaded', () => {
-                // Editor is available as window.editor
-                console.log('Editor instance:', window.editor);
-            });
-        </script>
+        // Add keyboard shortcut for clearing storage: Ctrl+Alt+C
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.altKey && e.key === 'c') {
+                if (confirm('Clear all saved data and start fresh?')) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            }
+        });
+    </script>
+    
+    <!-- 
+        Note: The editor now automatically validates and clears corrupted data!
+        
+        To manually access the editor instance:
+        - Editor is available as window.editor
+        - console.log('Editor instance:', window.editor);
+        
+        To clear storage manually:
+        - Add ?clear=true to the URL, OR
+        - Press Ctrl+Alt+C, OR  
+        - Open console and run: localStorage.clear()
+        
+        Troubleshooting:
+        - The editor now automatically detects and clears invalid data
+        - If issues persist, try ?clear=true in the URL
+        - Check browser console for validation errors
     -->
 </body>
 </html>
