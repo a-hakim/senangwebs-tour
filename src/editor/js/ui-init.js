@@ -1,7 +1,64 @@
-// UI Initialization - Handles color picker sync, keyboard shortcuts, and tab switching
-// Note: Editor is initialized in editor.js via DOMContentLoaded
+// UI Initialization - Handles color picker sync, keyboard shortcuts, tab switching, and declarative init
+// Note: Editor can be initialized via DOMContentLoaded (declarative) or manually (programmatic)
+
+/**
+ * Initialize editor from declarative HTML attributes
+ */
+function initDeclarativeEditor() {
+    const editorElement = document.querySelector('[data-swt-editor]');
+    
+    if (!editorElement) {
+        return null; // No declarative editor found
+    }
+    
+    // Check if auto-init is enabled
+    const autoInit = editorElement.getAttribute('data-swt-auto-init');
+    if (autoInit !== 'true') {
+        return null; // Auto-init disabled
+    }
+    
+    // Find required elements by data attributes
+    const sceneListElement = editorElement.querySelector('[data-swt-scene-list]');
+    const previewElement = editorElement.querySelector('[data-swt-preview-area]');
+    const propertiesElement = editorElement.querySelector('[data-swt-properties-panel]');
+    
+    // Get optional configuration from attributes
+    const projectName = editorElement.getAttribute('data-swt-project-name') || 'My Virtual Tour';
+    const autoSave = editorElement.getAttribute('data-swt-auto-save') === 'true';
+    const autoSaveInterval = parseInt(editorElement.getAttribute('data-swt-auto-save-interval')) || 30000;
+    
+    // Create and initialize editor
+    const editor = new TourEditor({
+        projectName,
+        autoSave,
+        autoSaveInterval
+    });
+    
+    // Store element references for controllers
+    if (sceneListElement) editor.options.sceneListElement = sceneListElement;
+    if (previewElement) editor.options.previewElement = previewElement;
+    if (propertiesElement) editor.options.propertiesElement = propertiesElement;
+    
+    // Initialize the editor
+    editor.init().then(() => {
+        console.log('✅ Declarative editor initialized');
+    }).catch(err => {
+        console.error('❌ Failed to initialize declarative editor:', err);
+    });
+    
+    return editor;
+}
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Try declarative initialization first
+    const declarativeEditor = initDeclarativeEditor();
+    
+    if (declarativeEditor) {
+        // Store editor instance globally for declarative mode
+        window.editor = declarativeEditor;
+        console.log('📦 Declarative editor mode activated');
+    }
+    
     // Setup color picker sync
     const colorPicker = document.getElementById('hotspotColor');
     const colorText = document.getElementById('hotspotColorText');

@@ -4,13 +4,32 @@ This guide explains how to build your own custom tour editor using the SWT edito
 
 ## Overview
 
-The SWT editor system is built with modular ES6 classes that can be used independently to create custom editor interfaces. Instead of using the pre-built `examples/editor.html`, you can compose your own editor with only the components you need.
+The SWT editor system supports **dual initialization modes**:
+
+1. **Declarative Mode** - HTML-only setup using `data-swt-*` attributes (zero JavaScript)
+2. **Programmatic Mode** - Full JavaScript API for custom integrations
+
+Both modes provide the same functionality but differ in setup complexity and flexibility.
+
+## Comparison Table
+
+| Feature | Declarative Mode | Programmatic Mode |
+|---------|-----------------|-------------------|
+| **Setup** | HTML attributes only | HTML + JavaScript |
+| **Code Required** | None | ~10-20 lines |
+| **Flexibility** | Limited to attributes | Full API control |
+| **Auto-Init** | Yes (via `data-swt-auto-init`) | Manual `editor.init()` |
+| **Configuration** | HTML attributes | JavaScript options |
+| **Best For** | Quick prototypes, simple editors | Complex integrations, custom logic |
+| **Example** | `examples/editor-declarative.html` | `examples/editor-simple.html` |
 
 ## Quick Start
 
-### Basic Setup
+The SWT editor supports **two initialization modes**: declarative (HTML attributes) and programmatic (JavaScript API).
 
-Create a minimal HTML file with the required dependencies:
+### Option 1: Declarative Mode (HTML Only)
+
+Use `data-swt-*` attributes for automatic initialization. No JavaScript required!
 
 ```html
 <!DOCTYPE html>
@@ -22,7 +41,39 @@ Create a minimal HTML file with the required dependencies:
   <link rel="stylesheet" href="dist/swt-editor.css">
 </head>
 <body>
-  <!-- Your custom editor UI -->
+  <!-- Declarative editor - auto-initializes on page load -->
+  <div data-swt-editor data-swt-auto-init="true">
+    <div data-swt-scene-list></div>
+    <div data-swt-preview-area></div>
+    <div data-swt-properties-panel></div>
+  </div>
+</body>
+</html>
+```
+
+**Supported Attributes:**
+- `data-swt-editor` - Marks the editor container
+- `data-swt-auto-init="true"` - Auto-initialize on DOMContentLoaded
+- `data-swt-scene-list` - Scene list container
+- `data-swt-preview-area` - A-Frame preview container
+- `data-swt-properties-panel` - Properties/settings panel
+- `data-swt-project-name="My Tour"` - Initial project name
+
+### Option 2: Programmatic Mode (JavaScript API)
+
+Full control via JavaScript API for custom initialization and configuration.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="dist/swt.js"></script>
+  <script src="dist/swt-editor.js"></script>
+  <link rel="stylesheet" href="dist/swt-editor.css">
+</head>
+<body>
+  <!-- Custom editor structure -->
   <div id="my-editor">
     <div id="scene-list"></div>
     <div id="preview-area"></div>
@@ -30,15 +81,26 @@ Create a minimal HTML file with the required dependencies:
   </div>
 
   <script>
-    // Your editor initialization code here
+    // Manual initialization with custom configuration
+    const editor = new TourEditor();
+    editor.init({
+      sceneListElement: document.getElementById('scene-list'),
+      previewElement: document.getElementById('preview-area'),
+      propertiesElement: document.getElementById('properties-panel'),
+      projectName: 'My Custom Tour',
+      autoSave: true,
+      autoSaveInterval: 30000 // 30 seconds
+    });
   </script>
 </body>
 </html>
 ```
 
-### Minimal Working Example
+### Minimal Working Examples
 
-See `examples/editor-simple.html` for a complete minimal implementation.
+- **Declarative:** `examples/editor-declarative.html` - HTML-only initialization
+- **Programmatic:** `examples/editor-simple.html` - JavaScript API usage
+- **Full-Featured:** `examples/editor.html` - Complete editor implementation
 
 ## Editor Architecture
 
@@ -58,7 +120,64 @@ The SWT editor uses a **six-controller pattern** with these main classes:
 
 ## Building a Custom Editor
 
-### Step 1: Initialize Components
+### Choosing an Initialization Mode
+
+| Feature | Declarative | Programmatic |
+|---------|------------|--------------|
+| Setup Complexity | Minimal (HTML only) | Moderate (HTML + JS) |
+| Flexibility | Limited to attributes | Full API access |
+| Custom Logic | Limited | Unlimited |
+| Best For | Quick setup, prototypes | Complex integrations |
+
+### Step 1: Choose Your Mode
+
+#### Declarative Mode Setup
+
+```html
+<!-- Add data-swt-* attributes to your HTML -->
+<div data-swt-editor data-swt-auto-init="true">
+  <div data-swt-scene-list></div>
+  <div data-swt-preview-area></div>
+  <div data-swt-properties-panel></div>
+</div>
+
+<!-- Include scripts (order matters!) -->
+<script src="dist/swt.js"></script>
+<script src="dist/swt-editor.js"></script>
+```
+
+#### Programmatic Mode Setup
+
+```html
+<!-- Define your container structure -->
+<div id="my-editor">
+  <div id="scenes"></div>
+  <div id="preview"></div>
+  <div id="properties"></div>
+</div>
+
+<!-- Include scripts -->
+<script src="dist/swt.js"></script>
+<script src="dist/swt-editor.js"></script>
+
+<!-- Initialize manually -->
+<script>
+  const editor = new TourEditor({
+    projectName: 'My Tour',
+    autoSave: true
+  });
+  
+  editor.init({
+    sceneListElement: document.getElementById('scenes'),
+    previewElement: document.getElementById('preview'),
+    propertiesElement: document.getElementById('properties')
+  });
+</script>
+```
+
+### Step 2: Initialize Components (Programmatic Only)
+
+For declarative mode, skip to Step 3. For programmatic mode:
 
 ```javascript
 // Create instances of the editor components

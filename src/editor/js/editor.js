@@ -2,14 +2,24 @@
 import { debounce, showModal } from './utils.js';
 
 class TourEditor {
-    constructor() {
+    constructor(options = {}) {
         
         this.config = {
-            title: 'My Virtual Tour',
+            title: options.projectName || 'My Virtual Tour',
             description: '',
             initialSceneId: '',
             autoRotate: false,
             showCompass: false
+        };
+        
+        // Store initialization options
+        this.options = {
+            sceneListElement: options.sceneListElement || null,
+            previewElement: options.previewElement || null,
+            propertiesElement: options.propertiesElement || null,
+            autoSave: options.autoSave !== undefined ? options.autoSave : false,
+            autoSaveInterval: options.autoSaveInterval || 30000,
+            ...options
         };
         
         this.storageManager = new ProjectStorageManager();
@@ -26,14 +36,23 @@ class TourEditor {
 
     /**
      * Initialize editor
+     * @param {Object} config - Optional configuration object for programmatic init
      */
-    async init() {
-// Initialize preview
+    async init(config = {}) {
+        // Merge config with existing options
+        if (config && Object.keys(config).length > 0) {
+            Object.assign(this.options, config);
+            if (config.projectName) {
+                this.config.title = config.projectName;
+            }
+        }
+        
+        // Initialize preview
         const previewInit = await this.previewController.init();
         if (!previewInit) {
             console.error('Failed to initialize preview controller');
             showToast('Failed to initialize preview', 'error');
-            return;
+            return false;
         }
         
         // Setup event listeners
@@ -46,14 +65,18 @@ class TourEditor {
             // }
         }
         
-        // Start auto-save
-        // this.storageManager.startAutoSave(() => {
-        //     this.saveProject();
-        // });
+        // Start auto-save if enabled
+        if (this.options.autoSave) {
+            this.storageManager.startAutoSave(() => {
+                this.saveProject();
+            }, this.options.autoSaveInterval);
+        }
         
         // Initial render
         this.render();
-showToast('Editor ready', 'success');
+        showToast('Editor ready', 'success');
+        
+        return true;
     }
 
     /**

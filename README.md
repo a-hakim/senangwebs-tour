@@ -88,7 +88,11 @@ A powerful, data-driven 360° virtual tour system for A-Frame WebVR with a visua
 
 ### Custom Editor Integration (Using swt-editor.js)
 
-Build your own tour editor interface using the SWT editor components:
+The SWT editor supports **two initialization modes**: declarative (HTML-only) and programmatic (JavaScript API).
+
+#### Option 1: Declarative Mode (HTML Attributes)
+
+Zero JavaScript required - just use `data-swt-*` attributes:
 
 ```html
 <!DOCTYPE html>
@@ -100,7 +104,40 @@ Build your own tour editor interface using the SWT editor components:
   <link rel="stylesheet" href="dist/swt-editor.css">
 </head>
 <body>
-  <!-- Your custom editor UI -->
+  <!-- Declarative editor - auto-initializes -->
+  <div data-swt-editor 
+       data-swt-auto-init="true"
+       data-swt-project-name="My Tour"
+       data-swt-auto-save="true">
+    <div data-swt-scene-list></div>
+    <div data-swt-preview-area></div>
+    <div data-swt-properties-panel></div>
+  </div>
+</body>
+</html>
+```
+
+**Supported Attributes:**
+- `data-swt-editor` - Marks the editor container
+- `data-swt-auto-init="true"` - Auto-initialize on page load
+- `data-swt-project-name="..."` - Initial project name
+- `data-swt-auto-save="true"` - Enable auto-save
+- `data-swt-auto-save-interval="30000"` - Auto-save interval (ms)
+
+#### Option 2: Programmatic Mode (JavaScript API)
+
+Full control via JavaScript:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="dist/swt.js"></script>
+  <script src="dist/swt-editor.js"></script>
+  <link rel="stylesheet" href="dist/swt-editor.css">
+</head>
+<body>
   <div id="my-editor">
     <div id="scene-list"></div>
     <div id="preview-area"></div>
@@ -108,42 +145,30 @@ Build your own tour editor interface using the SWT editor components:
   </div>
 
   <script>
-    // Initialize the editor components
-    const editor = new TourEditor();
-    const sceneManager = new SceneManagerEditor();
-    const hotspotEditor = new HotspotEditor();
-    const previewController = new PreviewController(document.getElementById('preview-area'));
-    const uiController = new UIController();
-    const storageManager = new ProjectStorageManager();
-    const exportManager = new ExportManager();
+    // Initialize with custom configuration
+    const editor = new TourEditor({
+      projectName: 'My Custom Tour',
+      autoSave: true,
+      autoSaveInterval: 30000
+    });
 
-    // Set up editor with your custom configuration
-    editor.initialize({
+    editor.init({
       sceneListElement: document.getElementById('scene-list'),
       previewElement: document.getElementById('preview-area'),
       propertiesElement: document.getElementById('properties-panel')
     });
 
-    // Add custom event handlers
-    editor.addEventListener('scene-added', (e) => {
-      console.log('Scene added:', e.detail.scene);
-      // Your custom logic here
-    });
-
-    editor.addEventListener('hotspot-placed', (e) => {
-      console.log('Hotspot placed:', e.detail.position);
-      // Your custom logic here
-    });
-
-    // Export tour configuration
-    document.getElementById('export-btn').addEventListener('click', () => {
-      const config = exportManager.generateTourConfig(editor.getScenes());
-      console.log('Tour config:', config);
-    });
+    // Access editor instance
+    window.editor = editor;
   </script>
 </body>
 </html>
 ```
+
+**Examples:**
+- `examples/editor-declarative.html` - Declarative mode (HTML-only)
+- `examples/editor-simple.html` - Minimal programmatic example
+- `examples/editor.html` - Full-featured editor
 
 **Available Editor Classes:**
 
