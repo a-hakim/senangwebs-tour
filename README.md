@@ -1,6 +1,7 @@
 # SenangWebs Tour (SWT)
 
 A powerful, data-driven 360° virtual tour system built on A-Frame WebVR. Create immersive virtual tours with a visual editor, or integrate the lightweight viewer library into your own projects.
+![SenangWebs Tour Preview](https://raw.githubusercontent.com/a-hakim/senangwebs-tour/master/swt_preview.png)
 
 ## Table of Contents
 
