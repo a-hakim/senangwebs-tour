@@ -670,6 +670,10 @@ const importUpload = document.getElementById('importUpload');
 
 // Initialize editor when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
+    if (document.querySelector('[data-swt-editor]')) {
+        // Declarative initialization will handle it
+        return;
+    }
     window.editor = new TourEditor();
     await window.editor.init();
 });

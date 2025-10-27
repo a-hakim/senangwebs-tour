@@ -9,6 +9,12 @@
 
 **Key Principle:** The library is **data-driven and stateless** - it renders tours from JSON configuration objects, not internal state.
 
+**Recent Changes (Oct 2025):**
+- README.md significantly updated with emoji sections, detailed API docs, and comprehensive examples
+- Removed emoji icons from README Table of Contents (user preference)
+- All build outputs now include sourcemaps for debugging
+- Editor supports both declarative (HTML attributes) and programmatic (JS API) initialization modes
+
 ## Architecture & Data Flow
 
 ### Three-Layer System
@@ -51,13 +57,14 @@ Editor (GUI) → Generates JSON → Library (SWT.Tour) → Renders in A-Frame
 
 **Key Patterns:**
 - **ES6 Exports:** All classes use `export default ClassName`, utils use named exports
-- **Global Window Access:** Entry point attaches classes to window for backward compatibility
+- **Global Window Access:** Entry point attaches classes to window for backward compatibility (see `editor-entry.js` lines 5-26)
 - **Debouncing:** All text inputs use `debounce(fn, 300)` from `utils.js`
 - **Editor → Preview Sync:** Changes trigger `editor.render()` → updates UI + reloads preview via `previewController.loadScene()`
 - **Scene Reload Optimization:** `lastRenderedSceneIndex` tracks loaded scene - only reloads if scene changes, preserving camera rotation when switching hotspots
 - **Camera Preservation:** `loadScene(scene, preserveCameraRotation=true)` saves/restores camera rotation across reloads - set to `false` when switching scenes
 - **Data Format Transformation:** Editor stores `imageUrl`, library expects `panorama` (conversion in `preview-controller.js` and `export-manager.js`)
-- **No Debug Code:** All `console.log()`, `console.trace()`, `console.debug()`, `console.warn()` removed - only `console.error()` for critical errors
+- **Logging Policy:** Only `console.error()` for critical errors. Some `console.warn()` remain in viewer library (src/) for runtime warnings (video autoplay, unknown actions). Editor should avoid all console.log/debug/trace.
+- **Declarative Init Pattern:** `ui-init.js` scans for `[data-swt-editor]` elements on DOMContentLoaded, auto-initializes if `data-swt-auto-init="true"` (see lines 6-55)
 
 ## Critical Workflows
 
@@ -77,10 +84,14 @@ npm run dev        # Watch mode for development
 npm run serve      # Runs http-server on port 8080
 
 # Then access:
-# http://localhost:8080/src/editor/index.html (editor source)
-# http://localhost:8080/examples/editor.html (editor demo)
-# http://localhost:8080/examples/viewer.html (standalone viewer)
+# http://localhost:8080/examples/editor.html (full-featured editor demo)
+# http://localhost:8080/examples/editor-declarative.html (declarative HTML-only demo)
+# http://localhost:8080/examples/example.html (full viewer integration)
+# http://localhost:8080/examples/example-simple.html (minimal viewer demo)
+# http://localhost:8080/examples/viewer.html (standalone drag-drop viewer)
 ```
+
+**Why local server?** A-Frame's texture loading and WebGL require proper CORS headers. File protocol (`file://`) won't work.
 
 ### File Structure (Post-Restructuring)
 ```
@@ -202,3 +213,34 @@ Open `examples/test.html` in browser - validates library loading, API surface, c
 - A-Frame inspector: Press `Ctrl+Alt+I` in any A-Frame scene for visual debugger
 - Check `console.error()` only - all debug `console.log()` removed from production code
 - Rollup sourcemaps: Enable in browser DevTools to debug original ES6 source
+
+## Quick Reference
+
+### Most Common Tasks
+
+**Adding a new editor feature:**
+1. Modify appropriate controller in `src/editor/js/` (scene-manager, hotspot-editor, ui-controller)
+2. Update `editor.js` if coordination needed between controllers
+3. Add UI elements in `ui-controller.js` render methods
+4. Test in `examples/editor.html` with `npm run dev` + `npm run serve`
+5. Update README.md API/Features section if public-facing
+
+**Changing data format:**
+1. Update JSON schema documentation in README.md Configuration Structure
+2. Update export conversion in `export-manager.js` (imageUrl → panorama)
+3. Update viewer library parsing in `src/index.js` Tour constructor
+4. Test both JSON export and standalone viewer export
+5. Verify backward compatibility or document breaking change
+
+**Adding CSS styles:**
+1. Edit `src/editor/css/main.css` (all editor styles in one file)
+2. Build automatically picks up changes via `editor-entry.css` @import
+3. Test with `npm run dev` (watch mode rebuilds CSS)
+4. Avoid inline styles - keep all CSS in main.css for maintainability
+
+**Debugging A-Frame issues:**
+1. Check browser console for A-Frame warnings (texture loading, component errors)
+2. Use A-Frame inspector (`Ctrl+Alt+I`) to inspect scene graph
+3. Verify `waitForLibrary('AFRAME')` pattern in `preview-controller.js`
+4. Check if scene element exists before accessing components
+5. Remember A-Frame is async - use `scene.addEventListener('loaded', ...)`
