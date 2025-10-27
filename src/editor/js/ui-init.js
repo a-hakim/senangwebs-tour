@@ -1,5 +1,4 @@
 // UI Initialization - Handles color picker sync, keyboard shortcuts, tab switching, and declarative init
-// Note: Editor can be initialized via DOMContentLoaded (declarative) or manually (programmatic)
 
 /**
  * Initialize editor from declarative HTML attributes
@@ -44,13 +43,7 @@ function initDeclarativeEditor() {
   if (previewElement) editor.options.previewElement = previewElement;
   if (propertiesElement) editor.options.propertiesElement = propertiesElement;
 
-  // Initialize the editor
-  editor
-    .init()
-    .then(() => {
-      console.log("Declarative editor initialized");
-    })
-    .catch((err) => {
+  editor.init().catch((err) => {
       console.error("Failed to initialize declarative editor:", err);
     });
 

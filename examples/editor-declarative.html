@@ -244,14 +244,10 @@
     
     <script>
         // Helper function to clear corrupted storage if needed
-        // Automatically clears invalid data on load
         window.addEventListener('DOMContentLoaded', () => {
-            // Check if there's a force-clear parameter in URL
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('clear') === 'true') {
                 localStorage.clear();
-                console.log('🧹 Storage cleared via URL parameter');
-                // Remove the parameter from URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         });

@@ -224,7 +224,7 @@
         <div id="loadingText">Loading Tour...</div>
         
         <div id="uploadArea">
-            <h2>📦 Load Tour</h2>
+            <h2>Load Tour</h2>
             <p>Drop your tour JSON file here or click to browse</p>
             <button class="btn" onclick="document.getElementById('fileInput').click()">
                 Choose File
@@ -235,7 +235,7 @@
 
     <!-- Error Message -->
     <div id="errorMessage">
-        <h3>⚠️ Error</h3>
+        <h3>Error</h3>
         <p id="errorText"></p>
         <button class="btn" onclick="location.reload()">Reload Page</button>
     </div>
@@ -405,12 +405,10 @@
 
                 // Setup event listeners
                 tour.on('sceneChanged', (sceneId) => {
-                    console.log('Scene changed:', sceneId);
                     updateSceneInfo();
                 });
 
                 tour.on('ready', () => {
-                    console.log('Tour ready');
                     hideLoading();
                     ui.classList.add('show');
                     updateSceneInfo();

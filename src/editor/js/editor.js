@@ -3,7 +3,6 @@ import { debounce, showModal } from './utils.js';
 
 class TourEditor {
     constructor(options = {}) {
-        
         this.config = {
             title: options.projectName || 'My Virtual Tour',
             description: '',
@@ -30,8 +29,8 @@ class TourEditor {
         this.exportManager = new ExportManager(this);
         
         this.hasUnsavedChanges = false;
-        this.lastRenderedSceneIndex = -1; // Track which scene is currently loaded in preview
-        this.listenersSetup = false; // Flag to prevent duplicate event listeners
+        this.lastRenderedSceneIndex = -1;
+        this.listenersSetup = false;
     }
 
     /**
@@ -96,17 +95,16 @@ class TourEditor {
      * Setup event listeners
      */
     setupEventListeners() {
-        // Prevent duplicate listener setup
         if (this.listenersSetup) {
-return;
+            return;
         }
-// Check for duplicate IDs in DOM
+
         const addSceneBtns = document.querySelectorAll('#addSceneBtn');
         const sceneUploads = document.querySelectorAll('#sceneUpload');
         const importBtns = document.querySelectorAll('#importBtn');
         const importUploads = document.querySelectorAll('#importUpload');
-if (addSceneBtns.length > 1 || sceneUploads.length > 1 || importBtns.length > 1 || importUploads.length > 1) {
-            console.error('❌ DUPLICATE IDS FOUND IN DOM! This will cause double-trigger issues.');
+        if (addSceneBtns.length > 1 || sceneUploads.length > 1 || importBtns.length > 1 || importUploads.length > 1) {
+            console.error('Duplicate IDs found in DOM. This will cause double-trigger issues.');
         }
         
         // Toolbar buttons
@@ -116,26 +114,22 @@ if (addSceneBtns.length > 1 || sceneUploads.length > 1 || importBtns.length > 1 
         document.getElementById('importBtn')?.addEventListener('click', () => this.importProject());
         document.getElementById('helpBtn')?.addEventListener('click', () => showModal('helpModal'));
 
-        // Scene management
         document.getElementById('addSceneBtn')?.addEventListener('click', () => {
-const sceneUpload = document.getElementById('sceneUpload');
+            const sceneUpload = document.getElementById('sceneUpload');
             if (sceneUpload) {
                 sceneUpload.click();
             }
         });
         
         document.getElementById('sceneUpload')?.addEventListener('change', (e) => {
-if (e.target.files && e.target.files.length > 0) {
+            if (e.target.files && e.target.files.length > 0) {
                 this.handleSceneUpload(e.target.files);
-                // Reset value after a delay to prevent triggering another change event
-                // This allows users to re-select the same file if needed
                 setTimeout(() => {
                     e.target.value = '';
-}, 100);
+                }, 100);
             }
         });
 
-        // Hotspot management
         document.getElementById('addHotspotBtn')?.addEventListener('click', () => {
             this.hotspotEditor.enablePlacementMode();
         });
@@ -153,7 +147,6 @@ if (e.target.files && e.target.files.length > 0) {
             });
         });
 
-        // Hotspot properties
         document.getElementById('hotspotTitle')?.addEventListener('input', debounce((e) => {
             this.updateCurrentHotspot('title', e.target.value);
         }, 300));
@@ -170,7 +163,6 @@ if (e.target.files && e.target.files.length > 0) {
             this.updateCurrentHotspot('color', e.target.value);
         });
 
-        // Hotspot position inputs
         document.getElementById('hotspotPosX')?.addEventListener('input', debounce((e) => {
             this.updateCurrentHotspotPosition('x', parseFloat(e.target.value) || 0);
         }, 300));
@@ -183,7 +175,6 @@ if (e.target.files && e.target.files.length > 0) {
             this.updateCurrentHotspotPosition('z', parseFloat(e.target.value) || 0);
         }, 300));
 
-        // Scene properties
         document.getElementById('sceneId')?.addEventListener('input', debounce((e) => {
             this.updateCurrentScene('id', sanitizeId(e.target.value));
         }, 300));
@@ -196,22 +187,18 @@ if (e.target.files && e.target.files.length > 0) {
             this.updateCurrentSceneImage(e.target.value);
         }, 300));
 
-        // Tour properties
         document.getElementById('tourTitle')?.addEventListener('input', debounce((e) => {
             this.config.title = e.target.value;
             this.markUnsavedChanges();
-            // Sync with project name in header if it exists
             const projectName = document.getElementById('project-name');
             if (projectName && projectName.value !== e.target.value) {
                 projectName.value = e.target.value;
             }
         }, 300));
         
-        // Project name in header (sync with tour title)
         document.getElementById('project-name')?.addEventListener('input', debounce((e) => {
             this.config.title = e.target.value;
             this.markUnsavedChanges();
-            // Sync with tour title if it exists
             const tourTitle = document.getElementById('tourTitle');
             if (tourTitle && tourTitle.value !== e.target.value) {
                 tourTitle.value = e.target.value;
@@ -238,7 +225,6 @@ if (e.target.files && e.target.files.length > 0) {
             this.markUnsavedChanges();
         });
 
-        // Export modal buttons
         document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
             this.exportManager.exportJSON();
         });
@@ -251,7 +237,6 @@ if (e.target.files && e.target.files.length > 0) {
             this.exportManager.exportViewerHTML();
         });
 
-        // Modal close buttons
         document.querySelectorAll('.modal-close').forEach(btn => {
             btn.addEventListener('click', () => {
                 const modal = btn.closest('.modal');
@@ -261,18 +246,15 @@ if (e.target.files && e.target.files.length > 0) {
             });
         });
 
-        // Import file input
         document.getElementById('importUpload')?.addEventListener('change', (e) => {
-if (e.target.files && e.target.files.length > 0) {
+            if (e.target.files && e.target.files.length > 0) {
                 this.handleImportFile(e.target.files[0]);
-                // Reset value after a delay to prevent triggering another change event
                 setTimeout(() => {
                     e.target.value = '';
-}, 100);
+                }, 100);
             }
         });
 
-        // Warn before leaving with unsaved changes
         window.addEventListener('beforeunload', (e) => {
             if (this.hasUnsavedChanges) {
                 e.preventDefault();
@@ -280,39 +262,36 @@ if (e.target.files && e.target.files.length > 0) {
             }
         });
         
-        // Mark listeners as setup
         this.listenersSetup = true;
-}
+    }
 
     /**
      * Handle scene upload
      */
     async handleSceneUpload(files) {
-        
         if (!files || files.length === 0) {
-return;
+            return;
         }
 
         this.uiController.setLoading(true);
 
         for (const file of files) {
-if (!file.type.startsWith('image/')) {
+            if (!file.type.startsWith('image/')) {
                 showToast(`${file.name} is not an image`, 'error');
                 continue;
             }
 
             const scene = await this.sceneManager.addScene(file);
-}
-this.uiController.setLoading(false);
+        }
+        this.uiController.setLoading(false);
         this.render();
         this.markUnsavedChanges();
-}
+    }
 
     /**
      * Add hotspot at position
      */
     addHotspotAtPosition(position) {
-        // Clamp position to within 10-unit radius
         const distance = Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
         if (distance > 5) {
             const scale = 5 / distance;
@@ -322,10 +301,9 @@ this.uiController.setLoading(false);
             position.x = parseFloat(position.x.toFixed(2));
             position.y = parseFloat(position.y.toFixed(2));
             position.z = parseFloat(position.z.toFixed(2));
-}
-const hotspot = this.hotspotEditor.addHotspot(position);
+        }
+        const hotspot = this.hotspotEditor.addHotspot(position);
         if (hotspot) {
-// Force scene reload to show new hotspot
             this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
@@ -338,29 +316,23 @@ const hotspot = this.hotspotEditor.addHotspot(position);
      * Select scene by index
      */
     selectScene(index) {
-if (this.sceneManager.setCurrentScene(index)) {
-// Scene changed, so we need to reload it with fresh camera
+        if (this.sceneManager.setCurrentScene(index)) {
             this.lastRenderedSceneIndex = -1;
-            
-            // Reset hotspot selection when switching scenes
             this.hotspotEditor.currentHotspotIndex = -1;
             
-            // Get the new scene and load with camera reset
             const scene = this.sceneManager.getCurrentScene();
             if (scene) {
-                this.previewController.loadScene(scene, false); // Don't preserve camera when switching scenes
+                this.previewController.loadScene(scene, false);
                 this.lastRenderedSceneIndex = index;
             }
             
-            // Update UI
             this.uiController.renderSceneList();
             this.uiController.updateSceneProperties(scene);
-            this.uiController.renderHotspotList(); // Update hotspot list for the selected scene
-            this.uiController.updateHotspotProperties(null); // Clear hotspot properties
+            this.uiController.renderHotspotList();
+            this.uiController.updateHotspotProperties(null);
             this.uiController.updateInitialSceneOptions();
             this.uiController.updateTargetSceneOptions();
-        } else {
-}
+        }
     }
 
     /**
@@ -368,16 +340,13 @@ if (this.sceneManager.setCurrentScene(index)) {
      */
     selectHotspot(index) {
         if (this.hotspotEditor.setCurrentHotspot(index)) {
-            // Get the selected hotspot
             const hotspot = this.hotspotEditor.getHotspot(index);
             
-            // Update UI without reloading the scene
             this.uiController.renderHotspotList();
             this.uiController.updateHotspotProperties(hotspot);
             this.uiController.updateTargetSceneOptions();
             this.uiController.switchTab('hotspot');
             
-            // Point camera to the hotspot for better UX
             if (hotspot && hotspot.position) {
                 this.previewController.pointCameraToHotspot(hotspot.position);
             }
@@ -399,7 +368,6 @@ if (this.sceneManager.setCurrentScene(index)) {
      */
     removeHotspot(index) {
         if (this.hotspotEditor.removeHotspot(index)) {
-            // Force scene reload to remove hotspot
             this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
@@ -412,7 +380,6 @@ if (this.sceneManager.setCurrentScene(index)) {
     duplicateHotspot(index) {
         const hotspot = this.hotspotEditor.duplicateHotspot(index);
         if (hotspot) {
-            // Force scene reload to show duplicated hotspot
             this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
@@ -453,10 +420,8 @@ if (this.sceneManager.setCurrentScene(index)) {
                 hotspot.position = { x: 0, y: 0, z: 0 };
             }
             
-            // Clamp value to within 10-unit radius
             hotspot.position[axis] = value;
             
-            // Calculate distance from origin and clamp to radius 10
             const pos = hotspot.position;
             const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
             if (distance > 10) {
@@ -465,7 +430,6 @@ if (this.sceneManager.setCurrentScene(index)) {
                 pos.y *= scale;
                 pos.z *= scale;
                 
-                // Update the input field with clamped value
                 document.getElementById(`hotspotPos${axis.toUpperCase()}`).value = pos[axis].toFixed(2);
                 showToast('Position clamped to 10-unit radius', 'info');
             }
@@ -494,21 +458,15 @@ if (this.sceneManager.setCurrentScene(index)) {
         const index = this.sceneManager.currentSceneIndex;
         if (index < 0) return;
         
-        // Update the scene's image URL
         if (this.sceneManager.updateScene(index, 'imageUrl', imageUrl)) {
-            // Also update thumbnail to match new image
             const scene = this.sceneManager.getCurrentScene();
             if (scene) {
-                scene.thumbnail = imageUrl; // Use same URL for thumbnail
+                scene.thumbnail = imageUrl;
             }
             
-            // Update scene list to show new thumbnail
             this.uiController.renderSceneList();
-            
-            // Force scene reload by resetting tracker
             this.lastRenderedSceneIndex = -1;
             
-            // Reload the preview with the new image
             if (scene) {
                 await this.previewController.loadScene(scene);
                 this.lastRenderedSceneIndex = index;
@@ -522,13 +480,9 @@ if (this.sceneManager.setCurrentScene(index)) {
      * Render all UI
      */
     render() {
-        // Render scene list
         this.uiController.renderSceneList();
-        
-        // Render hotspot list
         this.uiController.renderHotspotList();
         
-        // Update properties panels
         const currentScene = this.sceneManager.getCurrentScene();
         const currentHotspot = this.hotspotEditor.getCurrentHotspot();
         
@@ -536,30 +490,24 @@ if (this.sceneManager.setCurrentScene(index)) {
         this.uiController.updateHotspotProperties(currentHotspot);
         this.uiController.updateTourProperties(this.config);
         this.uiController.updateInitialSceneOptions();
-        this.uiController.updateTargetSceneOptions(); // Always update target scene dropdown
+        this.uiController.updateTargetSceneOptions();
         
-        // Update preview
         if (currentScene) {
-// Hide empty state
             const emptyState = document.querySelector('.preview-empty');
             if (emptyState) {
                 emptyState.style.display = 'none';
             }
             
-            // Only reload scene if it changed
             const currentSceneIndex = this.sceneManager.currentSceneIndex;
             if (currentSceneIndex !== this.lastRenderedSceneIndex) {
-// Load scene with camera rotation preservation enabled (default)
                 this.previewController.loadScene(currentScene);
                 this.lastRenderedSceneIndex = currentSceneIndex;
-            } else {
-}
+            }
             
             if (currentHotspot) {
                 this.previewController.highlightHotspot(this.hotspotEditor.currentHotspotIndex);
             }
         } else {
-// Show empty state
             const emptyState = document.querySelector('.preview-empty');
             if (emptyState) {
                 emptyState.style.display = 'flex';

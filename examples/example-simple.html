@@ -66,11 +66,6 @@
         const sceneEl = document.querySelector('#vr-scene');
         sceneEl.addEventListener('loaded', () => {
             const tour = new SWT.Tour(sceneEl, tourConfig);
-            
-            tour.addEventListener('scene-loaded', (e) => {
-                console.log('Scene loaded:', e.detail.sceneId);
-            });
-            
             tour.start();
         });
     </script>

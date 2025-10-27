@@ -36,7 +36,7 @@ class HotspotEditor {
         }
         
         showToast('Click on the 360° preview to place hotspot', 'info', 5000);
-return true;
+        return true;
     }
 
     /**
