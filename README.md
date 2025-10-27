@@ -5,112 +5,155 @@ A powerful, data-driven 360° virtual tour system for A-Frame WebVR with a visua
 ## Features
 
 - **Visual Editor** - Drag-and-drop interface for creating tours without coding
-- **Viewer Library** - Lightweight JavaScript library for embedding tours (12KB minified)
+- **Viewer Library** - Lightweight JavaScript library for embedding tours
 - **Standalone Viewer** - Drag-and-drop JSON player, no dependencies needed
 - **Mobile-Friendly** - Full touch and VR headset support
-- **Auto-Save** - Projects automatically saved to localStorage
 - **Customizable** - Custom hotspot colors, icons, and tooltips
 - **Export Options** - JSON or self-contained HTML files
-- **Offline-First** - Works without internet connection
-
-## Project Structure
-
-```
-senangwebs_tour/
-├── dist/                       # Built files (generated)
-│   ├── swt.js                 # Viewer library (26KB, dev)
-│   ├── swt.min.js             # Viewer library (12KB, prod)
-│   ├── swt-editor.js          # Editor bundle (89KB, dev)
-│   ├── swt-editor.min.js      # Editor bundle (38KB, prod)
-│   ├── swt-editor.css         # Editor styles (39KB, dev)
-│   └── swt-editor.min.css     # Editor styles (25KB, prod)
-├── src/                        # Source files
-│   ├── editor/                # Visual editor source
-│   │   ├── index.html         # Editor interface
-│   │   ├── css/               # Editor styles
-│   │   └── js/                # Editor modules (ES6)
-│   ├── components/            # A-Frame components
-│   ├── index.js               # Library entry point
-│   └── *Manager.js            # Core managers
-├── examples/                   # Example files
-│   ├── editor.html            # Editor demo
-│   ├── example.html           # Full tour demo
-│   ├── example-simple.html    # Minimal example
-│   ├── viewer.html            # Standalone viewer
-│   └── test.html              # Library tests
-└── index.html                  # Project landing page
-```
 
 ## Quick Start
 
-### Option 1: Use the Visual Editor
+### Editor Quick Start (Visual Tour Builder)
 
-1. Open `src/editor/index.html` or `examples/editor.html` in a browser
-2. Click "Add Scene" and upload 360° panorama images
-3. Click "Add Hotspot" and place hotspots by clicking the preview
-4. Configure hotspot properties and navigation targets
-5. Export as JSON or standalone HTML
+1. **Open the Editor:** Launch `examples/editor.html` in your browser (use `npm run serve` for local server).
+2. **Add Scenes:** Click "Add Scene" and upload your 360° panorama images (images are converted to Data URLs for offline editing).
+3. **Place Hotspots:** Click "Add Hotspot" and then click on the preview to place interactive hotspots.
+4. **Configure Hotspots:** Set hotspot color, icon, tooltip, and navigation target (scene to jump to).
+5. **Preview:** See live updates in the A-Frame preview window as you edit.
+6. **Export:**
 
-### Option 2: Use the Library (Code)
+- **JSON Export:** Download a portable tour config for use with the viewer library.
+- **Viewer Export:** Download a standalone HTML file with embedded JSON and viewer (no dependencies needed).
+
+### Viewer Library Quick Start (Code Integration)
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-    <script src="dist/swt.min.js"></script>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="dist/swt.min.js"></script>
 </head>
 <body>
-    <a-scene id="vr-scene">
-        <a-camera>
-            <a-cursor></a-cursor>
-        </a-camera>
-    </a-scene>
+  <a-scene id="vr-scene">
+    <a-camera>
+      <a-cursor></a-cursor>
+    </a-camera>
+  </a-scene>
 
-    <script>
-        const tourConfig = {
-            initialScene: "scene1",
-            scenes: {
-                scene1: {
-                    name: "First Scene",
-                    panorama: "path/to/panorama1.jpg",
-                    hotspots: [
-                        {
-                            position: { x: 10, y: 1.5, z: -3 },
-                            action: {
-                                type: "navigateTo",
-                                target: "scene2"
-                            },
-                            appearance: {
-                                color: "#00ff00",
-                                scale: 1.0
-                            },
-                            tooltip: {
-                                text: "Go to Scene 2"
-                            }
-                        }
-                    ]
-                },
-                scene2: {
-                    name: "Second Scene",
-                    panorama: "path/to/panorama2.jpg",
-                    hotspots: []
-                }
+  <script>
+    const tourConfig = {
+      initialScene: "scene1",
+      scenes: {
+        scene1: {
+          name: "First Scene",
+          panorama: "path/to/panorama1.jpg",
+          hotspots: [
+            {
+              position: { x: 10, y: 1.5, z: -3 },
+              action: {
+                type: "navigateTo",
+                target: "scene2"
+              },
+              appearance: {
+                color: "#00ff00",
+                scale: 1.0
+              },
+              tooltip: {
+                text: "Go to Scene 2"
+              }
             }
-        };
+          ]
+        },
+        scene2: {
+          name: "Second Scene",
+          panorama: "path/to/panorama2.jpg",
+          hotspots: []
+        }
+      }
+    };
 
-        const scene = document.querySelector('#vr-scene');
-        const tour = new SWT.Tour(scene, tourConfig);
+    const scene = document.querySelector('#vr-scene');
+    const tour = new SWT.Tour(scene, tourConfig);
 
-        tour.addEventListener('scene-loaded', (e) => {
-            console.log('Scene loaded:', e.detail.sceneId);
-        });
+    tour.addEventListener('scene-loaded', (e) => {
+      console.log('Scene loaded:', e.detail.sceneId);
+    });
 
-        tour.start();
-    </script>
+    tour.start();
+  </script>
 </body>
 </html>
 ```
+
+### Custom Editor Integration (Using swt-editor.js)
+
+Build your own tour editor interface using the SWT editor components:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="dist/swt.js"></script>
+  <script src="dist/swt-editor.js"></script>
+  <link rel="stylesheet" href="dist/swt-editor.css">
+</head>
+<body>
+  <!-- Your custom editor UI -->
+  <div id="my-editor">
+    <div id="scene-list"></div>
+    <div id="preview-area"></div>
+    <div id="properties-panel"></div>
+  </div>
+
+  <script>
+    // Initialize the editor components
+    const editor = new TourEditor();
+    const sceneManager = new SceneManagerEditor();
+    const hotspotEditor = new HotspotEditor();
+    const previewController = new PreviewController(document.getElementById('preview-area'));
+    const uiController = new UIController();
+    const storageManager = new ProjectStorageManager();
+    const exportManager = new ExportManager();
+
+    // Set up editor with your custom configuration
+    editor.initialize({
+      sceneListElement: document.getElementById('scene-list'),
+      previewElement: document.getElementById('preview-area'),
+      propertiesElement: document.getElementById('properties-panel')
+    });
+
+    // Add custom event handlers
+    editor.addEventListener('scene-added', (e) => {
+      console.log('Scene added:', e.detail.scene);
+      // Your custom logic here
+    });
+
+    editor.addEventListener('hotspot-placed', (e) => {
+      console.log('Hotspot placed:', e.detail.position);
+      // Your custom logic here
+    });
+
+    // Export tour configuration
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const config = exportManager.generateTourConfig(editor.getScenes());
+      console.log('Tour config:', config);
+    });
+  </script>
+</body>
+</html>
+```
+
+**Available Editor Classes:**
+
+- `TourEditor` - Main editor coordinator
+- `SceneManagerEditor` - Scene CRUD operations
+- `HotspotEditor` - Hotspot placement and editing
+- `PreviewController` - A-Frame preview management
+- `UIController` - DOM rendering and updates
+- `ProjectStorageManager` - LocalStorage persistence
+- `ExportManager` - JSON and HTML export functionality
 
 ## Building from Source
 
@@ -131,9 +174,9 @@ npm run serve
 
 ### Build Output
 
-- `dist/swt.js` & `swt.min.js` - Viewer library (UMD format)
-- `dist/swt-editor.js` & `swt-editor.min.js` - Editor bundle (IIFE format)
-- `dist/swt-editor.css` & `swt-editor.min.css` - Editor styles
+- `dist/swt.js` & `swt.min.js` - Viewer library (UMD format, 26KB/12KB) for embedding tours in web pages
+- `dist/swt-editor.js` & `swt-editor.min.js` - Editor bundle (IIFE format, 89KB/38KB) providing the complete visual editor interface, scene management, hotspot placement, real-time preview, and export functionality. Loaded in `examples/editor.html`.
+- `dist/swt-editor.css` & `swt-editor.min.css` - Editor styles (39KB/25KB) for the editor UI components
 
 ## API Documentation
 
@@ -210,7 +253,7 @@ new SWT.Tour(aframeSceneEl, tourConfig)
 - **Import/Export** - Load and save tour configurations
 - **Dual Export Modes:**
   - **JSON Export** - Configuration file for use with SWT library
-  - **Viewer Export** - Standalone HTML with embedded tour (no dependencies)
+  - **Viewer Export** - Standalone HTML with embedded tour
 
 ## Browser Compatibility
 
@@ -220,14 +263,6 @@ new SWT.Tour(aframeSceneEl, tourConfig)
 - Edge 90+
 - Mobile browsers with WebGL support
 
-## Documentation Files
-
-- `README.md` - This file, main documentation
-- `RESTRUCTURING.md` - Project restructuring guide
-- `.github/copilot-instructions.md` - AI agent development guide
-- `blueprint.md` - Library architecture blueprint
-- `blueprint-gui-editor.md` - Editor architecture blueprint
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -235,9 +270,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT License - see LICENSE file for details
-
-## Support
-
-- **Issues**: Open an issue on GitHub
-- **Documentation**: See `examples/` folder for working demos
-- **Local Testing**: Always use `npm run serve` (A-Frame requires proper CORS)
