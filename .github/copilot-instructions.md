@@ -9,12 +9,6 @@
 
 **Key Principle:** The library is **data-driven and stateless** - it renders tours from JSON configuration objects, not internal state.
 
-**Recent Changes (Oct 2025):**
-- README.md significantly updated with emoji sections, detailed API docs, and comprehensive examples
-- Removed emoji icons from README Table of Contents (user preference)
-- All build outputs now include sourcemaps for debugging
-- Editor supports both declarative (HTML attributes) and programmatic (JS API) initialization modes
-
 ## Architecture & Data Flow
 
 ### Three-Layer System
@@ -63,8 +57,8 @@ Editor (GUI) → Generates JSON → Library (SWT.Tour) → Renders in A-Frame
 - **Scene Reload Optimization:** `lastRenderedSceneIndex` tracks loaded scene - only reloads if scene changes, preserving camera rotation when switching hotspots
 - **Camera Preservation:** `loadScene(scene, preserveCameraRotation=true)` saves/restores camera rotation across reloads - set to `false` when switching scenes
 - **Data Format Transformation:** Editor stores `imageUrl`, library expects `panorama` (conversion in `preview-controller.js` and `export-manager.js`)
-- **Logging Policy:** Only `console.error()` for critical errors. Some `console.warn()` remain in viewer library (src/) for runtime warnings (video autoplay, unknown actions). Editor should avoid all console.log/debug/trace.
-- **Declarative Init Pattern:** `ui-init.js` scans for `[data-swt-editor]` elements on DOMContentLoaded, auto-initializes if `data-swt-auto-init="true"` (see lines 6-55)
+- **Logging Policy:** Use only `console.error()` for critical errors. `console.warn()` is acceptable in viewer library (src/) for runtime warnings (video autoplay, unknown actions). Never use `console.log()`, `console.debug()`, or `console.trace()` in production code. No emojis in console output.
+- **Declarative Init Pattern:** `ui-init.js` scans for `[data-swt-editor]` elements on DOMContentLoaded, auto-initializes if `data-swt-auto-init="true"`
 
 ## Critical Workflows
 
@@ -211,8 +205,22 @@ Open `examples/test.html` in browser - validates library loading, API surface, c
 - Editor state inspection: `window.editor` global available in dev console after initialization
 - Preview not updating: Check `hasUnsavedChanges` flag, call `editor.render()` manually
 - A-Frame inspector: Press `Ctrl+Alt+I` in any A-Frame scene for visual debugger
-- Check `console.error()` only - all debug `console.log()` removed from production code
+- Console output: Only `console.error()` for critical errors - no debug logging in production
 - Rollup sourcemaps: Enable in browser DevTools to debug original ES6 source
+
+## Code Quality Standards
+
+### Console Output Policy
+- **Production code:** Use ONLY `console.error()` for critical errors
+- **Viewer library (src/):** `console.warn()` acceptable for runtime warnings (autoplay failures, unknown actions)
+- **Never use:** `console.log()`, `console.debug()`, `console.trace()`, or any emojis in console output
+- **Examples/demos:** Can include minimal logging for educational purposes, but avoid clutter
+
+### Code Style
+- **No emojis:** Removed from all production code, error messages, and comments
+- **Indentation:** Consistent 4-space indentation (already enforced via cleanup)
+- **Comments:** Keep JSDoc for public APIs, remove redundant inline comments explaining obvious code
+- **Whitespace:** Clean, consistent formatting without trailing spaces or unnecessary blank lines
 
 ## Quick Reference
 
