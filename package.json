@@ -21,7 +21,7 @@
     "vr",
     "editor"
   ],
-  "author": "SenangWebs",
+  "author": "a-hakim",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
