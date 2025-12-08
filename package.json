@@ -34,6 +34,9 @@
     "terser": "^5.44.0"
   },
   "peerDependencies": {
-    "aframe": "^1.4.0"
+    "aframe": "^1.7.1"
+  },
+  "dependencies": {
+    "@bookklik/senangstart-icons": "^1.0.4"
   }
 }

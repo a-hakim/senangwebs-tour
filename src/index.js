@@ -3,10 +3,12 @@
  * Version 1.0.0
  */
 
-import './components/hotspot-listener.js';
-import { AssetManager } from './AssetManager.js';
-import { SceneManager } from './SceneManager.js';
-import { HotspotManager } from './HotspotManager.js';
+import AFRAME from "aframe";
+import "@bookklik/senangstart-icons/dist/senangstart-icon.min.js";
+import "./components/hotspot-listener.js";
+import { AssetManager } from "./AssetManager.js";
+import { SceneManager } from "./SceneManager.js";
+import { HotspotManager } from "./HotspotManager.js";
 
 /**
  * Main Tour class - The public API for the SWT library
@@ -14,11 +16,13 @@ import { HotspotManager } from './HotspotManager.js';
 class Tour {
   constructor(aframeSceneEl, tourConfig) {
     if (!aframeSceneEl) {
-      throw new Error('SWT.Tour requires an A-Frame scene element');
+      throw new Error("SWT.Tour requires an A-Frame scene element");
     }
 
     if (!tourConfig || !tourConfig.scenes || !tourConfig.initialScene) {
-      throw new Error('SWT.Tour requires a valid tour configuration with scenes and initialScene');
+      throw new Error(
+        "SWT.Tour requires a valid tour configuration with scenes and initialScene"
+      );
     }
 
     this.sceneEl = aframeSceneEl;
@@ -28,17 +32,20 @@ class Tour {
     // Initialize managers
     this.assetManager = new AssetManager(this.sceneEl);
     this.sceneManager = new SceneManager(this.sceneEl, this.assetManager);
-    
+
     const defaultHotspotSettings = this.config.settings?.defaultHotspot || {};
     this.hotspotManager = new HotspotManager(
-      this.sceneEl, 
-      this.assetManager, 
+      this.sceneEl,
+      this.assetManager,
       defaultHotspotSettings
     );
 
     // Event listeners
     this.boundHandleHotspotClick = this.handleHotspotClick.bind(this);
-    this.sceneEl.addEventListener('swt-hotspot-clicked', this.boundHandleHotspotClick);
+    this.sceneEl.addEventListener(
+      "swt-hotspot-clicked",
+      this.boundHandleHotspotClick
+    );
 
     // Ensure cursor exists for interaction
     this.ensureCursor();
@@ -48,13 +55,13 @@ class Tour {
    * Ensure the scene has a cursor for interaction
    */
   ensureCursor() {
-    const camera = this.sceneEl.querySelector('[camera]');
+    const camera = this.sceneEl.querySelector("[camera]");
     if (camera) {
-      let cursor = camera.querySelector('[cursor]');
+      let cursor = camera.querySelector("[cursor]");
       if (!cursor) {
-        cursor = document.createElement('a-cursor');
-        cursor.setAttribute('fuse', 'true');
-        cursor.setAttribute('fuse-timeout', '1500');
+        cursor = document.createElement("a-cursor");
+        cursor.setAttribute("fuse", "true");
+        cursor.setAttribute("fuse-timeout", "1500");
         camera.appendChild(cursor);
       }
     }
@@ -66,7 +73,7 @@ class Tour {
    */
   async start() {
     if (this.isStarted) {
-      console.warn('Tour has already been started');
+      console.warn("Tour has already been started");
       return Promise.resolve();
     }
 
@@ -74,12 +81,14 @@ class Tour {
     const initialSceneData = this.config.scenes[initialSceneId];
 
     if (!initialSceneData) {
-      throw new Error(`Initial scene "${initialSceneId}" not found in tour configuration`);
+      throw new Error(
+        `Initial scene "${initialSceneId}" not found in tour configuration`
+      );
     }
 
     try {
       // Emit scene-loading event
-      this.emit('scene-loading', { sceneId: initialSceneId });
+      this.emit("scene-loading", { sceneId: initialSceneId });
 
       // Load the scene
       await this.sceneManager.loadScene(initialSceneId, initialSceneData);
@@ -90,12 +99,12 @@ class Tour {
       this.isStarted = true;
 
       // Emit events
-      this.emit('scene-loaded', { sceneId: initialSceneId });
-      this.emit('tour-started', { sceneId: initialSceneId });
+      this.emit("scene-loaded", { sceneId: initialSceneId });
+      this.emit("tour-started", { sceneId: initialSceneId });
 
       return Promise.resolve();
     } catch (error) {
-      console.error('Failed to start tour:', error);
+      console.error("Failed to start tour:", error);
       throw error;
     }
   }
@@ -119,7 +128,7 @@ class Tour {
 
     try {
       // Emit scene-loading event
-      this.emit('scene-loading', { sceneId: sceneId });
+      this.emit("scene-loading", { sceneId: sceneId });
 
       // Remove old hotspots
       this.hotspotManager.removeAllHotspots();
@@ -131,7 +140,7 @@ class Tour {
       await this.hotspotManager.createHotspots(sceneData.hotspots || []);
 
       // Emit scene-loaded event
-      this.emit('scene-loaded', { sceneId: sceneId });
+      this.emit("scene-loaded", { sceneId: sceneId });
 
       return Promise.resolve();
     } catch (error) {
@@ -149,9 +158,9 @@ class Tour {
     const currentSceneId = this.sceneManager.getCurrentSceneId();
 
     // Emit hotspot-activated event
-    this.emit('hotspot-activated', {
+    this.emit("hotspot-activated", {
       hotspotData: hotspotData,
-      sceneId: currentSceneId
+      sceneId: currentSceneId,
     });
 
     // Handle the action
@@ -166,14 +175,14 @@ class Tour {
    */
   handleAction(action) {
     switch (action.type) {
-      case 'navigateTo':
+      case "navigateTo":
         if (action.target) {
-          this.navigateTo(action.target).catch(err => {
-            console.error('Navigation failed:', err);
+          this.navigateTo(action.target).catch((err) => {
+            console.error("Navigation failed:", err);
           });
         }
         break;
-      
+
       default:
         console.warn(`Unknown action type: ${action.type}`);
     }
@@ -196,7 +205,7 @@ class Tour {
     const event = new CustomEvent(eventName, {
       detail: detail,
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
     this.sceneEl.dispatchEvent(event);
   }
@@ -224,7 +233,10 @@ class Tour {
    */
   destroy() {
     // Remove event listeners
-    this.sceneEl.removeEventListener('swt-hotspot-clicked', this.boundHandleHotspotClick);
+    this.sceneEl.removeEventListener(
+      "swt-hotspot-clicked",
+      this.boundHandleHotspotClick
+    );
 
     // Clean up managers
     this.hotspotManager.destroy();
@@ -239,7 +251,7 @@ class Tour {
 export { Tour };
 
 // Also attach to window for UMD usage
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.SWT = window.SWT || {};
   window.SWT.Tour = Tour;
 }
