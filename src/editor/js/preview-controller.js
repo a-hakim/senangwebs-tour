@@ -92,7 +92,7 @@ class PreviewController {
           console.error("Error removing scene:", error);
         }
       }
-      
+
       // Clear any remaining children (loading overlays, empty state, etc)
       while (this.previewContainer.firstChild) {
         this.previewContainer.removeChild(this.previewContainer.firstChild);
@@ -100,9 +100,9 @@ class PreviewController {
     } else {
       // First load - only remove non-A-Frame elements (like empty state divs)
       const children = Array.from(this.previewContainer.children);
-      children.forEach(child => {
+      children.forEach((child) => {
         // Only remove if it's NOT an a-scene (shouldn't be any, but be safe)
-        if (child.tagName.toLowerCase() !== 'a-scene') {
+        if (child.tagName.toLowerCase() !== "a-scene") {
           this.previewContainer.removeChild(child);
         }
       });
@@ -313,6 +313,7 @@ class PreviewController {
 
   /**
    * Get current camera rotation
+   * Works with A-Frame's look-controls component by reading its internal state
    */
   getCameraRotation() {
     const aframeScene = this.previewContainer?.querySelector("a-scene");
@@ -325,7 +326,18 @@ class PreviewController {
       return null;
     }
 
-    // Get rotation from object3D which is more reliable
+    // Try to get rotation from look-controls internal state (more reliable)
+    const lookControls = camera.components?.["look-controls"];
+    if (lookControls && lookControls.pitchObject && lookControls.yawObject) {
+      const savedRotation = {
+        x: lookControls.pitchObject.rotation.x,
+        y: lookControls.yawObject.rotation.y,
+        z: 0,
+      };
+      return savedRotation;
+    }
+
+    // Fallback to object3D rotation
     const rotation = camera.object3D.rotation;
     const savedRotation = {
       x: rotation.x,
@@ -337,6 +349,7 @@ class PreviewController {
 
   /**
    * Set camera rotation
+   * Works with A-Frame's look-controls component by setting its internal state
    */
   setCameraRotation(rotation) {
     if (!rotation) {
@@ -353,17 +366,30 @@ class PreviewController {
       return;
     }
 
-    // Set rotation on object3D directly
+    // Set rotation via look-controls internal pitchObject/yawObject
+    // This is required because look-controls overrides object3D.rotation on each tick
     const setRotation = () => {
-      if (camera.object3D) {
-        camera.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
+      const cam = this.previewContainer?.querySelector("[camera]");
+      if (!cam) return;
+
+      const lookControls = cam.components?.["look-controls"];
+      if (lookControls && lookControls.pitchObject && lookControls.yawObject) {
+        // Set pitch (x rotation) on pitchObject
+        lookControls.pitchObject.rotation.x = rotation.x;
+        // Set yaw (y rotation) on yawObject
+        lookControls.yawObject.rotation.y = rotation.y;
+      } else if (cam.object3D) {
+        // Fallback to direct object3D if look-controls not ready
+        cam.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
       }
     };
 
-    // Try immediately and also after a delay to ensure it sticks
+    // Try immediately and also after delays to ensure it sticks
+    // A-Frame look-controls may not be fully initialized immediately
     setRotation();
     setTimeout(setRotation, 100);
     setTimeout(setRotation, 300);
+    setTimeout(setRotation, 500);
   }
 
   /**
@@ -372,15 +398,8 @@ class PreviewController {
   async refresh() {
     const scene = this.editor.sceneManager.getCurrentScene();
     if (scene) {
-      // Save current camera rotation
-      const savedRotation = this.getCameraRotation();
-      // Reload scene
-      await this.loadScene(scene);
-
-      // Restore camera rotation
-      if (savedRotation) {
-        this.setCameraRotation(savedRotation);
-      }
+      // loadScene with preserveCameraRotation=true handles save/restore internally
+      await this.loadScene(scene, true);
     }
   }
 
