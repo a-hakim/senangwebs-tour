@@ -1,7 +1,8 @@
 # Custom Editor Development Guide
 
 This guide explains how to build your own custom tour editor using the SWT editor components (`swt-editor.js`).
-![SenangWebs Tour Preview](https://raw.githubusercontent.com/a-hakim/senangwebs-tour/master/swt_preview.png)
+
+![SenangWebs Tour Preview](https://raw.githubusercontent.com/a-hakim/senangwebs-tour/master/swt_preview1.png)
 
 ## Overview
 
@@ -14,15 +15,15 @@ Both modes provide the same functionality but differ in setup complexity and fle
 
 ## Comparison Table
 
-| Feature | Declarative Mode | Programmatic Mode |
-|---------|-----------------|-------------------|
-| **Setup** | HTML attributes only | HTML + JavaScript |
-| **Code Required** | None | ~10-20 lines |
-| **Flexibility** | Limited to attributes | Full API control |
-| **Auto-Init** | Yes (via `data-swt-auto-init`) | Manual `editor.init()` |
-| **Configuration** | HTML attributes | JavaScript options |
-| **Best For** | Quick prototypes, simple editors | Complex integrations, custom logic |
-| **Example** | `examples/editor-declarative.html` | `examples/editor-simple.html` |
+| Feature           | Declarative Mode                   | Programmatic Mode                  |
+| ----------------- | ---------------------------------- | ---------------------------------- |
+| **Setup**         | HTML attributes only               | HTML + JavaScript                  |
+| **Code Required** | None                               | ~10-20 lines                       |
+| **Flexibility**   | Limited to attributes              | Full API control                   |
+| **Auto-Init**     | Yes (via `data-swt-auto-init`)     | Manual `editor.init()`             |
+| **Configuration** | HTML attributes                    | JavaScript options                 |
+| **Best For**      | Quick prototypes, simple editors   | Complex integrations, custom logic |
+| **Example**       | `examples/editor-declarative.html` | `examples/editor-simple.html`      |
 
 ## Quick Start
 
@@ -35,24 +36,27 @@ Use `data-swt-*` attributes for automatic initialization. No JavaScript required
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-  <script src="dist/swt.js"></script>
-  <script src="dist/swt-editor.js"></script>
-  <link rel="stylesheet" href="dist/swt-editor.css">
-</head>
-<body>
-  <!-- Declarative editor - auto-initializes on page load -->
-  <div data-swt-editor data-swt-auto-init="true">
-    <div data-swt-scene-list></div>
-    <div data-swt-preview-area></div>
-    <div data-swt-properties-panel></div>
-  </div>
-</body>
+  <head>
+    <script src="https://unpkg.com/senangwebs-tour@latest/dist/swt.js"></script>
+    <script src="https://unpkg.com/senangwebs-tour@latest/dist/swt-editor.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/senangwebs-tour@latest/dist/swt-editor.css"
+    />
+  </head>
+  <body>
+    <!-- Declarative editor - auto-initializes on page load -->
+    <div data-swt-editor data-swt-auto-init="true">
+      <div data-swt-scene-list></div>
+      <div data-swt-preview-area></div>
+      <div data-swt-properties-panel></div>
+    </div>
+  </body>
 </html>
 ```
 
 **Supported Attributes:**
+
 - `data-swt-editor` - Marks the editor container
 - `data-swt-auto-init="true"` - Auto-initialize on DOMContentLoaded
 - `data-swt-scene-list` - Scene list container
@@ -67,33 +71,35 @@ Full control via JavaScript API for custom initialization and configuration.
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-  <script src="dist/swt.js"></script>
-  <script src="dist/swt-editor.js"></script>
-  <link rel="stylesheet" href="dist/swt-editor.css">
-</head>
-<body>
-  <!-- Custom editor structure -->
-  <div id="my-editor">
-    <div id="scene-list"></div>
-    <div id="preview-area"></div>
-    <div id="properties-panel"></div>
-  </div>
+  <head>
+    <script src="https://unpkg.com/senangwebs-tour@latest/dist/swt.js"></script>
+    <script src="https://unpkg.com/senangwebs-tour@latest/dist/swt-editor.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/senangwebs-tour@latest/dist/swt-editor.css"
+    />
+  </head>
+  <body>
+    <!-- Custom editor structure -->
+    <div id="my-editor">
+      <div id="scene-list"></div>
+      <div id="preview-area"></div>
+      <div id="properties-panel"></div>
+    </div>
 
-  <script>
-    // Manual initialization with custom configuration
-    const editor = new TourEditor();
-    editor.init({
-      sceneListElement: document.getElementById('scene-list'),
-      previewElement: document.getElementById('preview-area'),
-      propertiesElement: document.getElementById('properties-panel'),
-      projectName: 'My Custom Tour',
-      autoSave: true,
-      autoSaveInterval: 30000 // 30 seconds
-    });
-  </script>
-</body>
+    <script>
+      // Manual initialization with custom configuration
+      const editor = new TourEditor();
+      editor.init({
+        sceneListElement: document.getElementById("scene-list"),
+        previewElement: document.getElementById("preview-area"),
+        propertiesElement: document.getElementById("properties-panel"),
+        projectName: "My Custom Tour",
+        autoSave: true,
+        autoSaveInterval: 30000, // 30 seconds
+      });
+    </script>
+  </body>
 </html>
 ```
 
@@ -109,26 +115,26 @@ The SWT editor uses a **six-controller pattern** with these main classes:
 
 ### Core Classes
 
-| Class | Purpose | Key Methods |
-|-------|---------|-------------|
-| `TourEditor` | Main coordinator, orchestrates all other components | `initialize()`, `render()`, `addScene()`, `addHotspot()` |
-| `SceneManagerEditor` | Scene CRUD operations | `addScene()`, `removeScene()`, `getScenes()` |
-| `HotspotEditor` | Hotspot placement and editing | `enablePlacementMode()`, `addHotspot()`, `updateHotspot()` |
-| `PreviewController` | A-Frame preview management | `loadScene()`, `pointCameraToHotspot()` |
-| `UIController` | DOM rendering and updates | `renderSceneList()`, `renderHotspotList()` |
-| `ProjectStorageManager` | LocalStorage persistence | `saveProject()`, `loadProject()` |
-| `ExportManager` | JSON and HTML export | `generateTourConfig()`, `exportAsViewer()` |
+| Class                   | Purpose                                             | Key Methods                                                |
+| ----------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
+| `TourEditor`            | Main coordinator, orchestrates all other components | `initialize()`, `render()`, `addScene()`, `addHotspot()`   |
+| `SceneManagerEditor`    | Scene CRUD operations                               | `addScene()`, `removeScene()`, `getScenes()`               |
+| `HotspotEditor`         | Hotspot placement and editing                       | `enablePlacementMode()`, `addHotspot()`, `updateHotspot()` |
+| `PreviewController`     | A-Frame preview management                          | `loadScene()`, `pointCameraToHotspot()`                    |
+| `UIController`          | DOM rendering and updates                           | `renderSceneList()`, `renderHotspotList()`                 |
+| `ProjectStorageManager` | LocalStorage persistence                            | `saveProject()`, `loadProject()`                           |
+| `ExportManager`         | JSON and HTML export                                | `generateTourConfig()`, `exportAsViewer()`                 |
 
 ## Building a Custom Editor
 
 ### Choosing an Initialization Mode
 
-| Feature | Declarative | Programmatic |
-|---------|------------|--------------|
-| Setup Complexity | Minimal (HTML only) | Moderate (HTML + JS) |
-| Flexibility | Limited to attributes | Full API access |
-| Custom Logic | Limited | Unlimited |
-| Best For | Quick setup, prototypes | Complex integrations |
+| Feature          | Declarative             | Programmatic         |
+| ---------------- | ----------------------- | -------------------- |
+| Setup Complexity | Minimal (HTML only)     | Moderate (HTML + JS) |
+| Flexibility      | Limited to attributes   | Full API access      |
+| Custom Logic     | Limited                 | Unlimited            |
+| Best For         | Quick setup, prototypes | Complex integrations |
 
 ### Step 1: Choose Your Mode
 
@@ -164,14 +170,14 @@ The SWT editor uses a **six-controller pattern** with these main classes:
 <!-- Initialize manually -->
 <script>
   const editor = new TourEditor({
-    projectName: 'My Tour',
-    autoSave: true
+    projectName: "My Tour",
+    autoSave: true,
   });
-  
+
   editor.init({
-    sceneListElement: document.getElementById('scenes'),
-    previewElement: document.getElementById('preview'),
-    propertiesElement: document.getElementById('properties')
+    sceneListElement: document.getElementById("scenes"),
+    previewElement: document.getElementById("preview"),
+    propertiesElement: document.getElementById("properties"),
   });
 </script>
 ```
@@ -185,7 +191,9 @@ For declarative mode, skip to Step 3. For programmatic mode:
 const editor = new TourEditor();
 const sceneManager = new SceneManagerEditor();
 const hotspotEditor = new HotspotEditor();
-const previewController = new PreviewController(document.getElementById('preview-area'));
+const previewController = new PreviewController(
+  document.getElementById("preview-area")
+);
 const uiController = new UIController();
 const storageManager = new ProjectStorageManager();
 const exportManager = new ExportManager();
@@ -196,9 +204,9 @@ const exportManager = new ExportManager();
 ```javascript
 // Set up editor with your custom DOM elements
 editor.initialize({
-  sceneListElement: document.getElementById('scene-list'),
-  previewElement: document.getElementById('preview-area'),
-  propertiesElement: document.getElementById('properties-panel')
+  sceneListElement: document.getElementById("scene-list"),
+  previewElement: document.getElementById("preview-area"),
+  propertiesElement: document.getElementById("properties-panel"),
 });
 ```
 
@@ -206,18 +214,18 @@ editor.initialize({
 
 ```javascript
 // Listen to editor events
-editor.addEventListener('scene-added', (e) => {
-  console.log('Scene added:', e.detail.scene);
+editor.addEventListener("scene-added", (e) => {
+  console.log("Scene added:", e.detail.scene);
   // Update your custom UI
 });
 
-editor.addEventListener('hotspot-placed', (e) => {
-  console.log('Hotspot placed:', e.detail.position);
+editor.addEventListener("hotspot-placed", (e) => {
+  console.log("Hotspot placed:", e.detail.position);
   // Handle hotspot placement in your UI
 });
 
-editor.addEventListener('scene-loaded', (e) => {
-  console.log('Scene loaded:', e.detail.sceneId);
+editor.addEventListener("scene-loaded", (e) => {
+  console.log("Scene loaded:", e.detail.sceneId);
   // Update preview state
 });
 ```
@@ -229,10 +237,10 @@ editor.addEventListener('scene-loaded', (e) => {
 ```javascript
 // Add a scene programmatically
 const sceneData = {
-  id: 'my-scene-1',
-  name: 'Living Room',
-  imageUrl: 'data:image/jpeg;base64,...', // Data URL or regular URL
-  hotspots: []
+  id: "my-scene-1",
+  name: "Living Room",
+  imageUrl: "data:image/jpeg;base64,...", // Data URL or regular URL
+  hotspots: [],
 };
 
 sceneManager.addScene(sceneData);
@@ -247,19 +255,19 @@ hotspotEditor.enablePlacementMode();
 
 // Add hotspot at specific position
 const hotspot = {
-  id: 'hotspot-1',
+  id: "hotspot-1",
   position: { x: 5, y: 1.5, z: -3 },
   action: {
-    type: 'navigateTo',
-    target: 'scene-2'
+    type: "navigateTo",
+    target: "scene-2",
   },
   appearance: {
-    color: '#ff0000',
-    scale: 1.2
+    color: "#ff0000",
+    scale: 1.2,
   },
   tooltip: {
-    text: 'Go to Kitchen'
-  }
+    text: "Go to Kitchen",
+  },
 };
 
 editor.addHotspot(hotspot);
@@ -273,14 +281,14 @@ const tourConfig = exportManager.generateTourConfig(sceneManager.getScenes());
 
 // Export as JSON file
 const jsonBlob = new Blob([JSON.stringify(tourConfig, null, 2)], {
-  type: 'application/json'
+  type: "application/json",
 });
 const url = URL.createObjectURL(jsonBlob);
 
 // Create download link
-const a = document.createElement('a');
+const a = document.createElement("a");
 a.href = url;
-a.download = 'my-tour.json';
+a.download = "my-tour.json";
 a.click();
 ```
 
@@ -289,19 +297,19 @@ a.click();
 ```javascript
 // Save project to localStorage
 storageManager.saveProject({
-  name: 'My Custom Tour',
+  name: "My Custom Tour",
   scenes: sceneManager.getScenes(),
   settings: {
-    initialScene: 'scene-1',
-    autoRotate: false
-  }
+    initialScene: "scene-1",
+    autoRotate: false,
+  },
 });
 
 // Load project from localStorage
 const project = storageManager.loadProject();
 if (project) {
   // Restore scenes
-  project.scenes.forEach(scene => {
+  project.scenes.forEach((scene) => {
     sceneManager.addScene(scene);
   });
   editor.render();
@@ -314,24 +322,24 @@ The editor emits custom events that you can listen to:
 
 ### Available Events
 
-| Event | When Fired | Event Detail |
-|-------|------------|--------------|
-| `scene-added` | New scene uploaded | `{ scene }` |
-| `scene-removed` | Scene deleted | `{ sceneId }` |
-| `scene-loaded` | Scene loaded in preview | `{ sceneId, sceneName }` |
-| `hotspot-placed` | Hotspot placed via click | `{ position, sceneId }` |
-| `hotspot-selected` | Hotspot selected from list | `{ hotspot, index }` |
-| `hotspot-updated` | Hotspot properties changed | `{ hotspot, property, value }` |
-| `project-saved` | Project saved to storage | `{ projectName }` |
-| `export-ready` | Tour ready for export | `{ config }` |
+| Event              | When Fired                 | Event Detail                   |
+| ------------------ | -------------------------- | ------------------------------ |
+| `scene-added`      | New scene uploaded         | `{ scene }`                    |
+| `scene-removed`    | Scene deleted              | `{ sceneId }`                  |
+| `scene-loaded`     | Scene loaded in preview    | `{ sceneId, sceneName }`       |
+| `hotspot-placed`   | Hotspot placed via click   | `{ position, sceneId }`        |
+| `hotspot-selected` | Hotspot selected from list | `{ hotspot, index }`           |
+| `hotspot-updated`  | Hotspot properties changed | `{ hotspot, property, value }` |
+| `project-saved`    | Project saved to storage   | `{ projectName }`              |
+| `export-ready`     | Tour ready for export      | `{ config }`                   |
 
 ### Event Handler Example
 
 ```javascript
 // Listen to multiple events
-const events = ['scene-added', 'hotspot-placed', 'project-saved'];
+const events = ["scene-added", "hotspot-placed", "project-saved"];
 
-events.forEach(eventName => {
+events.forEach((eventName) => {
   editor.addEventListener(eventName, (e) => {
     console.log(`${eventName}:`, e.detail);
     // Update your custom UI accordingly
@@ -348,7 +356,7 @@ The `swt-editor.css` file provides CSS classes you can use in your custom UI:
 ```html
 <!-- Scene card styling -->
 <div class="scene-card">
-  <img class="scene-thumbnail" src="..." alt="Scene">
+  <img class="scene-thumbnail" src="..." alt="Scene" />
   <div class="scene-info">
     <h3 class="scene-name">Living Room</h3>
   </div>
@@ -361,7 +369,7 @@ The `swt-editor.css` file provides CSS classes you can use in your custom UI:
 <!-- Form styling -->
 <div class="form-group">
   <label class="form-label">Scene Name</label>
-  <input type="text" class="form-input" placeholder="Enter name">
+  <input type="text" class="form-input" placeholder="Enter name" />
 </div>
 ```
 
@@ -412,7 +420,7 @@ Image loading and A-Frame initialization are asynchronous:
 
 ```javascript
 // Wait for A-Frame to be ready
-previewController.waitForLibrary('AFRAME', 5000).then(() => {
+previewController.waitForLibrary("AFRAME", 5000).then(() => {
   // A-Frame is ready, safe to load scenes
   previewController.loadScene(sceneData);
 });
@@ -424,14 +432,14 @@ Use the provided `debounce` utility for text inputs:
 
 ```javascript
 // Import from utils (if available)
-import { debounce } from './utils.js';
+import { debounce } from "./utils.js";
 
 // Or implement your own
 const debouncedUpdate = debounce((value) => {
-  hotspotEditor.updateProperty('tooltip.text', value);
+  hotspotEditor.updateProperty("tooltip.text", value);
 }, 300);
 
-document.getElementById('hotspot-title').addEventListener('input', (e) => {
+document.getElementById("hotspot-title").addEventListener("input", (e) => {
   debouncedUpdate(e.target.value);
 });
 ```
@@ -445,7 +453,7 @@ try {
   const config = exportManager.generateTourConfig(scenes);
   // Process config
 } catch (error) {
-  console.error('Export failed:', error);
+  console.error("Export failed:", error);
   // Show user-friendly error message
 }
 ```
@@ -459,10 +467,12 @@ Create a minimal editor with just scene upload and basic preview:
 ```javascript
 // Minimal setup - just scene management and preview
 const sceneManager = new SceneManagerEditor();
-const previewController = new PreviewController(document.getElementById('preview'));
+const previewController = new PreviewController(
+  document.getElementById("preview")
+);
 
 // Simple scene upload
-document.getElementById('upload').addEventListener('change', async (e) => {
+document.getElementById("upload").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (file) {
     const dataUrl = await loadImageAsDataUrl(file);
@@ -470,9 +480,9 @@ document.getElementById('upload').addEventListener('change', async (e) => {
       id: `scene-${Date.now()}`,
       name: file.name,
       imageUrl: dataUrl,
-      hotspots: []
+      hotspots: [],
     };
-    
+
     sceneManager.addScene(scene);
     previewController.loadScene(scene);
   }
@@ -488,15 +498,15 @@ let editMode = false;
 
 function toggleEditMode() {
   editMode = !editMode;
-  
+
   if (editMode) {
     // Enable hotspot placement
     hotspotEditor.enablePlacementMode();
-    document.getElementById('edit-panel').style.display = 'block';
+    document.getElementById("edit-panel").style.display = "block";
   } else {
     // Disable editing
     hotspotEditor.disablePlacementMode();
-    document.getElementById('edit-panel').style.display = 'none';
+    document.getElementById("edit-panel").style.display = "none";
   }
 }
 ```
@@ -508,30 +518,30 @@ Save/load tours from your server:
 ```javascript
 // Save to server
 async function saveTourToServer(tourConfig) {
-  const response = await fetch('/api/tours', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(tourConfig)
+  const response = await fetch("/api/tours", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(tourConfig),
   });
-  
+
   if (response.ok) {
     const result = await response.json();
-    console.log('Tour saved with ID:', result.id);
+    console.log("Tour saved with ID:", result.id);
   }
 }
 
 // Load from server
 async function loadTourFromServer(tourId) {
   const response = await fetch(`/api/tours/${tourId}`);
-  
+
   if (response.ok) {
     const tourConfig = await response.json();
-    
+
     // Load scenes into editor
-    Object.values(tourConfig.scenes).forEach(scene => {
+    Object.values(tourConfig.scenes).forEach((scene) => {
       sceneManager.addScene(scene);
     });
-    
+
     editor.render();
   }
 }
@@ -556,8 +566,8 @@ Enable debug logging (in development builds):
 window.SWT_DEBUG = true;
 
 // Check editor state
-console.log('Scenes:', sceneManager.getScenes());
-console.log('Current scene:', previewController.getCurrentScene());
+console.log("Scenes:", sceneManager.getScenes());
+console.log("Current scene:", previewController.getCurrentScene());
 ```
 
 ## API Reference

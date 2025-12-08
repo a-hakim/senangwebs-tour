@@ -1,73 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SWT - Simple Example</title>
-    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="../dist/swt.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <a-scene id="vr-scene">
-        <a-camera>
-            <a-cursor></a-cursor>
-        </a-camera>
+      <a-camera>
+        <a-cursor></a-cursor>
+      </a-camera>
     </a-scene>
 
     <script>
-        // Simple tour configuration
-        const tourConfig = {
-            initialScene: "scene1",
-            scenes: {
-                scene1: {
-                    name: "Scene 1",
-                    panorama: "https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg",
-                    hotspots: [
-                        {
-                            position: { x: 5, y: 0, z: -5 },
-                            action: {
-                                type: "navigateTo",
-                                target: "scene2"
-                            },
-                            appearance: {
-                                color: "#FF6B6B",
-                                scale: "2 2 2"
-                            },
-                            tooltip: {
-                                text: "Go to Scene 2"
-                            }
-                        }
-                    ]
+      // Simple tour configuration
+      const tourConfig = {
+        initialScene: "scene1",
+        scenes: {
+          scene1: {
+            name: "Scene 1",
+            panorama:
+              "https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg",
+            hotspots: [
+              {
+                position: { x: 5, y: 0, z: -5 },
+                action: {
+                  type: "navigateTo",
+                  target: "scene2",
                 },
-                scene2: {
-                    name: "Scene 2",
-                    panorama: "https://cdn.aframe.io/360-image-gallery-boilerplate/img/cubes.jpg",
-                    hotspots: [
-                        {
-                            position: { x: -5, y: 0, z: -5 },
-                            action: {
-                                type: "navigateTo",
-                                target: "scene1"
-                            },
-                            appearance: {
-                                color: "#4ECDC4",
-                                scale: "2 2 2"
-                            },
-                            tooltip: {
-                                text: "Back to Scene 1"
-                            }
-                        }
-                    ]
-                }
-            }
-        };
+                appearance: {
+                  color: "#FF6B6B",
+                  scale: "2 2 2",
+                },
+                tooltip: {
+                  text: "Go to Scene 2",
+                },
+              },
+            ],
+          },
+          scene2: {
+            name: "Scene 2",
+            panorama:
+              "https://cdn.aframe.io/360-image-gallery-boilerplate/img/cubes.jpg",
+            hotspots: [
+              {
+                position: { x: -5, y: 0, z: -5 },
+                action: {
+                  type: "navigateTo",
+                  target: "scene1",
+                },
+                appearance: {
+                  color: "#4ECDC4",
+                  scale: "2 2 2",
+                },
+                tooltip: {
+                  text: "Back to Scene 1",
+                },
+              },
+            ],
+          },
+        },
+      };
 
-        // Initialize tour when scene is loaded
-        const sceneEl = document.querySelector('#vr-scene');
-        sceneEl.addEventListener('loaded', () => {
-            const tour = new SWT.Tour(sceneEl, tourConfig);
-            tour.start();
-        });
+      // Initialize tour when scene is loaded
+      const sceneEl = document.querySelector("#vr-scene");
+      sceneEl.addEventListener("loaded", () => {
+        const tour = new SWT.Tour(sceneEl, tourConfig);
+        tour.start();
+      });
     </script>
-</body>
+  </body>
 </html>
