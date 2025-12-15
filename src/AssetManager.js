@@ -56,8 +56,19 @@ export class AssetManager {
    * @returns {Promise} - Resolves when the asset is loaded
    */
   async preloadImage(url, id) {
-    if (this.loadedAssets.has(id)) {
-      return Promise.resolve(this.loadedAssets.get(id));
+    // Check if asset exists and if the URL is the same
+    const existingAsset = this.loadedAssets.get(id);
+    if (existingAsset) {
+      const existingSrc = existingAsset.getAttribute('src');
+      if (existingSrc === url) {
+        // Same URL, return cached asset
+        return Promise.resolve(existingAsset);
+      }
+      // URL changed - remove old asset and create new one
+      if (existingAsset.parentNode) {
+        existingAsset.parentNode.removeChild(existingAsset);
+      }
+      this.loadedAssets.delete(id);
     }
 
     // Ensure assets element is ready

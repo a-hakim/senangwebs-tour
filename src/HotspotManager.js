@@ -92,12 +92,14 @@ export class HotspotManager {
     // Clear previous icon data URLs cache
     this.iconDataUrls.clear();
 
-    // Process all hotspot icons
-    const iconPromises = hotspots.map(async (hotspot, index) => {
+    // Process all hotspot icons SEQUENTIALLY to avoid race condition
+    // (IconRenderer uses a shared renderContainer that would be corrupted by parallel generation)
+    for (let index = 0; index < hotspots.length; index++) {
+      const hotspot = hotspots[index];
       const icon = hotspot.appearance?.icon || this.defaultSettings.icon;
       const color = hotspot.appearance?.color || '#ffffff';
       
-      if (!icon) return;
+      if (!icon) continue;
       
       // Check if it's an image URL
       const isImageUrl = icon.startsWith('http') || icon.startsWith('data:') || icon.startsWith('/');
@@ -124,9 +126,7 @@ export class HotspotManager {
           console.warn(`Failed to generate icon for hotspot ${index}:`, err);
         }
       }
-    });
-
-    await Promise.all(iconPromises);
+    }
 
     // Then create the hotspot entities
     hotspots.forEach((hotspot, index) => {

@@ -223,7 +223,6 @@ body {
 
 .scene-card.active {
   border-color: var(--accent-primary);
-  background: rgba(59, 130, 246, 0.1);
 }
 
 .scene-thumbnail {
@@ -677,7 +676,6 @@ body {
 
 .hotspot-item.active {
   border-color: var(--accent-primary);
-  background: rgba(59, 130, 246, 0.1);
 }
 
 .hotspot-color {
@@ -1026,6 +1024,8 @@ body {
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   margin-top: 8px;
+  height: 280px;
+  overflow-y: auto;
 }
 
 /* Icon Grid Buttons */
