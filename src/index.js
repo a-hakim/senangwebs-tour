@@ -9,6 +9,7 @@ import "./components/hotspot-listener.js";
 import { AssetManager } from "./AssetManager.js";
 import { SceneManager } from "./SceneManager.js";
 import { HotspotManager } from "./HotspotManager.js";
+import { IconRenderer } from "./IconRenderer.js";
 
 /**
  * Main Tour class - The public API for the SWT library
@@ -32,12 +33,14 @@ class Tour {
     // Initialize managers
     this.assetManager = new AssetManager(this.sceneEl);
     this.sceneManager = new SceneManager(this.sceneEl, this.assetManager);
+    this.iconRenderer = new IconRenderer();
 
     const defaultHotspotSettings = this.config.settings?.defaultHotspot || {};
     this.hotspotManager = new HotspotManager(
       this.sceneEl,
       this.assetManager,
-      defaultHotspotSettings
+      defaultHotspotSettings,
+      this.iconRenderer
     );
 
     // Event listeners
@@ -242,6 +245,11 @@ class Tour {
     this.hotspotManager.destroy();
     this.sceneManager.destroy();
     this.assetManager.destroy();
+    
+    // Clean up icon renderer
+    if (this.iconRenderer) {
+      this.iconRenderer.destroy();
+    }
 
     this.isStarted = false;
   }

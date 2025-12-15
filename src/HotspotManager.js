@@ -2,13 +2,15 @@
  * HotspotManager - Creates, manages, and removes hotspot entities in the A-Frame scene
  */
 export class HotspotManager {
-  constructor(sceneEl, assetManager, defaultHotspotSettings = {}) {
+  constructor(sceneEl, assetManager, defaultHotspotSettings = {}, iconRenderer = null) {
     this.sceneEl = sceneEl;
     this.assetManager = assetManager;
     this.defaultSettings = defaultHotspotSettings;
+    this.iconRenderer = iconRenderer;
     this.activeHotspots = [];
     this.tooltipEl = null;
     this.tooltipCreated = false;
+    this.iconDataUrls = new Map(); // Cache for generated icon data URLs
     
     // Listen for hover events
     this.sceneEl.addEventListener('swt-hotspot-hover', (evt) => {
@@ -87,17 +89,41 @@ export class HotspotManager {
       this.createTooltip();
     }
 
-    // First, preload all hotspot icons (with error handling)
-    const iconPromises = hotspots.map((hotspot, index) => {
+    // Clear previous icon data URLs cache
+    this.iconDataUrls.clear();
+
+    // Process all hotspot icons
+    const iconPromises = hotspots.map(async (hotspot, index) => {
       const icon = hotspot.appearance?.icon || this.defaultSettings.icon;
-      if (icon) {
+      const color = hotspot.appearance?.color || '#ffffff';
+      
+      if (!icon) return;
+      
+      // Check if it's an image URL
+      const isImageUrl = icon.startsWith('http') || icon.startsWith('data:') || icon.startsWith('/');
+      
+      if (isImageUrl) {
+        // Preload as image asset
         const assetId = `hotspot-icon-${index}`;
-        return this.assetManager.preloadImage(icon, assetId).catch(err => {
+        try {
+          await this.assetManager.preloadImage(icon, assetId);
+        } catch (err) {
           console.warn(`Failed to load icon for hotspot ${index}, will use color instead`);
-          return null; // Continue even if icon fails to load
-        });
+        }
+      } else if (this.iconRenderer) {
+        // Generate icon data URL from SenangStart icon name
+        try {
+          const dataUrl = await this.iconRenderer.generateIconDataUrl(icon, color, 128);
+          if (dataUrl) {
+            this.iconDataUrls.set(index, dataUrl);
+            // Preload the generated data URL as an asset
+            const assetId = `hotspot-icon-${index}`;
+            await this.assetManager.preloadImage(dataUrl, assetId);
+          }
+        } catch (err) {
+          console.warn(`Failed to generate icon for hotspot ${index}:`, err);
+        }
       }
-      return Promise.resolve();
     });
 
     await Promise.all(iconPromises);
@@ -121,26 +147,29 @@ export class HotspotManager {
     const pos = hotspot.position;
     hotspotEl.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
 
-    // Set icon or fallback to plane with color
+    // Get icon and color
     const icon = hotspot.appearance?.icon || this.defaultSettings.icon;
+    const color = hotspot.appearance?.color || '#4CC3D9';
+    
+    // Check if we have a preloaded icon asset (either from URL or generated from icon name)
     const assetId = `hotspot-icon-${index}`;
-    const assetEl = icon ? document.getElementById(assetId) : null;
+    const assetEl = document.getElementById(assetId);
     
     let visualEl;
     
-    // Check if icon was successfully loaded
+    // Check if icon asset was successfully loaded/generated
     if (icon && assetEl) {
       visualEl = document.createElement('a-image');
       visualEl.setAttribute('src', `#${assetId}`);
       // Make images double-sided
-      visualEl.setAttribute('material', 'side', 'double');
+      visualEl.setAttribute('material', 'side: double; transparent: true; alphaTest: 0.1');
     } else {
-      // Fallback to a plane with color
+      // Fallback to a colored plane
       visualEl = document.createElement('a-plane');
-      visualEl.setAttribute('color', hotspot.appearance?.color || '#4CC3D9');
+      visualEl.setAttribute('color', color);
       visualEl.setAttribute('width', '1');
       visualEl.setAttribute('height', '1');
-      // Make plane double-sided and always face camera
+      // Make plane double-sided
       visualEl.setAttribute('material', 'side', 'double');
     }
 

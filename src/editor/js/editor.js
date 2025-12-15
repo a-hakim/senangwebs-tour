@@ -57,6 +57,9 @@ class TourEditor {
         // Setup event listeners
         this.setupEventListeners();
         
+        // Populate icon grid
+        this.uiController.populateIconGrid();
+        
         // Load saved project if exists (but only if it has valid data)
         if (this.storageManager.hasProject()) {
             try {
@@ -161,6 +164,19 @@ class TourEditor {
         
         document.getElementById('hotspotColor')?.addEventListener('input', (e) => {
             this.updateCurrentHotspot('color', e.target.value);
+        });
+
+        // Icon grid button clicks
+        document.getElementById('hotspotIconGrid')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('.icon-btn');
+            if (btn) {
+                const iconValue = btn.dataset.icon;
+                // Update active state
+                document.querySelectorAll('#hotspotIconGrid .icon-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Update hotspot
+                this.updateCurrentHotspot('icon', iconValue);
+            }
         });
 
         document.getElementById('hotspotPosX')?.addEventListener('input', debounce((e) => {

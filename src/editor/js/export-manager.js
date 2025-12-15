@@ -40,8 +40,13 @@ class ExportManager {
           // Add appearance
           hotspotData.appearance = {
             color: hotspot.color || "#FF6B6B",
-            scale: "2 2 2",
+            scale: hotspot.scale || "2 2 2",
           };
+          
+          // Add icon if set
+          if (hotspot.icon) {
+            hotspotData.appearance.icon = hotspot.icon;
+          }
 
           // Add tooltip if title exists
           if (hotspot.title) {

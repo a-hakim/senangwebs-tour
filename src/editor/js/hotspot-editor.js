@@ -79,7 +79,8 @@ class HotspotEditor {
             title: 'New Hotspot',
             description: '',
             color: '#00ff00',
-            icon: ''
+            icon: '',
+            scale: '1 1 1'
         };
 
         scene.hotspots.push(hotspot);

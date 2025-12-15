@@ -1020,6 +1020,45 @@ body {
   }
 }
 
+/* Icon Grid */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Icon Grid Buttons */
+.icon-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.icon-btn ss-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.icon-btn.active {
+  border-color: var(--accent-primary);
+  background: rgba(0, 255, 153, 0.1);
+  color: var(--accent-primary);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .sidebar {

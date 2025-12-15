@@ -1,5 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
+import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
 import postcssImport from 'postcss-import';
 
@@ -42,7 +43,8 @@ export default [
       sourcemap: true
     },
     plugins: [
-      resolve()
+      resolve(),
+      json()
     ]
   },
   // Editor - JavaScript bundle (minified)
@@ -55,6 +57,7 @@ export default [
     },
     plugins: [
       resolve(),
+      json(),
       terser()
     ]
   },

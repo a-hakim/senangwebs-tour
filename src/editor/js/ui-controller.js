@@ -1,5 +1,8 @@
 // UI Controller - Handles DOM manipulation and rendering
 
+// Import icons list from SenangStart icons package (baked into bundle at build time)
+import iconsData from "@bookklik/senangstart-icons/src/icons.json";
+
 class UIController {
   constructor(editor) {
     this.editor = editor;
@@ -189,9 +192,18 @@ class UIController {
     const item = document.createElement("div");
     item.className = "hotspot-item" + (isActive ? " active" : "");
 
-    const color = document.createElement("div");
-    color.className = "hotspot-color";
-    color.style.backgroundColor = hotspot.color;
+    const colorIndicator = document.createElement("div");
+    colorIndicator.className = "hotspot-color";
+    colorIndicator.style.backgroundColor = hotspot.color;
+    
+    // If hotspot has an icon, show it with the color applied
+    if (hotspot.icon) {
+      colorIndicator.innerHTML = `<ss-icon icon="${hotspot.icon}" thickness="2.2" style="color: ${hotspot.color}; width: 20px; height: 20px;"></ss-icon>`;
+      colorIndicator.style.backgroundColor = "transparent";
+      colorIndicator.style.display = "flex";
+      colorIndicator.style.alignItems = "center";
+      colorIndicator.style.justifyContent = "center";
+    }
 
     const info = document.createElement("div");
     info.className = "hotspot-info";
@@ -230,7 +242,7 @@ class UIController {
 
     actions.appendChild(deleteBtn);
 
-    item.appendChild(color);
+    item.appendChild(colorIndicator);
     item.appendChild(info);
     item.appendChild(actions);
 
@@ -239,6 +251,58 @@ class UIController {
     };
 
     return item;
+  }
+
+  /**
+   * Set active state on icon grid button
+   */
+  setActiveIconButton(iconName) {
+    const grid = document.getElementById("hotspotIconGrid");
+    if (!grid) return;
+    
+    // Remove active from all buttons
+    grid.querySelectorAll(".icon-btn").forEach(btn => {
+      btn.classList.remove("active");
+    });
+    
+    // Find and activate the matching button
+    const activeBtn = grid.querySelector(`.icon-btn[data-icon="${iconName}"]`);
+    if (activeBtn) {
+      activeBtn.classList.add("active");
+    }
+  }
+
+  /**
+   * Populate icon grid from SenangStart icons (baked in at build time)
+   */
+  populateIconGrid() {
+    const grid = document.getElementById("hotspotIconGrid");
+    if (!grid) return;
+
+    // Clear existing content
+    grid.innerHTML = "";
+
+    // Add "No icon" button first
+    const noIconBtn = document.createElement("button");
+    noIconBtn.type = "button";
+    noIconBtn.className = "icon-btn active";
+    noIconBtn.dataset.icon = "";
+    noIconBtn.title = "No icon";
+    noIconBtn.innerHTML = '<ss-icon icon="x-mark" thickness="1.5" style="opacity: 0.5;"></ss-icon>';
+    grid.appendChild(noIconBtn);
+
+    // Add buttons for each icon from imported JSON
+    iconsData.forEach(icon => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "icon-btn";
+      btn.dataset.icon = icon.slug;
+      btn.title = icon.name;
+      btn.innerHTML = `<ss-icon icon="${icon.slug}" thickness="2.2"></ss-icon>`;
+      grid.appendChild(btn);
+    });
+
+    console.log(`Loaded ${iconsData.length} icons`);
   }
 
   /**
@@ -260,6 +324,8 @@ class UIController {
       document.getElementById("hotspotColor").value = "#00ff00";
       const colorText = document.getElementById("hotspotColorText");
       if (colorText) colorText.value = "#00ff00";
+      // Reset icon grid to "no icon" button
+      this.setActiveIconButton("");
       document.getElementById("hotspotPosX").value = "";
       document.getElementById("hotspotPosY").value = "";
       document.getElementById("hotspotPosZ").value = "";
@@ -282,6 +348,9 @@ class UIController {
     if (colorText) {
       colorText.value = hotspot.color || "#00ff00";
     }
+
+    // Update icon grid active button
+    this.setActiveIconButton(hotspot.icon || "");
 
     // Update position inputs
     const pos = hotspot.position || { x: 0, y: 0, z: 0 };
