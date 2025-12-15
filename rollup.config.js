@@ -6,6 +6,12 @@ import postcssImport from 'postcss-import';
 
 const production = !process.env.ROLLUP_WATCH;
 
+// Suppress "this is undefined" warning from UMD libraries
+const onwarn = (warning, warn) => {
+  if (warning.code === 'THIS_IS_UNDEFINED') return;
+  warn(warning);
+};
+
 export default [
   // Viewer Library - Development build
   {
@@ -18,7 +24,8 @@ export default [
     },
     plugins: [
       resolve()
-    ]
+    ],
+    onwarn
   },
   // Viewer Library - Production build (minified)
   {
@@ -32,7 +39,8 @@ export default [
     plugins: [
       resolve(),
       terser()
-    ]
+    ],
+    onwarn
   },
   // Editor - JavaScript bundle (development)
   {
