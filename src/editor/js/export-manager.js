@@ -177,7 +177,7 @@ class ExportManager {
   </head>
   <body>
     <a-scene id="tour-container">
-      <a-camera>
+      <a-camera look-controls>
         <a-cursor></a-cursor>
       </a-camera>
     </a-scene>

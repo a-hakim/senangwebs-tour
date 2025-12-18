@@ -11,6 +11,8 @@ export class HotspotManager {
     this.tooltipEl = null;
     this.tooltipCreated = false;
     this.iconDataUrls = new Map(); // Cache for generated icon data URLs
+    this.sceneLoadCounter = 0; // Unique counter to prevent asset ID collisions between scene loads
+    this.currentAssetPrefix = ''; // Current asset ID prefix for this scene load
     
     // Listen for hover events
     this.sceneEl.addEventListener('swt-hotspot-hover', (evt) => {
@@ -89,6 +91,11 @@ export class HotspotManager {
       this.createTooltip();
     }
 
+    // Increment scene load counter to ensure unique asset IDs for this scene load
+    // This prevents A-Frame/THREE.js texture caching from reusing old icons
+    this.sceneLoadCounter++;
+    this.currentAssetPrefix = `hotspot-icon-${this.sceneLoadCounter}`;
+
     // Clear previous icon data URLs cache
     this.iconDataUrls.clear();
 
@@ -104,9 +111,11 @@ export class HotspotManager {
       // Check if it's an image URL
       const isImageUrl = icon.startsWith('http') || icon.startsWith('data:') || icon.startsWith('/');
       
+      // Use unique asset ID that includes scene load counter
+      const assetId = `${this.currentAssetPrefix}-${index}`;
+      
       if (isImageUrl) {
         // Preload as image asset
-        const assetId = `hotspot-icon-${index}`;
         try {
           await this.assetManager.preloadImage(icon, assetId);
         } catch (err) {
@@ -119,7 +128,6 @@ export class HotspotManager {
           if (dataUrl) {
             this.iconDataUrls.set(index, dataUrl);
             // Preload the generated data URL as an asset
-            const assetId = `hotspot-icon-${index}`;
             await this.assetManager.preloadImage(dataUrl, assetId);
           }
         } catch (err) {
@@ -152,8 +160,10 @@ export class HotspotManager {
     const color = hotspot.appearance?.color || '#4CC3D9';
     
     // Check if we have a preloaded icon asset (either from URL or generated from icon name)
-    const assetId = `hotspot-icon-${index}`;
-    const assetEl = document.getElementById(assetId);
+    // Use the unique asset prefix that includes scene load counter
+    const assetId = `${this.currentAssetPrefix}-${index}`;
+    const assetsEl = this.sceneEl.querySelector('a-assets');
+    const assetEl = assetsEl ? assetsEl.querySelector(`#${assetId}`) : null;
     
     let visualEl;
     
@@ -197,6 +207,9 @@ export class HotspotManager {
    * Remove all active hotspots from the scene
    */
   removeAllHotspots() {
+    // Remove hotspot icon assets from a-assets to prevent icon mixup on scene navigation
+    this.removeHotspotIconAssets();
+    
     this.activeHotspots.forEach(hotspot => {
       if (hotspot.parentNode) {
         hotspot.parentNode.removeChild(hotspot);
@@ -204,9 +217,40 @@ export class HotspotManager {
     });
     this.activeHotspots = [];
     
+    // Clear icon data URLs cache
+    this.iconDataUrls.clear();
+    
     // Hide tooltip
     if (this.tooltipEl) {
       this.tooltipEl.setAttribute('visible', 'false');
+    }
+  }
+
+  /**
+   * Remove all hotspot icon assets from a-assets element
+   * This prevents icon mixup when navigating between scenes
+   */
+  removeHotspotIconAssets() {
+    const assetsEl = this.sceneEl.querySelector('a-assets');
+    if (!assetsEl) return;
+    
+    // Find and remove all assets with IDs matching hotspot-icon-* pattern
+    const iconAssets = assetsEl.querySelectorAll('[id^="hotspot-icon-"]');
+    iconAssets.forEach(asset => {
+      if (asset.parentNode) {
+        asset.parentNode.removeChild(asset);
+      }
+    });
+    
+    // Also clear the asset manager's loaded assets for hotspot icons
+    if (this.assetManager && this.assetManager.loadedAssets) {
+      const keysToDelete = [];
+      this.assetManager.loadedAssets.forEach((value, key) => {
+        if (key.startsWith('hotspot-icon-')) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => this.assetManager.loadedAssets.delete(key));
     }
   }
 
