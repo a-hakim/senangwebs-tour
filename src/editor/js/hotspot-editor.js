@@ -63,8 +63,11 @@ class HotspotEditor {
 
     /**
      * Add hotspot at position
+     * @param {Object} position - The 3D position {x, y, z}
+     * @param {string} targetSceneId - Target scene ID for navigation
+     * @param {Object} cameraOrientation - Camera orientation at creation {pitch, yaw} in radians
      */
-    addHotspot(position, targetSceneId = '') {
+    addHotspot(position, targetSceneId = '', cameraOrientation = null) {
         const scene = this.editor.sceneManager.getCurrentScene();
         if (!scene) {
             showToast('No scene selected', 'error');
@@ -75,6 +78,7 @@ class HotspotEditor {
             id: generateId('hotspot'),
             type: 'navigation',
             position: position,
+            cameraOrientation: cameraOrientation, // Store camera pitch/yaw for reliable pointing
             targetSceneId: targetSceneId,
             title: 'New Hotspot',
             description: '',
@@ -202,6 +206,9 @@ class HotspotEditor {
             y: original.position.y,
             z: original.position.z
         };
+        
+        // Clear camera orientation since position changed - will fallback to position-based calculation
+        duplicate.cameraOrientation = null;
 
         scene.hotspots.push(duplicate);
         this.currentHotspotIndex = scene.hotspots.length - 1;

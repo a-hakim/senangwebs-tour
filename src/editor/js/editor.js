@@ -1,14 +1,12 @@
 // Main Editor Controller
-import { debounce, showModal } from './utils.js';
+import { debounce, showModal, showToast } from './utils.js';
 
 class TourEditor {
     constructor(options = {}) {
         this.config = {
             title: options.projectName || 'My Virtual Tour',
             description: '',
-            initialSceneId: '',
-            autoRotate: false,
-            showCompass: false
+            initialSceneId: ''
         };
         
         // Store initialization options
@@ -203,6 +201,14 @@ class TourEditor {
             this.updateCurrentSceneImage(e.target.value);
         }, 300));
 
+        document.getElementById('setStartingPosBtn')?.addEventListener('click', () => {
+            this.setSceneStartingPosition();
+        });
+        
+        document.getElementById('clearStartingPosBtn')?.addEventListener('click', () => {
+            this.clearSceneStartingPosition();
+        });
+
         document.getElementById('tourTitle')?.addEventListener('input', debounce((e) => {
             this.config.title = e.target.value;
             this.markUnsavedChanges();
@@ -230,16 +236,6 @@ class TourEditor {
             this.config.initialSceneId = e.target.value;
             this.markUnsavedChanges();
         });
-        
-        document.getElementById('tourAutoRotate')?.addEventListener('change', (e) => {
-            this.config.autoRotate = e.target.checked;
-            this.markUnsavedChanges();
-        });
-        
-        document.getElementById('tourShowCompass')?.addEventListener('change', (e) => {
-            this.config.showCompass = e.target.checked;
-            this.markUnsavedChanges();
-        });
 
         document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
             this.exportManager.exportJSON();
@@ -249,8 +245,8 @@ class TourEditor {
             this.exportManager.copyJSON();
         });
         
-        document.getElementById('exportViewerBtn')?.addEventListener('click', () => {
-            this.exportManager.exportViewerHTML();
+        document.getElementById('exportViewerBtn')?.addEventListener('click', async () => {
+            await this.exportManager.exportViewerHTML();
         });
 
         document.querySelectorAll('.modal-close').forEach(btn => {
@@ -318,7 +314,15 @@ class TourEditor {
             position.y = parseFloat(position.y.toFixed(2));
             position.z = parseFloat(position.z.toFixed(2));
         }
-        const hotspot = this.hotspotEditor.addHotspot(position);
+        
+        // Capture current camera orientation for reliable pointing later
+        const cameraRotation = this.previewController.getCameraRotation();
+        const cameraOrientation = cameraRotation ? {
+            pitch: cameraRotation.x,
+            yaw: cameraRotation.y
+        } : null;
+        
+        const hotspot = this.hotspotEditor.addHotspot(position, '', cameraOrientation);
         if (hotspot) {
             this.lastRenderedSceneIndex = -1;
             this.render();
@@ -363,8 +367,8 @@ class TourEditor {
             this.uiController.updateTargetSceneOptions();
             this.uiController.switchTab('hotspot');
             
-            if (hotspot && hotspot.position) {
-                this.previewController.pointCameraToHotspot(hotspot.position);
+            if (hotspot) {
+                this.previewController.pointCameraToHotspot(hotspot);
             }
         }
     }
@@ -438,6 +442,10 @@ class TourEditor {
             
             hotspot.position[axis] = value;
             
+            // Clear camera orientation since position changed manually
+            // Will fallback to position-based calculation when pointing camera
+            hotspot.cameraOrientation = null;
+            
             const pos = hotspot.position;
             const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
             if (distance > 10) {
@@ -490,6 +498,49 @@ class TourEditor {
             }
             this.markUnsavedChanges();
         }
+    }
+
+    /**
+     * Set scene starting position to current camera rotation
+     */
+    setSceneStartingPosition() {
+        const scene = this.sceneManager.getCurrentScene();
+        if (!scene) {
+            showToast('No scene selected', 'error');
+            return;
+        }
+        
+        const rotation = this.previewController.getCameraRotation();
+        if (!rotation) {
+            showToast('Could not get camera rotation', 'error');
+            return;
+        }
+        
+        scene.startingPosition = {
+            pitch: rotation.x,
+            yaw: rotation.y
+        };
+        
+        this.uiController.updateSceneProperties(scene);
+        this.markUnsavedChanges();
+        showToast('Starting position set', 'success');
+    }
+
+    /**
+     * Clear scene starting position
+     */
+    clearSceneStartingPosition() {
+        const scene = this.sceneManager.getCurrentScene();
+        if (!scene) {
+            showToast('No scene selected', 'error');
+            return;
+        }
+        
+        scene.startingPosition = null;
+        
+        this.uiController.updateSceneProperties(scene);
+        this.markUnsavedChanges();
+        showToast('Starting position cleared', 'success');
     }
 
     /**
@@ -578,9 +629,7 @@ class TourEditor {
         this.config = {
             title: 'My Virtual Tour',
             description: '',
-            initialSceneId: '',
-            autoRotate: false,
-            showCompass: false
+            initialSceneId: ''
         };
         
         this.sceneManager.clearScenes();

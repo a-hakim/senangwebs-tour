@@ -174,6 +174,7 @@ class PreviewController {
         name: s.name,
         panorama: s.imageUrl,
         hotspots: sceneHotspots,
+        startingPosition: s.startingPosition || null,
       };
     });
 
@@ -181,10 +182,6 @@ class PreviewController {
       title: scene.name,
       initialScene: scene.id,
       scenes: allScenes,
-      settings: {
-        autoRotate: false,
-        showCompass: false,
-      },
     };
 
     try {
@@ -221,9 +218,17 @@ class PreviewController {
       // Hide loading animation after scene loads
       this.hideLoading();
 
-      // Restore camera rotation if preserved
+      // Handle camera rotation after scene loads
       if (savedRotation && preserveCameraRotation) {
+        // Restore previous camera rotation
         this.setCameraRotation(savedRotation);
+      } else if (scene.startingPosition) {
+        // Set camera to scene's starting position immediately
+        this.setCameraRotation({
+          x: scene.startingPosition.pitch,
+          y: scene.startingPosition.yaw,
+          z: 0
+        });
       }
 
       // Setup click handler after a short delay to ensure A-Frame is ready
@@ -414,10 +419,12 @@ class PreviewController {
   }
 
   /**
-   * Point camera to hotspot position
+   * Point camera to hotspot
+   * Uses stored camera orientation if available, otherwise calculates from position
+   * @param {Object} hotspot - The hotspot object with position and optional cameraOrientation
    */
-  pointCameraToHotspot(hotspotPosition) {
-    if (!hotspotPosition) {
+  pointCameraToHotspot(hotspot) {
+    if (!hotspot) {
       return;
     }
 
@@ -431,25 +438,36 @@ class PreviewController {
       return;
     }
 
-    // Get camera position (usually at origin 0,0,0)
-    const cameraPos = camera.object3D.position;
+    let pitch, yaw;
 
-    // Calculate direction vector from camera to hotspot
-    const direction = new THREE.Vector3(
-      hotspotPosition.x - cameraPos.x,
-      hotspotPosition.y - cameraPos.y,
-      hotspotPosition.z - cameraPos.z
-    );
+    // Use stored camera orientation if available (more reliable)
+    if (hotspot.cameraOrientation) {
+      // Stored values are in radians, convert to degrees for animateCameraRotation
+      pitch = hotspot.cameraOrientation.pitch * (180 / Math.PI);
+      yaw = hotspot.cameraOrientation.yaw * (180 / Math.PI);
+    } else if (hotspot.position) {
+      // Fallback: calculate from position (for legacy hotspots without cameraOrientation)
+      const hotspotPosition = hotspot.position;
+      const cameraPos = camera.object3D.position;
 
-    // Calculate spherical coordinates (yaw and pitch)
-    const distance = direction.length();
+      // Calculate direction vector from camera to hotspot
+      const direction = new THREE.Vector3(
+        hotspotPosition.x - cameraPos.x,
+        hotspotPosition.y - cameraPos.y,
+        hotspotPosition.z - cameraPos.z
+      );
 
-    // Pitch (up/down rotation around X-axis) - in degrees
-    const pitch = Math.asin(direction.y / distance) * (180 / Math.PI);
+      // Calculate spherical coordinates (yaw and pitch)
+      const distance = direction.length();
 
-    // Yaw (left/right rotation around Y-axis) - in degrees
-    // Using atan2 to get correct quadrant
-    const yaw = Math.atan2(direction.x, direction.z) * (180 / Math.PI);
+      // Pitch (up/down rotation around X-axis) - in degrees
+      pitch = Math.asin(direction.y / distance) * (180 / Math.PI);
+
+      // Yaw (left/right rotation around Y-axis) - in degrees
+      yaw = Math.atan2(direction.x, direction.z) * (180 / Math.PI);
+    } else {
+      return;
+    }
 
     // Apply smooth rotation with animation
     this.animateCameraRotation(camera, { x: pitch, y: yaw, z: 0 });
@@ -457,15 +475,29 @@ class PreviewController {
 
   /**
    * Animate camera rotation smoothly
+   * Uses look-controls internal pitchObject/yawObject to avoid being overwritten
    */
   animateCameraRotation(camera, targetRotation, duration = 800) {
     if (!camera || !camera.object3D) return;
 
-    const startRotation = {
-      x: camera.object3D.rotation.x * (180 / Math.PI),
-      y: camera.object3D.rotation.y * (180 / Math.PI),
-      z: camera.object3D.rotation.z * (180 / Math.PI),
-    };
+    // Get look-controls component
+    const lookControls = camera.components?.["look-controls"];
+    
+    // Get current rotation - prefer look-controls internal state
+    let startRotation;
+    if (lookControls && lookControls.pitchObject && lookControls.yawObject) {
+      startRotation = {
+        x: lookControls.pitchObject.rotation.x * (180 / Math.PI),
+        y: lookControls.yawObject.rotation.y * (180 / Math.PI),
+        z: 0,
+      };
+    } else {
+      startRotation = {
+        x: camera.object3D.rotation.x * (180 / Math.PI),
+        y: camera.object3D.rotation.y * (180 / Math.PI),
+        z: 0,
+      };
+    }
 
     // Handle angle wrapping for smooth rotation
     let deltaY = targetRotation.y - startRotation.y;
@@ -488,19 +520,22 @@ class PreviewController {
           ? 2 * progress * progress
           : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
-      // Interpolate rotation
-      const currentRotation = {
-        x: startRotation.x + (targetRotation.x - startRotation.x) * eased,
-        y: startRotation.y + (endRotationY - startRotation.y) * eased,
-        z: startRotation.z + (targetRotation.z - startRotation.z) * eased,
-      };
+      // Interpolate rotation (in degrees)
+      const currentX = startRotation.x + (targetRotation.x - startRotation.x) * eased;
+      const currentY = startRotation.y + (endRotationY - startRotation.y) * eased;
 
-      // Apply rotation (convert degrees to radians)
-      camera.object3D.rotation.set(
-        currentRotation.x * (Math.PI / 180),
-        currentRotation.y * (Math.PI / 180),
-        currentRotation.z * (Math.PI / 180)
-      );
+      // Apply rotation using look-controls internal objects (in radians)
+      if (lookControls && lookControls.pitchObject && lookControls.yawObject) {
+        lookControls.pitchObject.rotation.x = currentX * (Math.PI / 180);
+        lookControls.yawObject.rotation.y = currentY * (Math.PI / 180);
+      } else {
+        // Fallback to direct rotation
+        camera.object3D.rotation.set(
+          currentX * (Math.PI / 180),
+          currentY * (Math.PI / 180),
+          0
+        );
+      }
 
       if (progress < 1) {
         requestAnimationFrame(animate);

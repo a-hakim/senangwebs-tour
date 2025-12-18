@@ -101,6 +101,11 @@ class Tour {
 
       this.isStarted = true;
 
+      // Set camera to starting position if set
+      if (initialSceneData.startingPosition) {
+        this.setCameraToStartingPosition(initialSceneData.startingPosition);
+      }
+
       // Emit events
       this.emit("scene-loaded", { sceneId: initialSceneId });
       this.emit("tour-started", { sceneId: initialSceneId });
@@ -136,8 +141,13 @@ class Tour {
       // Remove old hotspots
       this.hotspotManager.removeAllHotspots();
 
-      // Transition to new scene
-      await this.sceneManager.transitionTo(sceneId, sceneData);
+      // Transition to new scene with callback to set camera position while screen is black
+      await this.sceneManager.transitionTo(sceneId, sceneData, () => {
+        // Set camera to starting position during transition (while screen is still black)
+        if (sceneData.startingPosition) {
+          this.setCameraToStartingPosition(sceneData.startingPosition);
+        }
+      });
 
       // Create new hotspots
       await this.hotspotManager.createHotspots(sceneData.hotspots || []);
@@ -189,6 +199,41 @@ class Tour {
       default:
         console.warn(`Unknown action type: ${action.type}`);
     }
+  }
+
+  /**
+   * Set camera to a starting position immediately
+   * Uses look-controls internal pitchObject/yawObject for proper A-Frame compatibility
+   * @param {Object} startingPosition - Object with pitch and yaw in radians
+   */
+  setCameraToStartingPosition(startingPosition) {
+    if (!startingPosition) return;
+
+    const camera = this.sceneEl.querySelector("[camera]");
+    if (!camera) return;
+
+    // Get look-controls component
+    const lookControls = camera.components?.["look-controls"];
+
+    // Set rotation using look-controls internal objects (already in radians)
+    const setRotation = () => {
+      const cam = this.sceneEl.querySelector("[camera]");
+      if (!cam) return;
+      
+      const lc = cam.components?.["look-controls"];
+      if (lc && lc.pitchObject && lc.yawObject) {
+        lc.pitchObject.rotation.x = startingPosition.pitch;
+        lc.yawObject.rotation.y = startingPosition.yaw;
+      } else if (cam.object3D) {
+        cam.object3D.rotation.set(startingPosition.pitch, startingPosition.yaw, 0);
+      }
+    };
+
+    // Set immediately and retry a few times to ensure it sticks
+    setRotation();
+    setTimeout(setRotation, 100);
+    setTimeout(setRotation, 300);
+    setTimeout(setRotation, 500);
   }
 
   /**

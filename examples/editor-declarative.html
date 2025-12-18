@@ -287,6 +287,33 @@
                     Enter a URL or keep the uploaded image data URL
                   </small>
                 </div>
+
+                <div class="form-group">
+                  <label class="form-label">Starting Position</label>
+                  <div id="startingPositionDisplay" style="
+                    color: var(--text-muted);
+                    font-size: 12px;
+                    margin-bottom: 8px;
+                  ">Not set (camera keeps current position)</div>
+                  <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" id="setStartingPosBtn" style="flex: 1;">
+                      Set Current View
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearStartingPosBtn" style="flex: 0;">
+                      Clear
+                    </button>
+                  </div>
+                  <small
+                    style="
+                      color: var(--text-muted);
+                      margin-top: 4px;
+                      display: block;
+                      font-size: 11px;
+                    "
+                  >
+                    Camera will animate to this position when entering the scene
+                  </small>
+                </div>
               </div>
             </div>
 
@@ -327,20 +354,6 @@
                   <select id="tourInitialScene" class="form-select">
                     <option value="">Select initial scene...</option>
                   </select>
-                </div>
-
-                <div class="form-group">
-                  <div class="form-checkbox">
-                    <input type="checkbox" id="tourAutoRotate" />
-                    <label for="tourAutoRotate">Auto-rotate camera</label>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <div class="form-checkbox">
-                    <input type="checkbox" id="tourShowCompass" />
-                    <label for="tourShowCompass">Show compass</label>
-                  </div>
                 </div>
               </div>
             </div>

@@ -62,14 +62,20 @@ export class SceneManager {
    * Transition to a new scene with fade effect
    * @param {string} sceneId - The target scene ID
    * @param {Object} sceneData - The scene configuration object
+   * @param {Function} onSceneLoaded - Optional callback to run after scene loads but before fade-in
    * @returns {Promise} - Resolves when the transition is complete
    */
-  async transitionTo(sceneId, sceneData) {
+  async transitionTo(sceneId, sceneData, onSceneLoaded = null) {
     // Fade out
     await this.fadeOut();
 
     // Load new scene
     await this.loadScene(sceneId, sceneData);
+
+    // Call onSceneLoaded callback (e.g., to set camera position while screen is black)
+    if (onSceneLoaded && typeof onSceneLoaded === 'function') {
+      onSceneLoaded();
+    }
 
     // Fade in
     await this.fadeIn();

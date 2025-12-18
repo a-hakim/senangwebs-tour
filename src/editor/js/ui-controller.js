@@ -366,16 +366,34 @@ class UIController {
    * Update properties panel for scene
    */
   updateSceneProperties(scene) {
+    const startingPosDisplay = document.getElementById("startingPositionDisplay");
+    
     if (!scene) {
       document.getElementById("sceneId").value = "";
       document.getElementById("sceneName").value = "";
       document.getElementById("sceneImageUrl").value = "";
+      if (startingPosDisplay) {
+        startingPosDisplay.textContent = "Not set (camera keeps current position)";
+      }
       return;
     }
 
     document.getElementById("sceneId").value = scene.id || "";
     document.getElementById("sceneName").value = scene.name || "";
     document.getElementById("sceneImageUrl").value = scene.imageUrl || "";
+    
+    // Update starting position display
+    if (startingPosDisplay) {
+      if (scene.startingPosition) {
+        const pitchDeg = (scene.startingPosition.pitch * 180 / Math.PI).toFixed(1);
+        const yawDeg = (scene.startingPosition.yaw * 180 / Math.PI).toFixed(1);
+        startingPosDisplay.textContent = `Pitch: ${pitchDeg}° | Yaw: ${yawDeg}°`;
+        startingPosDisplay.style.color = "var(--accent-primary)";
+      } else {
+        startingPosDisplay.textContent = "Not set (camera keeps current position)";
+        startingPosDisplay.style.color = "var(--text-muted)";
+      }
+    }
   }
 
   /**
@@ -386,10 +404,6 @@ class UIController {
     document.getElementById("tourDescription").value = config.description || "";
     document.getElementById("tourInitialScene").value =
       config.initialSceneId || "";
-    document.getElementById("tourAutoRotate").checked =
-      config.autoRotate || false;
-    document.getElementById("tourShowCompass").checked =
-      config.showCompass || false;
 
     // Also update project name in header if it exists
     const projectName = document.getElementById("project-name");

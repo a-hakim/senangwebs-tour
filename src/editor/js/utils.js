@@ -209,6 +209,7 @@ export {
     hideModal,
     formatFileSize,
     downloadTextAsFile,
+    copyToClipboard,
     debounce,
     positionToString,
     parsePosition,

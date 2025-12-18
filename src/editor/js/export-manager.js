@@ -1,9 +1,11 @@
 // Export Manager - Handles JSON generation for SWT library
-import { downloadTextAsFile, showModal } from "./utils.js";
+import { downloadTextAsFile, showModal, copyToClipboard } from "./utils.js";
+import { IconRenderer } from "../../IconRenderer.js";
 
 class ExportManager {
   constructor(editor) {
     this.editor = editor;
+    this.iconRenderer = new IconRenderer();
   }
 
   /**
@@ -58,6 +60,11 @@ class ExportManager {
           return hotspotData;
         }),
       };
+      
+      // Add starting position if set
+      if (scene.startingPosition) {
+        scenesData[scene.id].startingPosition = scene.startingPosition;
+      }
     });
 
     // Determine initial scene
@@ -72,6 +79,41 @@ class ExportManager {
       scenes: scenesData,
     };
 
+    return jsonData;
+  }
+
+  /**
+   * Generate JSON with icons baked in as SVG data URLs
+   * This ensures the exported HTML doesn't need the SenangStart icons library
+   */
+  async generateJSONWithBakedIcons() {
+    const jsonData = this.generateJSON();
+    
+    // Process all scenes and convert icon names to data URLs
+    for (const sceneId of Object.keys(jsonData.scenes)) {
+      const scene = jsonData.scenes[sceneId];
+      
+      for (let i = 0; i < scene.hotspots.length; i++) {
+        const hotspot = scene.hotspots[i];
+        const icon = hotspot.appearance?.icon;
+        
+        // Skip if no icon or if it's already a data URL or URL
+        if (!icon) continue;
+        if (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/')) continue;
+        
+        // Generate SVG data URL from icon name
+        try {
+          const color = hotspot.appearance?.color || '#ffffff';
+          const dataUrl = await this.iconRenderer.generateIconDataUrl(icon, color, 128);
+          if (dataUrl) {
+            hotspot.appearance.icon = dataUrl;
+          }
+        } catch (err) {
+          console.warn(`Failed to bake icon "${icon}" for export:`, err);
+        }
+      }
+    }
+    
     return jsonData;
   }
 
@@ -119,10 +161,10 @@ class ExportManager {
   }
 
   /**
-   * Generate HTML viewer code
+   * Generate HTML viewer code with icons baked in
    */
-  generateViewerHTML() {
-    const jsonData = this.generateJSON();
+  async generateViewerHTML() {
+    const jsonData = await this.generateJSONWithBakedIcons();
     const title = this.editor.config.title || "Virtual Tour";
 
     return `<!DOCTYPE html>
@@ -159,11 +201,11 @@ class ExportManager {
   }
 
   /**
-   * Export as standalone HTML viewer
+   * Export as standalone HTML viewer with icons baked in
    */
-  exportViewerHTML() {
+  async exportViewerHTML() {
     try {
-      const html = this.generateViewerHTML();
+      const html = await this.generateViewerHTML();
       const title = this.editor.config.title || "tour";
       const filename = sanitizeId(title) + "-viewer.html";
 
