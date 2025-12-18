@@ -256,26 +256,51 @@ class PreviewController {
       return null;
     }
 
-    // Get the actual Three.js camera
-    const threeCamera = camera.object3D.children.find(
-      (child) => child.isCamera
-    );
-    if (!threeCamera) {
-      return null;
+    // Get pitch and yaw from look-controls (the authoritative source in A-Frame)
+    const lookControls = camera.components?.["look-controls"];
+    let pitch = 0;
+    let yaw = 0;
+
+    if (lookControls && lookControls.pitchObject && lookControls.yawObject) {
+      pitch = lookControls.pitchObject.rotation.x;
+      yaw = lookControls.yawObject.rotation.y;
+    } else {
+      // Fallback to object3D rotation
+      pitch = camera.object3D.rotation.x;
+      yaw = camera.object3D.rotation.y;
     }
 
-    // Create a raycaster from the camera center (0, 0 in normalized coords = center of screen)
+    // Calculate direction vector from pitch/yaw
+    // In A-Frame/Three.js coordinate system:
+    // - Looking forward is -Z
+    // - Yaw rotates around Y axis
+    // - Pitch rotates around X axis
+    const direction = new THREE.Vector3();
+    direction.x = -Math.sin(yaw) * Math.cos(pitch);
+    direction.y = Math.sin(pitch);
+    direction.z = -Math.cos(yaw) * Math.cos(pitch);
+    direction.normalize();
+
+    // Create raycaster from camera position in the direction we're looking
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera({ x: 0, y: 0 }, threeCamera);
+    const origin = new THREE.Vector3(0, 0, 0); // Camera is typically at origin in 360 viewer
+    raycaster.set(origin, direction);
 
     // Raycast against the sky sphere
     const intersects = raycaster.intersectObject(sky.object3D, true);
 
     if (intersects.length > 0) {
       const point = intersects[0].point;
+      
+      // Calculate an upward offset to center the hotspot visual on the cursor
+      // The offset is applied along the "up" direction relative to the sphere surface
+      // For a sphere, we shift the point slightly in the Y direction (vertical up in world space)
+      // The offset compensates for the hotspot visual being centered, so the top aligns with cursor
+      const offsetAmount = 200; // Adjust this value to fine-tune alignment
+      
       return {
         x: parseFloat(point.x.toFixed(2)),
-        y: parseFloat(point.y.toFixed(2)),
+        y: parseFloat((point.y + offsetAmount).toFixed(2)),
         z: parseFloat(point.z.toFixed(2)),
       };
     }
