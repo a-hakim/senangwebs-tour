@@ -230,11 +230,6 @@ class PreviewController {
           z: 0
         });
       }
-
-      // Setup click handler after a short delay to ensure A-Frame is ready
-      setTimeout(() => {
-        this.setupClickHandler();
-      }, 500);
     } catch (error) {
       console.error("Failed to load preview:", error);
       showToast("Failed to load preview: " + error.message, "error");
@@ -244,76 +239,48 @@ class PreviewController {
   }
 
   /**
-   * Setup click handler for hotspot placement
+   * Get the current cursor intersection point with the sky sphere.
+   * Raycasts from the camera center (where the A-Cursor points) to find the intersection.
+   * @returns {Object|null} The 3D position {x, y, z} or null if no intersection
    */
-  setupClickHandler() {
-    if (!this.tour) {
-      return;
-    }
-
-    const aframeScene = this.previewContainer.querySelector("a-scene");
+  getCursorIntersection() {
+    const aframeScene = this.previewContainer?.querySelector("a-scene");
     if (!aframeScene) {
-      setTimeout(() => this.setupClickHandler(), 200); // Retry
-      return;
+      return null;
     }
 
-    // Remove any existing click handler to avoid duplicates
-    if (this.clickHandler) {
-      aframeScene.removeEventListener("click", this.clickHandler);
+    const camera = aframeScene.querySelector("[camera]");
+    const sky = aframeScene.querySelector("a-sky");
+
+    if (!camera || !sky) {
+      return null;
     }
 
-    // Create and store the click handler
-    this.clickHandler = (evt) => {
-      if (!this.editor.hotspotEditor.placementMode) {
-        return;
-      }
+    // Get the actual Three.js camera
+    const threeCamera = camera.object3D.children.find(
+      (child) => child.isCamera
+    );
+    if (!threeCamera) {
+      return null;
+    }
 
-      // Try to get intersection from event detail first
-      let intersection = evt.detail?.intersection;
+    // Create a raycaster from the camera center (0, 0 in normalized coords = center of screen)
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera({ x: 0, y: 0 }, threeCamera);
 
-      // If no intersection, perform manual raycasting
-      if (!intersection) {
-        const camera = aframeScene.querySelector("[camera]");
-        const sky = aframeScene.querySelector("a-sky");
+    // Raycast against the sky sphere
+    const intersects = raycaster.intersectObject(sky.object3D, true);
 
-        if (!camera || !sky) {
-          showToast("Scene not ready, please try again", "warning");
-          return;
-        }
-
-        // Get mouse position relative to canvas
-        const canvas = aframeScene.canvas;
-        const rect = canvas.getBoundingClientRect();
-        const mouse = {
-          x: ((evt.clientX - rect.left) / rect.width) * 2 - 1,
-          y: -((evt.clientY - rect.top) / rect.height) * 2 + 1,
-        };
-
-        // Perform raycasting
-        const raycaster = new THREE.Raycaster();
-        const cameraEl = camera.object3D;
-        raycaster.setFromCamera(mouse, cameraEl.children[0]); // Get the actual camera
-
-        // Raycast against the sky sphere
-        const intersects = raycaster.intersectObject(sky.object3D, true);
-
-        if (intersects.length > 0) {
-          intersection = intersects[0];
-        } else {
-          showToast("Click on the panorama image", "warning");
-          return;
-        }
-      }
-
-      const point = intersection.point;
-      const position = {
+    if (intersects.length > 0) {
+      const point = intersects[0].point;
+      return {
         x: parseFloat(point.x.toFixed(2)),
         y: parseFloat(point.y.toFixed(2)),
         z: parseFloat(point.z.toFixed(2)),
       };
-      this.editor.addHotspotAtPosition(position);
-    };
-    aframeScene.addEventListener("click", this.clickHandler);
+    }
+
+    return null;
   }
 
   /**

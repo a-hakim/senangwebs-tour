@@ -132,7 +132,7 @@ class TourEditor {
         });
 
         document.getElementById('addHotspotBtn')?.addEventListener('click', () => {
-            this.hotspotEditor.enablePlacementMode();
+            this.addHotspotAtCursor();
         });
         
         document.getElementById('clearHotspotsBtn')?.addEventListener('click', () => {
@@ -330,6 +330,26 @@ class TourEditor {
         } else {
             console.error('Failed to add hotspot');
         }
+    }
+
+    /**
+     * Add hotspot at current cursor position (center of view)
+     * This uses the A-Cursor's raycaster intersection with the sky sphere
+     */
+    addHotspotAtCursor() {
+        const scene = this.sceneManager.getCurrentScene();
+        if (!scene) {
+            showToast('Please select a scene first', 'error');
+            return;
+        }
+
+        const position = this.previewController.getCursorIntersection();
+        if (!position) {
+            showToast('Could not get cursor position. Please ensure the preview is loaded.', 'error');
+            return;
+        }
+
+        this.addHotspotAtPosition(position);
     }
 
     /**

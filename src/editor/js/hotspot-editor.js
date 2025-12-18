@@ -5,61 +5,7 @@ class HotspotEditor {
     constructor(editor) {
         this.editor = editor;
         this.currentHotspotIndex = -1;
-        this.placementMode = false;
     }
-
-    /**
-     * Enable hotspot placement mode
-     */
-    enablePlacementMode() {
-        const scene = this.editor.sceneManager.getCurrentScene();
-        if (!scene) {
-            showToast('Please select a scene first', 'error');
-            return false;
-        }
-
-        this.placementMode = true;
-        
-        // Visual feedback
-        document.body.style.cursor = 'crosshair';
-        const preview = document.getElementById('preview');
-        if (preview) {
-            preview.style.border = '3px solid #4CC3D9';
-            preview.style.boxShadow = '0 0 20px rgba(76, 195, 217, 0.5)';
-        }
-        
-        // Update button state
-        const btn = document.getElementById('addHotspotBtn');
-        if (btn) {
-            btn.textContent = 'Click on Preview...';
-            btn.classList.add('btn-active');
-        }
-        
-        showToast('Click on the 360° preview to place hotspot', 'info', 5000);
-        return true;
-    }
-
-    /**
-     * Disable hotspot placement mode
-     */
-    disablePlacementMode() {
-        this.placementMode = false;
-        document.body.style.cursor = 'default';
-        
-        // Remove visual feedback
-        const preview = document.getElementById('preview');
-        if (preview) {
-            preview.style.border = '';
-            preview.style.boxShadow = '';
-        }
-        
-        // Reset button state
-        const btn = document.getElementById('addHotspotBtn');
-        if (btn) {
-            btn.textContent = '+ Add Hotspot';
-            btn.classList.remove('btn-active');
-        }
-}
 
     /**
      * Add hotspot at position
@@ -90,7 +36,6 @@ class HotspotEditor {
         scene.hotspots.push(hotspot);
         this.currentHotspotIndex = scene.hotspots.length - 1;
         
-        this.disablePlacementMode();
         showToast('Hotspot added', 'success');
         
         return hotspot;
