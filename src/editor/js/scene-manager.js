@@ -15,22 +15,43 @@ class SceneManagerEditor {
 
   /**
    * Add new scene
+   * @param {File|Object} fileOrConfig - Either a File object or a scene config object
+   * @param {string} fileOrConfig.id - Scene ID (if config object)
+   * @param {string} fileOrConfig.name - Scene name (if config object)
+   * @param {string} fileOrConfig.imageUrl - Image URL (if config object)
+   * @param {string} fileOrConfig.thumbnail - Thumbnail URL (if config object)
+   * @param {Array} fileOrConfig.hotspots - Hotspots array (if config object)
    */
-  async addScene(file) {
+  async addScene(fileOrConfig) {
     try {
-      // Generate thumbnail
-      const thumbnail = await generateThumbnail(file);
+      let scene;
 
-      // Load full image
-      const imageDataUrl = await loadImageAsDataUrl(file);
+      // Check if it's a File/Blob or a config object
+      if (fileOrConfig instanceof File || fileOrConfig instanceof Blob) {
+        // Original behavior: handle File upload
+        const thumbnail = await generateThumbnail(fileOrConfig);
+        const imageDataUrl = await loadImageAsDataUrl(fileOrConfig);
 
-      const scene = {
-        id: sanitizeId(file.name.replace(/\.[^/.]+$/, "")),
-        name: file.name.replace(/\.[^/.]+$/, ""),
-        imageUrl: imageDataUrl,
-        thumbnail: thumbnail,
-        hotspots: [],
-      };
+        scene = {
+          id: sanitizeId(fileOrConfig.name.replace(/\.[^/.]+$/, "")),
+          name: fileOrConfig.name.replace(/\.[^/.]+$/, ""),
+          imageUrl: imageDataUrl,
+          thumbnail: thumbnail,
+          hotspots: [],
+        };
+      } else if (typeof fileOrConfig === "object" && fileOrConfig !== null) {
+        // Handle config object with URL strings
+        scene = {
+          id: fileOrConfig.id || sanitizeId(`scene-${Date.now()}`),
+          name: fileOrConfig.name || "Untitled Scene",
+          imageUrl: fileOrConfig.imageUrl || "",
+          thumbnail: fileOrConfig.thumbnail || fileOrConfig.imageUrl || "",
+          hotspots: fileOrConfig.hotspots || [],
+          ...(fileOrConfig.startingPosition && { startingPosition: fileOrConfig.startingPosition }),
+        };
+      } else {
+        throw new Error("Invalid argument: expected File, Blob, or scene config object");
+      }
 
       this.scenes.push(scene);
       this.currentSceneIndex = this.scenes.length - 1;
