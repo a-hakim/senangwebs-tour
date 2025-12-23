@@ -55,8 +55,8 @@ class TourEditor {
         // Setup event listeners
         this.setupEventListeners();
         
-        // Populate icon grid
-        this.uiController.populateIconGrid();
+        // Populate icon grid (async to wait for custom element registration)
+        await this.uiController.populateIconGrid();
         
         // Load saved project if exists (but only if it has valid data)
         if (this.storageManager.hasProject()) {
@@ -570,6 +570,7 @@ class TourEditor {
     render() {
         this.uiController.renderSceneList();
         this.uiController.renderHotspotList();
+        this.uiController.populateIconGrid(); // Re-render icon grid to ensure icons display
         
         const currentScene = this.sceneManager.getCurrentScene();
         const currentHotspot = this.hotspotEditor.getCurrentHotspot();

@@ -4269,10 +4269,26 @@
 
       /**
        * Populate icon grid from SenangStart icons (baked in at build time)
+       * Waits for ss-icon custom element to be defined to avoid race conditions
        */
-      populateIconGrid() {
+      async populateIconGrid() {
         const grid = document.getElementById("hotspotIconGrid");
         if (!grid) return;
+
+        // Wait for ss-icon custom element to be defined before populating
+        // This prevents race conditions where icons don't render if the
+        // custom element isn't registered yet when this method runs
+        try {
+          if (customElements.get('ss-icon') === undefined) {
+            // Give a reasonable timeout to avoid infinite waiting
+            await Promise.race([
+              customElements.whenDefined('ss-icon'),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('ss-icon timeout')), 5000))
+            ]);
+          }
+        } catch (err) {
+          console.warn('ss-icon custom element not available, icon grid may not render properly:', err.message);
+        }
 
         // Clear existing content
         grid.innerHTML = "";
@@ -4844,8 +4860,8 @@
             // Setup event listeners
             this.setupEventListeners();
             
-            // Populate icon grid
-            this.uiController.populateIconGrid();
+            // Populate icon grid (async to wait for custom element registration)
+            await this.uiController.populateIconGrid();
             
             // Load saved project if exists (but only if it has valid data)
             if (this.storageManager.hasProject()) {
@@ -5359,6 +5375,7 @@
         render() {
             this.uiController.renderSceneList();
             this.uiController.renderHotspotList();
+            this.uiController.populateIconGrid(); // Re-render icon grid to ensure icons display
             
             const currentScene = this.sceneManager.getCurrentScene();
             const currentHotspot = this.hotspotEditor.getCurrentHotspot();
