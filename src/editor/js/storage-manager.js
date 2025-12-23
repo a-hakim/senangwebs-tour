@@ -78,8 +78,10 @@ class ProjectStorageManager {
         return false;
       }
 
-      // imageUrl is required for scenes to be valid
-      if (!scene.imageUrl || typeof scene.imageUrl !== "string") {
+      // panorama or imageUrl is required for scenes to be valid (support both formats)
+      const hasImage = (scene.panorama && typeof scene.panorama === "string") ||
+                       (scene.imageUrl && typeof scene.imageUrl === "string");
+      if (!hasImage) {
         return false;
       }
 

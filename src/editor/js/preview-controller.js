@@ -1,5 +1,6 @@
 // Preview Controller - Manages A-Frame preview integration using SWT library
 import { showToast } from "./utils.js";
+import { buildPreviewTourConfig } from "./data-transform.js";
 
 class PreviewController {
   constructor(editor) {
@@ -49,14 +50,16 @@ class PreviewController {
 
   /**
    * Load scene into preview using SWT library
+   * Scenes and hotspots now use unified library format directly
    */
   async loadScene(scene, preserveCameraRotation = true) {
     if (!this.isInitialized || !scene) {
       return;
     }
 
-    // Validate scene has required data
-    if (!scene.imageUrl || !scene.id) {
+    // Validate scene has required data (panorama or imageUrl for backward compatibility)
+    const panoramaUrl = scene.panorama || scene.imageUrl;
+    if (!panoramaUrl || !scene.id) {
       console.error("Invalid scene data:", scene);
       return;
     }
@@ -122,67 +125,10 @@ class PreviewController {
     // Give A-Frame a moment to start initializing before we proceed
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Build tour config for this single scene
-    // Transform editor scene format to library format
-    const transformedHotspots = (scene.hotspots || []).map((h) => ({
-      id: h.id,
-      position: h.position,
-      action: {
-        type: h.type === "navigation" ? "navigateTo" : h.type,
-        target: h.targetSceneId,
-      },
-      appearance: {
-        color: h.color || "#00ff00",
-        icon: h.icon || null,
-        scale: h.scale || "1 1 1",
-      },
-      tooltip: {
-        text: h.title || "Hotspot",
-      },
-    }));
-
-    const libraryScene = {
-      id: scene.id,
-      name: scene.name,
-      panorama: scene.imageUrl, // Editor uses 'imageUrl', library expects 'panorama'
-      hotspots: transformedHotspots,
-    };
-
-    // Build scenes object with ALL scenes (for navigation to work)
-    const allScenes = {};
+    // Build tour config using shared transform utilities
+    // This includes ALL scenes for navigation support
     const editorScenes = this.editor.sceneManager.scenes || [];
-    editorScenes.forEach((s) => {
-      const sceneHotspots = (s.hotspots || []).map((h) => ({
-        id: h.id,
-        position: h.position,
-        action: {
-          type: h.type === "navigation" ? "navigateTo" : h.type,
-          target: h.targetSceneId,
-        },
-        appearance: {
-          color: h.color || "#00ff00",
-          icon: h.icon || null,
-          scale: h.scale || "1 1 1",
-        },
-        tooltip: {
-          text: h.title || "Hotspot",
-        },
-      }));
-
-      allScenes[s.id] = {
-        id: s.id,
-        name: s.name,
-        panorama: s.imageUrl,
-        hotspots: sceneHotspots,
-        startingPosition: s.startingPosition || null,
-      };
-    });
-
-    const tourConfig = {
-      title: scene.name,
-      initialScene: scene.id,
-      scenes: allScenes,
-    };
+    const tourConfig = buildPreviewTourConfig(scene, editorScenes);
 
     try {
       // Create new tour instance

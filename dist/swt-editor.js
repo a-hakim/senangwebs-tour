@@ -300,8 +300,10 @@
             return false;
           }
 
-          // imageUrl is required for scenes to be valid
-          if (!scene.imageUrl || typeof scene.imageUrl !== "string") {
+          // panorama or imageUrl is required for scenes to be valid (support both formats)
+          const hasImage = (scene.panorama && typeof scene.panorama === "string") ||
+                           (scene.imageUrl && typeof scene.imageUrl === "string");
+          if (!hasImage) {
             return false;
           }
 
@@ -426,7 +428,7 @@
        * @param {File|Object} fileOrConfig - Either a File object or a scene config object
        * @param {string} fileOrConfig.id - Scene ID (if config object)
        * @param {string} fileOrConfig.name - Scene name (if config object)
-       * @param {string} fileOrConfig.imageUrl - Image URL (if config object)
+       * @param {string} fileOrConfig.panorama - Panorama URL (if config object)
        * @param {string} fileOrConfig.thumbnail - Thumbnail URL (if config object)
        * @param {Array} fileOrConfig.hotspots - Hotspots array (if config object)
        */
@@ -443,17 +445,17 @@
             scene = {
               id: sanitizeId$1(fileOrConfig.name.replace(/\.[^/.]+$/, "")),
               name: fileOrConfig.name.replace(/\.[^/.]+$/, ""),
-              imageUrl: imageDataUrl,
+              panorama: imageDataUrl,
               thumbnail: thumbnail,
               hotspots: [],
             };
           } else if (typeof fileOrConfig === "object" && fileOrConfig !== null) {
-            // Handle config object with URL strings
+            // Handle config object - support both panorama and imageUrl for backward compatibility
             scene = {
               id: fileOrConfig.id || sanitizeId$1(`scene-${Date.now()}`),
               name: fileOrConfig.name || "Untitled Scene",
-              imageUrl: fileOrConfig.imageUrl || "",
-              thumbnail: fileOrConfig.thumbnail || fileOrConfig.imageUrl || "",
+              panorama: fileOrConfig.panorama || fileOrConfig.imageUrl || "",
+              thumbnail: fileOrConfig.thumbnail || fileOrConfig.panorama || fileOrConfig.imageUrl || "",
               hotspots: fileOrConfig.hotspots || [],
               ...(fileOrConfig.startingPosition && { startingPosition: fileOrConfig.startingPosition }),
             };
@@ -523,12 +525,13 @@
         if (index >= 0 && index < this.scenes.length) {
           this.scenes[index][property] = value;
 
-          // If updating ID, update all hotspot target references
+          // If updating ID, update all hotspot target references (uses nested action.target)
           if (property === "id") {
+            const oldId = this.scenes[index].id;
             this.scenes.forEach((scene) => {
               scene.hotspots.forEach((hotspot) => {
-                if (hotspot.targetSceneId === this.scenes[index].id) {
-                  hotspot.targetSceneId = value;
+                if (hotspot.action?.target === oldId) {
+                  hotspot.action.target = value;
                 }
               });
             });
@@ -649,17 +652,24 @@
                 return null;
             }
 
+            // Use unified library format with nested structure
             const hotspot = {
                 id: generateId('hotspot'),
-                type: 'navigation',
                 position: position,
-                cameraOrientation: cameraOrientation, // Store camera pitch/yaw for reliable pointing
-                targetSceneId: targetSceneId,
-                title: 'New Hotspot',
-                description: '',
-                color: '#00ff00',
-                icon: '',
-                scale: '1 1 1'
+                cameraOrientation: cameraOrientation,
+                action: {
+                    type: 'navigateTo',
+                    target: targetSceneId
+                },
+                appearance: {
+                    color: '#00ff00',
+                    scale: '1 1 1',
+                    icon: ''
+                },
+                tooltip: {
+                    text: 'New Hotspot',
+                    description: ''
+                }
             };
 
             scene.hotspots.push(hotspot);
@@ -698,6 +708,7 @@
 
         /**
          * Update hotspot property
+         * Supports nested properties like 'appearance.color', 'action.target', 'tooltip.text'
          */
         updateHotspot(index, property, value) {
             const scene = this.editor.sceneManager.getCurrentScene();
@@ -705,7 +716,23 @@
                 return false;
             }
 
-            scene.hotspots[index][property] = value;
+            const hotspot = scene.hotspots[index];
+            
+            // Handle nested properties (e.g., 'appearance.color')
+            if (property.includes('.')) {
+                const parts = property.split('.');
+                let obj = hotspot;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!obj[parts[i]]) {
+                        obj[parts[i]] = {};
+                    }
+                    obj = obj[parts[i]];
+                }
+                obj[parts[parts.length - 1]] = value;
+            } else {
+                hotspot[property] = value;
+            }
+            
             return true;
         }
 
@@ -772,7 +799,9 @@
             const original = scene.hotspots[index];
             const duplicate = deepClone(original);
             duplicate.id = generateId('hotspot');
-            duplicate.title = original.title + ' (Copy)';
+            if (duplicate.tooltip) {
+                duplicate.tooltip.text = (original.tooltip?.text || 'Hotspot') + ' (Copy)';
+            }
             
             // Offset position slightly
             duplicate.position = {
@@ -815,6 +844,49 @@
             return true;
         }
     };
+
+    /**
+     * Data Transform Utilities
+     * 
+     * With the unified format, editor and library use the same structure:
+     * - scenes: Array of scene objects with `panorama`
+     * - hotspots: nested properties (action, appearance, tooltip)
+     * 
+     * These utilities handle building the tour config for the SWT library.
+     */
+
+    /**
+     * Build a complete tour configuration for the SWT library
+     * Since unified format is used, this just wraps the scenes array with config
+     * @param {Object} config - Config with initialSceneId, etc.
+     * @param {Array} scenes - Array of scenes (already in unified format)
+     * @returns {Object} Complete tour config
+     */
+    function buildTourConfig(config, scenes) {
+      // Determine initial scene
+      let initialScene = config.initialSceneId;
+      if (!initialScene && scenes && scenes.length > 0) {
+        initialScene = scenes[0].id;
+      }
+
+      return {
+        initialScene: initialScene,
+        scenes: scenes || [],
+      };
+    }
+
+    /**
+     * Build tour config for preview (sets initial scene to current scene)
+     * @param {Object} currentScene - The scene to show initially
+     * @param {Array} allScenes - All scenes for navigation support
+     * @returns {Object} Complete tour config
+     */
+    function buildPreviewTourConfig(currentScene, allScenes) {
+      return buildTourConfig(
+        { initialSceneId: currentScene.id },
+        allScenes
+      );
+    }
 
     // Preview Controller - Manages A-Frame preview integration using SWT library
 
@@ -866,14 +938,16 @@
 
       /**
        * Load scene into preview using SWT library
+       * Scenes and hotspots now use unified library format directly
        */
       async loadScene(scene, preserveCameraRotation = true) {
         if (!this.isInitialized || !scene) {
           return;
         }
 
-        // Validate scene has required data
-        if (!scene.imageUrl || !scene.id) {
+        // Validate scene has required data (panorama or imageUrl for backward compatibility)
+        const panoramaUrl = scene.panorama || scene.imageUrl;
+        if (!panoramaUrl || !scene.id) {
           console.error("Invalid scene data:", scene);
           return;
         }
@@ -939,65 +1013,10 @@
         // Give A-Frame a moment to start initializing before we proceed
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Build tour config for this single scene
-        // Transform editor scene format to library format
-        (scene.hotspots || []).map((h) => ({
-          id: h.id,
-          position: h.position,
-          action: {
-            type: h.type === "navigation" ? "navigateTo" : h.type,
-            target: h.targetSceneId,
-          },
-          appearance: {
-            color: h.color || "#00ff00",
-            icon: h.icon || null,
-            scale: h.scale || "1 1 1",
-          },
-          tooltip: {
-            text: h.title || "Hotspot",
-          },
-        }));
-
-        ({
-          id: scene.id,
-          name: scene.name,
-          panorama: scene.imageUrl});
-
-        // Build scenes object with ALL scenes (for navigation to work)
-        const allScenes = {};
+        // Build tour config using shared transform utilities
+        // This includes ALL scenes for navigation support
         const editorScenes = this.editor.sceneManager.scenes || [];
-        editorScenes.forEach((s) => {
-          const sceneHotspots = (s.hotspots || []).map((h) => ({
-            id: h.id,
-            position: h.position,
-            action: {
-              type: h.type === "navigation" ? "navigateTo" : h.type,
-              target: h.targetSceneId,
-            },
-            appearance: {
-              color: h.color || "#00ff00",
-              icon: h.icon || null,
-              scale: h.scale || "1 1 1",
-            },
-            tooltip: {
-              text: h.title || "Hotspot",
-            },
-          }));
-
-          allScenes[s.id] = {
-            id: s.id,
-            name: s.name,
-            panorama: s.imageUrl,
-            hotspots: sceneHotspots,
-            startingPosition: s.startingPosition || null,
-          };
-        });
-
-        const tourConfig = {
-          title: scene.name,
-          initialScene: scene.id,
-          scenes: allScenes,
-        };
+        const tourConfig = buildPreviewTourConfig(scene, editorScenes);
 
         try {
           // Create new tour instance
@@ -4022,9 +4041,9 @@
         dragHandle.innerHTML =
           '<ss-icon icon="arrow-up-down-left-right" thickness="2.2"></ss-icon>';
 
-        // Thumbnail
+        // Thumbnail - use thumbnail, panorama, or imageUrl (backward compatibility)
         const thumbnail = document.createElement("img");
-        thumbnail.src = scene.thumbnail || scene.imageUrl;
+        thumbnail.src = scene.thumbnail || scene.panorama || scene.imageUrl;
         thumbnail.alt = scene.name;
 
         // Info
@@ -4156,18 +4175,25 @@
 
       /**
        * Create hotspot list item
+       * Uses unified format with nested appearance, action, and tooltip
        */
       createHotspotItem(hotspot, index, isActive) {
         const item = document.createElement("div");
         item.className = "hotspot-item" + (isActive ? " active" : "");
 
+        // Get values from nested structure
+        const color = hotspot.appearance?.color || "#00ff00";
+        const icon = hotspot.appearance?.icon || "";
+        const title = hotspot.tooltip?.text || "Untitled Hotspot";
+        const targetSceneId = hotspot.action?.target || "";
+
         const colorIndicator = document.createElement("div");
         colorIndicator.className = "hotspot-color";
-        colorIndicator.style.backgroundColor = hotspot.color;
+        colorIndicator.style.backgroundColor = color;
         
         // If hotspot has an icon, show it with the color applied
-        if (hotspot.icon) {
-          colorIndicator.innerHTML = `<ss-icon icon="${hotspot.icon}" thickness="2.2" style="color: ${hotspot.color}; width: 20px; height: 20px;"></ss-icon>`;
+        if (icon) {
+          colorIndicator.innerHTML = `<ss-icon icon="${icon}" thickness="2.2" style="color: ${color}; width: 20px; height: 20px;"></ss-icon>`;
           colorIndicator.style.backgroundColor = "transparent";
           colorIndicator.style.display = "flex";
           colorIndicator.style.alignItems = "center";
@@ -4177,24 +4203,24 @@
         const info = document.createElement("div");
         info.className = "hotspot-info";
 
-        const title = document.createElement("div");
-        title.className = "hotspot-title";
-        title.textContent = hotspot.title || "Untitled Hotspot";
+        const titleEl = document.createElement("div");
+        titleEl.className = "hotspot-title";
+        titleEl.textContent = title;
 
         const target = document.createElement("div");
         target.className = "hotspot-target";
-        if (hotspot.targetSceneId) {
+        if (targetSceneId) {
           const targetScene = this.editor.sceneManager.getSceneById(
-            hotspot.targetSceneId
+            targetSceneId
           );
           target.textContent = targetScene
             ? `→ ${targetScene.name}`
-            : `→ ${hotspot.targetSceneId}`;
+            : `→ ${targetSceneId}`;
         } else {
           target.textContent = "No target";
         }
 
-        info.appendChild(title);
+        info.appendChild(titleEl);
         info.appendChild(target);
 
         const actions = document.createElement("div");
@@ -4276,6 +4302,7 @@
 
       /**
        * Update properties panel for hotspot
+       * Uses unified format with nested appearance, action, and tooltip
        */
       updateHotspotProperties(hotspot) {
         const hotspotAll = document.getElementById("hotspotAll");
@@ -4305,21 +4332,26 @@
         if (hotspotAll) hotspotAll.style.display = "block";
         if (hotspotProperties) hotspotProperties.style.display = "block";
 
-        document.getElementById("hotspotTitle").value = hotspot.title || "";
-        document.getElementById("hotspotDescription").value =
-          hotspot.description || "";
-        document.getElementById("hotspotTarget").value =
-          hotspot.targetSceneId || "";
-        document.getElementById("hotspotColor").value = hotspot.color || "#00ff00";
+        // Get values from nested structure
+        const title = hotspot.tooltip?.text || "";
+        const description = hotspot.tooltip?.description || "";
+        const targetSceneId = hotspot.action?.target || "";
+        const color = hotspot.appearance?.color || "#00ff00";
+        const icon = hotspot.appearance?.icon || "";
+
+        document.getElementById("hotspotTitle").value = title;
+        document.getElementById("hotspotDescription").value = description;
+        document.getElementById("hotspotTarget").value = targetSceneId;
+        document.getElementById("hotspotColor").value = color;
 
         // Update color text input if it exists
         const colorText = document.getElementById("hotspotColorText");
         if (colorText) {
-          colorText.value = hotspot.color || "#00ff00";
+          colorText.value = color;
         }
 
         // Update icon grid active button
-        this.setActiveIconButton(hotspot.icon || "");
+        this.setActiveIconButton(icon);
 
         // Update position inputs
         const pos = hotspot.position || { x: 0, y: 0, z: 0 };
@@ -4349,7 +4381,8 @@
 
         document.getElementById("sceneId").value = scene.id || "";
         document.getElementById("sceneName").value = scene.name || "";
-        document.getElementById("sceneImageUrl").value = scene.imageUrl || "";
+        // Support both panorama (unified) and imageUrl (legacy)
+        document.getElementById("sceneImageUrl").value = scene.panorama || scene.imageUrl || "";
         
         // Update starting position display
         if (startingPosDisplay) {
@@ -4586,75 +4619,13 @@
       /**
        * Generate JSON compatible with SWT library
        * Follows the tourConfig structure from example-simple.html
+       * Uses shared data-transform utilities for consistent transformation
        */
       generateJSON() {
         const scenes = this.editor.sceneManager.getAllScenes();
         const config = this.editor.config;
 
-        // Build scenes object (keyed by scene ID)
-        const scenesData = {};
-        scenes.forEach((scene) => {
-          scenesData[scene.id] = {
-            name: scene.name,
-            panorama: scene.imageUrl,
-            hotspots: scene.hotspots.map((hotspot) => {
-              const hotspotData = {
-                position: hotspot.position,
-              };
-
-              // Add action based on hotspot type
-              if (hotspot.type === "navigation" && hotspot.targetSceneId) {
-                hotspotData.action = {
-                  type: "navigateTo",
-                  target: hotspot.targetSceneId,
-                };
-              } else if (hotspot.type === "info") {
-                hotspotData.action = {
-                  type: "showInfo",
-                };
-              }
-
-              // Add appearance
-              hotspotData.appearance = {
-                color: hotspot.color || "#FF6B6B",
-                scale: hotspot.scale || "2 2 2",
-              };
-              
-              // Add icon if set
-              if (hotspot.icon) {
-                hotspotData.appearance.icon = hotspot.icon;
-              }
-
-              // Add tooltip if title exists
-              if (hotspot.title) {
-                hotspotData.tooltip = {
-                  text: hotspot.title,
-                };
-              }
-
-              return hotspotData;
-            }),
-          };
-          
-          // Add starting position if set
-          if (scene.startingPosition) {
-            scenesData[scene.id].startingPosition = scene.startingPosition;
-          }
-        });
-
-        // Determine initial scene
-        let initialScene = config.initialSceneId;
-        if (!initialScene && scenes.length > 0) {
-          initialScene = scenes[0].id;
-        }
-
-        // Build final JSON matching SWT tourConfig format
-        const jsonData = {
-          initialScene: initialScene,
-          scenes: scenesData,
-        };
-
-        return jsonData;
+        return buildTourConfig(config, scenes);
       }
 
       /**
@@ -4665,9 +4636,8 @@
         const jsonData = this.generateJSON();
         
         // Process all scenes and convert icon names to data URLs
-        for (const sceneId of Object.keys(jsonData.scenes)) {
-          const scene = jsonData.scenes[sceneId];
-          
+        // Scenes are an array in unified format
+        for (const scene of jsonData.scenes) {
           for (let i = 0; i < scene.hotspots.length; i++) {
             const hotspot = scene.hotspots[i];
             const icon = hotspot.appearance?.icon;
@@ -4968,19 +4938,19 @@
             });
 
             document.getElementById('hotspotTitle')?.addEventListener('input', debounce((e) => {
-                this.updateCurrentHotspot('title', e.target.value);
+                this.updateCurrentHotspot('tooltip.text', e.target.value);
             }, 300));
             
             document.getElementById('hotspotDescription')?.addEventListener('input', debounce((e) => {
-                this.updateCurrentHotspot('description', e.target.value);
+                this.updateCurrentHotspot('tooltip.description', e.target.value);
             }, 300));
             
             document.getElementById('hotspotTarget')?.addEventListener('change', (e) => {
-                this.updateCurrentHotspot('targetSceneId', e.target.value);
+                this.updateCurrentHotspot('action.target', e.target.value);
             });
             
             document.getElementById('hotspotColor')?.addEventListener('input', (e) => {
-                this.updateCurrentHotspot('color', e.target.value);
+                this.updateCurrentHotspot('appearance.color', e.target.value);
             });
 
             // Icon grid button clicks
@@ -4992,7 +4962,7 @@
                     document.querySelectorAll('#hotspotIconGrid .icon-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     // Update hotspot
-                    this.updateCurrentHotspot('icon', iconValue);
+                    this.updateCurrentHotspot('appearance.icon', iconValue);
                 }
             });
 
@@ -5321,7 +5291,8 @@
             const index = this.sceneManager.currentSceneIndex;
             if (index < 0) return;
             
-            if (this.sceneManager.updateScene(index, 'imageUrl', imageUrl)) {
+            // Use panorama for unified format
+            if (this.sceneManager.updateScene(index, 'panorama', imageUrl)) {
                 const scene = this.sceneManager.getCurrentScene();
                 if (scene) {
                     scene.thumbnail = imageUrl;

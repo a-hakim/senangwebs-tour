@@ -403,6 +403,67 @@ User Action → Editor Method → Manager Update → UI Render → Event Emissio
 5. `scene-added` event emitted
 6. Your custom handlers execute
 
+## Data Format
+
+The editor and viewer now use the **same data format**. Scenes are stored as an **array**.
+
+```javascript
+// Data format - used everywhere (editor, viewer, export)
+{
+  config: {
+    title: "My Tour",
+    initialSceneId: "scene-1"
+  },
+  scenes: [  // Array of scenes
+    {
+      id: "scene-1",
+      name: "Living Room",
+      panorama: "http://example.com/panorama.jpg",  // Use 'panorama' (not 'imageUrl')
+      thumbnail: "http://example.com/thumb.jpg",
+      startingPosition: { pitch: 0.1, yaw: 1.5 },
+      hotspots: [
+        {
+          id: "hotspot-1",
+          position: { x: 5, y: 0, z: -5 },
+          action: {                     // Nested object
+            type: "navigateTo",
+            target: "scene-2"
+          },
+          appearance: {                 // Nested object
+            color: "#00ff00",
+            scale: "1 1 1",
+            icon: "arrow"
+          },
+          tooltip: {                    // Nested object
+            text: "Go to Kitchen",
+            description: "Click here"
+          },
+          cameraOrientation: { pitch: -0.02, yaw: 2.06 }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Property Reference
+
+| Property | Location | Description |
+|----------|----------|-------------|
+| `scenes` | Top level | Array of scene objects |
+| `panorama` | Scene | Image URL or base64 data URL |
+| `action.type` | Hotspot | `"navigateTo"` or `"showInfo"` |
+| `action.target` | Hotspot | Target scene ID |
+| `appearance.color` | Hotspot | Hotspot color (hex) |
+| `appearance.scale` | Hotspot | Scale string `"x y z"` |
+| `appearance.icon` | Hotspot | Icon name or URL |
+| `tooltip.text` | Hotspot | Title text |
+| `tooltip.description` | Hotspot | Description text |
+
+### Backward Compatibility
+
+The library still accepts `scenes` as an object keyed by ID for backward compatibility with existing tour configurations.
+
 ## Best Practices
 
 ### 1. Always Call `editor.render()`

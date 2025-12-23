@@ -149,19 +149,19 @@ class TourEditor {
         });
 
         document.getElementById('hotspotTitle')?.addEventListener('input', debounce((e) => {
-            this.updateCurrentHotspot('title', e.target.value);
+            this.updateCurrentHotspot('tooltip.text', e.target.value);
         }, 300));
         
         document.getElementById('hotspotDescription')?.addEventListener('input', debounce((e) => {
-            this.updateCurrentHotspot('description', e.target.value);
+            this.updateCurrentHotspot('tooltip.description', e.target.value);
         }, 300));
         
         document.getElementById('hotspotTarget')?.addEventListener('change', (e) => {
-            this.updateCurrentHotspot('targetSceneId', e.target.value);
+            this.updateCurrentHotspot('action.target', e.target.value);
         });
         
         document.getElementById('hotspotColor')?.addEventListener('input', (e) => {
-            this.updateCurrentHotspot('color', e.target.value);
+            this.updateCurrentHotspot('appearance.color', e.target.value);
         });
 
         // Icon grid button clicks
@@ -173,7 +173,7 @@ class TourEditor {
                 document.querySelectorAll('#hotspotIconGrid .icon-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 // Update hotspot
-                this.updateCurrentHotspot('icon', iconValue);
+                this.updateCurrentHotspot('appearance.icon', iconValue);
             }
         });
 
@@ -502,7 +502,8 @@ class TourEditor {
         const index = this.sceneManager.currentSceneIndex;
         if (index < 0) return;
         
-        if (this.sceneManager.updateScene(index, 'imageUrl', imageUrl)) {
+        // Use panorama for unified format
+        if (this.sceneManager.updateScene(index, 'panorama', imageUrl)) {
             const scene = this.sceneManager.getCurrentScene();
             if (scene) {
                 scene.thumbnail = imageUrl;

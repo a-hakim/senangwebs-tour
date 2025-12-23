@@ -18,7 +18,7 @@ class SceneManagerEditor {
    * @param {File|Object} fileOrConfig - Either a File object or a scene config object
    * @param {string} fileOrConfig.id - Scene ID (if config object)
    * @param {string} fileOrConfig.name - Scene name (if config object)
-   * @param {string} fileOrConfig.imageUrl - Image URL (if config object)
+   * @param {string} fileOrConfig.panorama - Panorama URL (if config object)
    * @param {string} fileOrConfig.thumbnail - Thumbnail URL (if config object)
    * @param {Array} fileOrConfig.hotspots - Hotspots array (if config object)
    */
@@ -35,17 +35,17 @@ class SceneManagerEditor {
         scene = {
           id: sanitizeId(fileOrConfig.name.replace(/\.[^/.]+$/, "")),
           name: fileOrConfig.name.replace(/\.[^/.]+$/, ""),
-          imageUrl: imageDataUrl,
+          panorama: imageDataUrl,
           thumbnail: thumbnail,
           hotspots: [],
         };
       } else if (typeof fileOrConfig === "object" && fileOrConfig !== null) {
-        // Handle config object with URL strings
+        // Handle config object - support both panorama and imageUrl for backward compatibility
         scene = {
           id: fileOrConfig.id || sanitizeId(`scene-${Date.now()}`),
           name: fileOrConfig.name || "Untitled Scene",
-          imageUrl: fileOrConfig.imageUrl || "",
-          thumbnail: fileOrConfig.thumbnail || fileOrConfig.imageUrl || "",
+          panorama: fileOrConfig.panorama || fileOrConfig.imageUrl || "",
+          thumbnail: fileOrConfig.thumbnail || fileOrConfig.panorama || fileOrConfig.imageUrl || "",
           hotspots: fileOrConfig.hotspots || [],
           ...(fileOrConfig.startingPosition && { startingPosition: fileOrConfig.startingPosition }),
         };
@@ -115,12 +115,13 @@ class SceneManagerEditor {
     if (index >= 0 && index < this.scenes.length) {
       this.scenes[index][property] = value;
 
-      // If updating ID, update all hotspot target references
+      // If updating ID, update all hotspot target references (uses nested action.target)
       if (property === "id") {
+        const oldId = this.scenes[index].id;
         this.scenes.forEach((scene) => {
           scene.hotspots.forEach((hotspot) => {
-            if (hotspot.targetSceneId === this.scenes[index].id) {
-              hotspot.targetSceneId = value;
+            if (hotspot.action?.target === oldId) {
+              hotspot.action.target = value;
             }
           });
         });

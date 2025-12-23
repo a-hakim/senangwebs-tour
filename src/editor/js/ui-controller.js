@@ -53,9 +53,9 @@ class UIController {
     dragHandle.innerHTML =
       '<ss-icon icon="arrow-up-down-left-right" thickness="2.2"></ss-icon>';
 
-    // Thumbnail
+    // Thumbnail - use thumbnail, panorama, or imageUrl (backward compatibility)
     const thumbnail = document.createElement("img");
-    thumbnail.src = scene.thumbnail || scene.imageUrl;
+    thumbnail.src = scene.thumbnail || scene.panorama || scene.imageUrl;
     thumbnail.alt = scene.name;
 
     // Info
@@ -187,18 +187,25 @@ class UIController {
 
   /**
    * Create hotspot list item
+   * Uses unified format with nested appearance, action, and tooltip
    */
   createHotspotItem(hotspot, index, isActive) {
     const item = document.createElement("div");
     item.className = "hotspot-item" + (isActive ? " active" : "");
 
+    // Get values from nested structure
+    const color = hotspot.appearance?.color || "#00ff00";
+    const icon = hotspot.appearance?.icon || "";
+    const title = hotspot.tooltip?.text || "Untitled Hotspot";
+    const targetSceneId = hotspot.action?.target || "";
+
     const colorIndicator = document.createElement("div");
     colorIndicator.className = "hotspot-color";
-    colorIndicator.style.backgroundColor = hotspot.color;
+    colorIndicator.style.backgroundColor = color;
     
     // If hotspot has an icon, show it with the color applied
-    if (hotspot.icon) {
-      colorIndicator.innerHTML = `<ss-icon icon="${hotspot.icon}" thickness="2.2" style="color: ${hotspot.color}; width: 20px; height: 20px;"></ss-icon>`;
+    if (icon) {
+      colorIndicator.innerHTML = `<ss-icon icon="${icon}" thickness="2.2" style="color: ${color}; width: 20px; height: 20px;"></ss-icon>`;
       colorIndicator.style.backgroundColor = "transparent";
       colorIndicator.style.display = "flex";
       colorIndicator.style.alignItems = "center";
@@ -208,24 +215,24 @@ class UIController {
     const info = document.createElement("div");
     info.className = "hotspot-info";
 
-    const title = document.createElement("div");
-    title.className = "hotspot-title";
-    title.textContent = hotspot.title || "Untitled Hotspot";
+    const titleEl = document.createElement("div");
+    titleEl.className = "hotspot-title";
+    titleEl.textContent = title;
 
     const target = document.createElement("div");
     target.className = "hotspot-target";
-    if (hotspot.targetSceneId) {
+    if (targetSceneId) {
       const targetScene = this.editor.sceneManager.getSceneById(
-        hotspot.targetSceneId
+        targetSceneId
       );
       target.textContent = targetScene
         ? `→ ${targetScene.name}`
-        : `→ ${hotspot.targetSceneId}`;
+        : `→ ${targetSceneId}`;
     } else {
       target.textContent = "No target";
     }
 
-    info.appendChild(title);
+    info.appendChild(titleEl);
     info.appendChild(target);
 
     const actions = document.createElement("div");
@@ -307,6 +314,7 @@ class UIController {
 
   /**
    * Update properties panel for hotspot
+   * Uses unified format with nested appearance, action, and tooltip
    */
   updateHotspotProperties(hotspot) {
     const hotspotAll = document.getElementById("hotspotAll");
@@ -336,21 +344,26 @@ class UIController {
     if (hotspotAll) hotspotAll.style.display = "block";
     if (hotspotProperties) hotspotProperties.style.display = "block";
 
-    document.getElementById("hotspotTitle").value = hotspot.title || "";
-    document.getElementById("hotspotDescription").value =
-      hotspot.description || "";
-    document.getElementById("hotspotTarget").value =
-      hotspot.targetSceneId || "";
-    document.getElementById("hotspotColor").value = hotspot.color || "#00ff00";
+    // Get values from nested structure
+    const title = hotspot.tooltip?.text || "";
+    const description = hotspot.tooltip?.description || "";
+    const targetSceneId = hotspot.action?.target || "";
+    const color = hotspot.appearance?.color || "#00ff00";
+    const icon = hotspot.appearance?.icon || "";
+
+    document.getElementById("hotspotTitle").value = title;
+    document.getElementById("hotspotDescription").value = description;
+    document.getElementById("hotspotTarget").value = targetSceneId;
+    document.getElementById("hotspotColor").value = color;
 
     // Update color text input if it exists
     const colorText = document.getElementById("hotspotColorText");
     if (colorText) {
-      colorText.value = hotspot.color || "#00ff00";
+      colorText.value = color;
     }
 
     // Update icon grid active button
-    this.setActiveIconButton(hotspot.icon || "");
+    this.setActiveIconButton(icon);
 
     // Update position inputs
     const pos = hotspot.position || { x: 0, y: 0, z: 0 };
@@ -380,7 +393,8 @@ class UIController {
 
     document.getElementById("sceneId").value = scene.id || "";
     document.getElementById("sceneName").value = scene.name || "";
-    document.getElementById("sceneImageUrl").value = scene.imageUrl || "";
+    // Support both panorama (unified) and imageUrl (legacy)
+    document.getElementById("sceneImageUrl").value = scene.panorama || scene.imageUrl || "";
     
     // Update starting position display
     if (startingPosDisplay) {

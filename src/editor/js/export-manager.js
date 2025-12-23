@@ -1,6 +1,7 @@
 // Export Manager - Handles JSON generation for SWT library
 import { downloadTextAsFile, showModal, copyToClipboard } from "./utils.js";
 import { IconRenderer } from "../../IconRenderer.js";
+import { buildTourConfig } from "./data-transform.js";
 
 class ExportManager {
   constructor(editor) {
@@ -11,75 +12,13 @@ class ExportManager {
   /**
    * Generate JSON compatible with SWT library
    * Follows the tourConfig structure from example-simple.html
+   * Uses shared data-transform utilities for consistent transformation
    */
   generateJSON() {
     const scenes = this.editor.sceneManager.getAllScenes();
     const config = this.editor.config;
 
-    // Build scenes object (keyed by scene ID)
-    const scenesData = {};
-    scenes.forEach((scene) => {
-      scenesData[scene.id] = {
-        name: scene.name,
-        panorama: scene.imageUrl,
-        hotspots: scene.hotspots.map((hotspot) => {
-          const hotspotData = {
-            position: hotspot.position,
-          };
-
-          // Add action based on hotspot type
-          if (hotspot.type === "navigation" && hotspot.targetSceneId) {
-            hotspotData.action = {
-              type: "navigateTo",
-              target: hotspot.targetSceneId,
-            };
-          } else if (hotspot.type === "info") {
-            hotspotData.action = {
-              type: "showInfo",
-            };
-          }
-
-          // Add appearance
-          hotspotData.appearance = {
-            color: hotspot.color || "#FF6B6B",
-            scale: hotspot.scale || "2 2 2",
-          };
-          
-          // Add icon if set
-          if (hotspot.icon) {
-            hotspotData.appearance.icon = hotspot.icon;
-          }
-
-          // Add tooltip if title exists
-          if (hotspot.title) {
-            hotspotData.tooltip = {
-              text: hotspot.title,
-            };
-          }
-
-          return hotspotData;
-        }),
-      };
-      
-      // Add starting position if set
-      if (scene.startingPosition) {
-        scenesData[scene.id].startingPosition = scene.startingPosition;
-      }
-    });
-
-    // Determine initial scene
-    let initialScene = config.initialSceneId;
-    if (!initialScene && scenes.length > 0) {
-      initialScene = scenes[0].id;
-    }
-
-    // Build final JSON matching SWT tourConfig format
-    const jsonData = {
-      initialScene: initialScene,
-      scenes: scenesData,
-    };
-
-    return jsonData;
+    return buildTourConfig(config, scenes);
   }
 
   /**
@@ -90,9 +29,8 @@ class ExportManager {
     const jsonData = this.generateJSON();
     
     // Process all scenes and convert icon names to data URLs
-    for (const sceneId of Object.keys(jsonData.scenes)) {
-      const scene = jsonData.scenes[sceneId];
-      
+    // Scenes are an array in unified format
+    for (const scene of jsonData.scenes) {
       for (let i = 0; i < scene.hotspots.length; i++) {
         const hotspot = scene.hotspots[i];
         const icon = hotspot.appearance?.icon;

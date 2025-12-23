@@ -30,6 +30,9 @@ class Tour {
     this.config = tourConfig;
     this.isStarted = false;
 
+    // Normalize scenes to array format (backward compatibility with object format)
+    this.scenesArray = this.normalizeScenesArray(tourConfig.scenes);
+
     // Initialize managers
     this.assetManager = new AssetManager(this.sceneEl);
     this.sceneManager = new SceneManager(this.sceneEl, this.assetManager);
@@ -52,6 +55,32 @@ class Tour {
 
     // Ensure cursor exists for interaction
     this.ensureCursor();
+  }
+
+  /**
+   * Normalize scenes to array format
+   * Supports both array and object (keyed by ID) formats for backward compatibility
+   * @param {Array|Object} scenes - Scenes in either format
+   * @returns {Array} - Scenes as array with id property
+   */
+  normalizeScenesArray(scenes) {
+    if (Array.isArray(scenes)) {
+      return scenes;
+    }
+    // Convert object format to array format
+    return Object.entries(scenes).map(([id, sceneData]) => ({
+      id,
+      ...sceneData,
+    }));
+  }
+
+  /**
+   * Get scene data by ID
+   * @param {string} sceneId - The scene ID to find
+   * @returns {Object|undefined} - Scene data or undefined if not found
+   */
+  getSceneById(sceneId) {
+    return this.scenesArray.find((scene) => scene.id === sceneId);
   }
 
   /**
@@ -81,7 +110,7 @@ class Tour {
     }
 
     const initialSceneId = this.config.initialScene;
-    const initialSceneData = this.config.scenes[initialSceneId];
+    const initialSceneData = this.getSceneById(initialSceneId);
 
     if (!initialSceneData) {
       throw new Error(
@@ -123,7 +152,7 @@ class Tour {
    * @returns {Promise}
    */
   async navigateTo(sceneId) {
-    const sceneData = this.config.scenes[sceneId];
+    const sceneData = this.getSceneById(sceneId);
 
     if (!sceneData) {
       throw new Error(`Scene "${sceneId}" not found in tour configuration`);

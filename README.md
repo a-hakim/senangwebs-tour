@@ -280,13 +280,21 @@ new SWT.Tour(aframeSceneElement, tourConfiguration);
 
 #### Configuration Structure
 
+Both the editor and viewer use the same data format. Scenes are stored as an **array**:
+
 ```javascript
 {
   initialScene: "scene-id",       // Required: Starting scene ID
-  scenes: {                        // Required: Object (not array!)
-    "scene-id": {                  // Key = scene ID
+  scenes: [                        // Required: Array of scenes
+    {
+      id: "scene-id",              // Required: Scene identifier
       name: "Scene Name",          // Required: Display name
       panorama: "url-or-dataurl",  // Required: Image URL or base64
+      thumbnail: "url",            // Optional: Thumbnail for editor
+      startingPosition: {          // Optional: Initial camera orientation
+        pitch: 0.1,                // Vertical angle (radians)
+        yaw: 1.5                   // Horizontal angle (radians)
+      },
       hotspots: [                  // Optional: Array of hotspots
         {
           id: "hotspot-1",         // Optional: Auto-generated if omitted
@@ -301,25 +309,29 @@ new SWT.Tour(aframeSceneElement, tourConfiguration);
           },
           appearance: {            // Optional: Visual customization
             color: "#00ff00",      // Default: "#00ff00"
-            scale: 1.5,            // Default: 1.0 (number or "x y z" string)
-            icon: "arrow"          // Default: sphere (future: custom icons)
+            scale: "1 1 1",        // Default: "1 1 1"
+            icon: "arrow"          // Optional: Icon name or URL
           },
           tooltip: {               // Optional: Hover/focus text
-            text: "Click to navigate" // Tooltip content
+            text: "Click here",    // Tooltip title
+            description: "Details" // Optional: Extended description
+          },
+          cameraOrientation: {     // Optional: Camera direction when created
+            pitch: -0.02,          // Vertical angle (radians)
+            yaw: 2.06              // Horizontal angle (radians)
           }
         }
       ]
     }
-  }
+  ]
 }
 ```
 
 **Important Notes:**
 
-- `scenes` is an **object** (keys are scene IDs), not an array
+- `scenes` is an **array** (not an object)
+- The library also accepts `scenes` as an object keyed by ID for backward compatibility
 - Hotspot `position` is in 3D space (typically on 10-unit sphere surface)
-- Editor stores `imageUrl`, library expects `panorama` (export handles conversion)
-- Images can be URLs or Data URLs (base64) for offline tours
 
 ---
 

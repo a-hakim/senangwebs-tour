@@ -20,17 +20,24 @@ class HotspotEditor {
             return null;
         }
 
+        // Use unified library format with nested structure
         const hotspot = {
             id: generateId('hotspot'),
-            type: 'navigation',
             position: position,
-            cameraOrientation: cameraOrientation, // Store camera pitch/yaw for reliable pointing
-            targetSceneId: targetSceneId,
-            title: 'New Hotspot',
-            description: '',
-            color: '#00ff00',
-            icon: '',
-            scale: '1 1 1'
+            cameraOrientation: cameraOrientation,
+            action: {
+                type: 'navigateTo',
+                target: targetSceneId
+            },
+            appearance: {
+                color: '#00ff00',
+                scale: '1 1 1',
+                icon: ''
+            },
+            tooltip: {
+                text: 'New Hotspot',
+                description: ''
+            }
         };
 
         scene.hotspots.push(hotspot);
@@ -69,6 +76,7 @@ class HotspotEditor {
 
     /**
      * Update hotspot property
+     * Supports nested properties like 'appearance.color', 'action.target', 'tooltip.text'
      */
     updateHotspot(index, property, value) {
         const scene = this.editor.sceneManager.getCurrentScene();
@@ -76,7 +84,23 @@ class HotspotEditor {
             return false;
         }
 
-        scene.hotspots[index][property] = value;
+        const hotspot = scene.hotspots[index];
+        
+        // Handle nested properties (e.g., 'appearance.color')
+        if (property.includes('.')) {
+            const parts = property.split('.');
+            let obj = hotspot;
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!obj[parts[i]]) {
+                    obj[parts[i]] = {};
+                }
+                obj = obj[parts[i]];
+            }
+            obj[parts[parts.length - 1]] = value;
+        } else {
+            hotspot[property] = value;
+        }
+        
         return true;
     }
 
@@ -143,7 +167,9 @@ class HotspotEditor {
         const original = scene.hotspots[index];
         const duplicate = deepClone(original);
         duplicate.id = generateId('hotspot');
-        duplicate.title = original.title + ' (Copy)';
+        if (duplicate.tooltip) {
+            duplicate.tooltip.text = (original.tooltip?.text || 'Hotspot') + ' (Copy)';
+        }
         
         // Offset position slightly
         duplicate.position = {
