@@ -585,7 +585,8 @@ setTimeout(() => {
 - **ES6 Module Architecture** - Six-controller pattern with clear separation
 - **Sourcemaps** - Debug original ES6 source in browser DevTools
 - **Two Init Modes** - Declarative (HTML) or Programmatic (JS API)
-- **Event System** - React to scene-added, hotspot-clicked events
+- **Comprehensive Event System** - 30+ events including unified `change` event for any modification
+- **Load/Export API** - `generateJSON()` and `loadJSON()` for round-trip data management
 - **Global Access** - All classes attached to `window` for console debugging
 
 ## Browser Compatibility

@@ -117,13 +117,13 @@ The SWT editor uses a **six-controller pattern** with these main classes:
 
 | Class                   | Purpose                                             | Key Methods                                                |
 | ----------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
-| `TourEditor`            | Main coordinator, orchestrates all other components | `initialize()`, `render()`, `addScene()`, `addHotspot()`   |
+| `TourEditor`            | Main coordinator, orchestrates all other components | `init()`, `render()`, `on()`, `off()`, `emit()`            |
 | `SceneManagerEditor`    | Scene CRUD operations                               | `addScene()`, `removeScene()`, `getScenes()`               |
-| `HotspotEditor`         | Hotspot placement and editing                       | `enablePlacementMode()`, `addHotspot()`, `updateHotspot()` |
+| `HotspotEditor`         | Hotspot placement and editing                       | `addHotspot()`, `updateHotspot()`, `removeHotspot()`       |
 | `PreviewController`     | A-Frame preview management                          | `loadScene()`, `pointCameraToHotspot()`                    |
 | `UIController`          | DOM rendering and updates                           | `renderSceneList()`, `renderHotspotList()`                 |
 | `ProjectStorageManager` | LocalStorage persistence                            | `saveProject()`, `loadProject()`                           |
-| `ExportManager`         | JSON and HTML export                                | `generateTourConfig()`, `exportAsViewer()`                 |
+| `ExportManager`         | JSON and HTML export/import                         | `generateJSON()`, `loadJSON()`, `exportViewerHTML()`       |
 
 ## Building a Custom Editor
 
@@ -318,34 +318,170 @@ if (project) {
 
 ## Event System
 
-The editor emits custom events that you can listen to:
+The editor provides a comprehensive event system for reacting to all editor operations.
+
+### Subscribing to Events
+
+```javascript
+// Subscribe to an event
+const unsubscribe = editor.on('scene:add', (event) => {
+  console.log('Scene added:', event.scene);
+});
+
+// Unsubscribe later
+unsubscribe();
+// Or: editor.off('scene:add', callback);
+
+// One-time listener
+editor.once('ready', (event) => {
+  console.log('Editor is ready!');
+});
+```
+
+### Unified Change Event
+
+Listen to **any** data modification with a single event:
+
+```javascript
+// Fires for ALL data-modifying events
+editor.on('change', (event) => {
+  console.log('Data changed:', event.originalEvent);
+  
+  // Perfect for auto-save
+  const tourData = editor.exportManager.generateJSON();
+  saveToServer(tourData);
+});
+```
+
+### Wildcard Listeners
+
+Listen to all events in a namespace:
+
+```javascript
+// All scene events
+editor.on('scene:*', (event) => {
+  console.log('Scene event:', event.type);
+});
+
+// All hotspot events
+editor.on('hotspot:*', (event) => {
+  console.log('Hotspot event:', event.type);
+});
+```
 
 ### Available Events
 
-| Event              | When Fired                 | Event Detail                   |
-| ------------------ | -------------------------- | ------------------------------ |
-| `scene-added`      | New scene uploaded         | `{ scene }`                    |
-| `scene-removed`    | Scene deleted              | `{ sceneId }`                  |
-| `scene-loaded`     | Scene loaded in preview    | `{ sceneId, sceneName }`       |
-| `hotspot-placed`   | Hotspot placed via click   | `{ position, sceneId }`        |
-| `hotspot-selected` | Hotspot selected from list | `{ hotspot, index }`           |
-| `hotspot-updated`  | Hotspot properties changed | `{ hotspot, property, value }` |
-| `project-saved`    | Project saved to storage   | `{ projectName }`              |
-| `export-ready`     | Tour ready for export      | `{ config }`                   |
+| Event | When Fired | Event Data |
+|-------|------------|------------|
+| **Lifecycle** |
+| `ready` | Editor initialized | `{ config }` |
+| **Scene Events** |
+| `scene:add` | Scene added | `{ scene, file }` |
+| `scene:remove` | Scene deleted | `{ scene, index }` |
+| `scene:select` | Scene selected | `{ scene, index }` |
+| `scene:update` | Scene property changed | `{ scene, index, property, value }` |
+| `scene:reorder` | Scenes reordered | `{ fromIndex, toIndex }` |
+| `scene:imageChange` | Scene image updated | `{ scene, index, imageUrl }` |
+| `scene:startingPositionSet` | Starting position set | `{ scene, startingPosition }` |
+| `scene:startingPositionClear` | Starting position cleared | `{ scene }` |
+| **Hotspot Events** |
+| `hotspot:add` | Hotspot placed | `{ hotspot, position, sceneId }` |
+| `hotspot:remove` | Hotspot deleted | `{ hotspot, index }` |
+| `hotspot:select` | Hotspot selected | `{ hotspot, index }` |
+| `hotspot:update` | Hotspot property changed | `{ hotspot, index, property, value }` |
+| `hotspot:duplicate` | Hotspot duplicated | `{ hotspot, originalIndex }` |
+| `hotspot:positionChange` | Hotspot moved | `{ hotspot, index, axis, value, position }` |
+| **Project Events** |
+| `project:new` | New project created | `{ config }` |
+| `project:save` | Project saved | `{ projectData }` |
+| `project:load` | Project loaded | `{ projectData }` |
+| `project:import` | Project imported | `{ projectData, file }` |
+| **UI Events** |
+| `ui:render` | UI re-rendered | `{}` |
+| **Unified** |
+| `change` | Any data modification | `{ originalEvent, ...originalData }` |
 
 ### Event Handler Example
 
 ```javascript
-// Listen to multiple events
-const events = ["scene-added", "hotspot-placed", "project-saved"];
+// Track all changes for undo/redo
+const history = [];
 
-events.forEach((eventName) => {
-  editor.addEventListener(eventName, (e) => {
-    console.log(`${eventName}:`, e.detail);
-    // Update your custom UI accordingly
+editor.on('change', (event) => {
+  history.push({
+    type: event.originalEvent,
+    timestamp: event.timestamp,
+    data: editor.exportManager.generateJSON()
   });
 });
+
+// Listen to specific events
+editor.on('scene:add', (e) => updateSceneCounter());
+editor.on('hotspot:add', (e) => showTooltipEditor(e.hotspot));
+editor.on('project:save', (e) => showSaveConfirmation());
 ```
+
+## Loading & Exporting Tour Data
+
+### Export Tour Data
+
+```javascript
+// Generate JSON (same format as viewer expects)
+const tourData = editor.exportManager.generateJSON();
+// Returns: { initialScene: "scene-1", scenes: [...] }
+
+// Export as downloadable JSON file
+editor.exportManager.exportJSON();
+
+// Export as standalone HTML viewer
+await editor.exportManager.exportViewerHTML();
+
+// Copy JSON to clipboard
+await editor.exportManager.copyJSON();
+```
+
+### Load Tour Data
+
+Use `loadJSON()` to load an entire tour configuration (inverse of `generateJSON()`):
+
+```javascript
+// Load from exported JSON
+editor.exportManager.loadJSON({
+  initialScene: "living-room",
+  scenes: [
+    {
+      id: "living-room",
+      name: "Living Room",
+      panorama: "https://example.com/living-room.jpg",
+      hotspots: [...]
+    },
+    {
+      id: "kitchen",
+      name: "Kitchen", 
+      panorama: "https://example.com/kitchen.jpg",
+      hotspots: [...]
+    }
+  ]
+});
+
+// Load from server
+async function loadTourFromServer(tourId) {
+  const response = await fetch(`/api/tours/${tourId}`);
+  const tourData = await response.json();
+  editor.exportManager.loadJSON(tourData);
+}
+
+// Round-trip: export and reload
+const backup = editor.exportManager.generateJSON();
+// ... make changes ...
+editor.exportManager.loadJSON(backup); // Restore
+```
+
+The `loadJSON()` method:
+- Clears existing scenes and loads new ones
+- Sets the `initialSceneId` from the tour data
+- Re-renders the entire editor UI
+- Emits `project:load` event (which triggers `change` event)
 
 ## UI Customization
 

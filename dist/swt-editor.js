@@ -79,7 +79,7 @@
     /**
      * Show toast notification
      */
-    function showToast$1(message, type = 'info', duration = 3000) {
+    function showToast(message, type = 'info', duration = 3000) {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.className = `toast ${type}`;
@@ -218,7 +218,7 @@
         positionToString: positionToString,
         sanitizeId: sanitizeId$1,
         showModal: showModal,
-        showToast: showToast$1
+        showToast: showToast
     });
 
     // Storage Manager - Handles LocalStorage operations
@@ -245,7 +245,7 @@
         } catch (error) {
           console.error("Failed to save project:", error);
           if (error.name === "QuotaExceededError") {
-            showToast$1("Storage quota exceeded. Project too large!", "error");
+            showToast("Storage quota exceeded. Project too large!", "error");
           }
           return false;
         }
@@ -271,7 +271,7 @@
           return null;
         } catch (error) {
           console.error("Failed to load project:", error);
-          showToast$1("Failed to load project", "error");
+          showToast("Failed to load project", "error");
           return null;
         }
       }
@@ -380,7 +380,7 @@
           return true;
         } catch (error) {
           console.error("Failed to export project:", error);
-          showToast$1("Failed to export project", "error");
+          showToast("Failed to export project", "error");
           return false;
         }
       }
@@ -398,14 +398,14 @@
               resolve(projectData);
             } catch (error) {
               console.error("Failed to parse project file:", error);
-              showToast$1("Invalid project file", "error");
+              showToast("Invalid project file", "error");
               reject(error);
             }
           };
 
           reader.onerror = () => {
             console.error("Failed to read file:", reader.error);
-            showToast$1("Failed to read file", "error");
+            showToast("Failed to read file", "error");
             reject(reader.error);
           };
 
@@ -465,11 +465,11 @@
 
           this.scenes.push(scene);
           this.currentSceneIndex = this.scenes.length - 1;
-          showToast$1(`Scene "${scene.name}" added successfully`, "success");
+          showToast(`Scene "${scene.name}" added successfully`, "success");
           return scene;
         } catch (error) {
           console.error("Failed to add scene:", error);
-          showToast$1("Failed to add scene", "error");
+          showToast("Failed to add scene", "error");
           return null;
         }
       }
@@ -498,7 +498,7 @@
             this.currentSceneIndex--;
           }
 
-          showToast$1(`Scene "${scene.name}" removed`, "success");
+          showToast(`Scene "${scene.name}" removed`, "success");
           return true;
         }
         return false;
@@ -648,7 +648,7 @@
         addHotspot(position, targetSceneId = '', cameraOrientation = null) {
             const scene = this.editor.sceneManager.getCurrentScene();
             if (!scene) {
-                showToast$1('No scene selected', 'error');
+                showToast('No scene selected', 'error');
                 return null;
             }
 
@@ -675,7 +675,7 @@
             scene.hotspots.push(hotspot);
             this.currentHotspotIndex = scene.hotspots.length - 1;
             
-            showToast$1('Hotspot added', 'success');
+            showToast('Hotspot added', 'success');
             
             return hotspot;
         }
@@ -702,7 +702,7 @@
                 this.currentHotspotIndex--;
             }
 
-            showToast$1('Hotspot removed', 'success');
+            showToast('Hotspot removed', 'success');
             return true;
         }
 
@@ -816,7 +816,7 @@
             scene.hotspots.push(duplicate);
             this.currentHotspotIndex = scene.hotspots.length - 1;
             
-            showToast$1('Hotspot duplicated', 'success');
+            showToast('Hotspot duplicated', 'success');
             return duplicate;
         }
 
@@ -840,7 +840,7 @@
             scene.hotspots = [];
             this.currentHotspotIndex = -1;
             
-            showToast$1('All hotspots removed', 'success');
+            showToast('All hotspots removed', 'success');
             return true;
         }
     };
@@ -1066,7 +1066,7 @@
           }
         } catch (error) {
           console.error("Failed to load preview:", error);
-          showToast$1("Failed to load preview: " + error.message, "error");
+          showToast("Failed to load preview: " + error.message, "error");
           // Hide loading on error
           this.hideLoading();
         }
@@ -4313,7 +4313,7 @@
           grid.appendChild(btn);
         });
 
-        console.log(`Loaded ${iconsData.length} icons`);
+        // console.log(`Loaded ${iconsData.length} icons`);
       }
 
       /**
@@ -4624,6 +4624,262 @@
       }
     }
 
+    /**
+     * Event Emitter for TourEditor
+     * 
+     * Provides a comprehensive event system for the editor with:
+     * - Specific events for all editor operations
+     * - A unified 'change' event that fires for any modification
+     * - Support for wildcards and namespaced events
+     */
+
+    /**
+     * Event types for the Tour Editor
+     * These are the available events that can be listened to
+     */
+    const EditorEvents = {
+      // Lifecycle
+      INIT: 'init',
+      READY: 'ready',
+      DESTROY: 'destroy',
+      
+      // Scene events
+      SCENE_ADD: 'scene:add',
+      SCENE_REMOVE: 'scene:remove',
+      SCENE_SELECT: 'scene:select',
+      SCENE_UPDATE: 'scene:update',
+      SCENE_REORDER: 'scene:reorder',
+      SCENE_CLEAR: 'scene:clear',
+      SCENE_IMAGE_CHANGE: 'scene:imageChange',
+      SCENE_STARTING_POSITION_SET: 'scene:startingPositionSet',
+      SCENE_STARTING_POSITION_CLEAR: 'scene:startingPositionClear',
+      
+      // Hotspot events
+      HOTSPOT_ADD: 'hotspot:add',
+      HOTSPOT_REMOVE: 'hotspot:remove',
+      HOTSPOT_SELECT: 'hotspot:select',
+      HOTSPOT_UPDATE: 'hotspot:update',
+      HOTSPOT_DUPLICATE: 'hotspot:duplicate',
+      HOTSPOT_POSITION_CHANGE: 'hotspot:positionChange',
+      
+      // Project events
+      PROJECT_NEW: 'project:new',
+      PROJECT_SAVE: 'project:save',
+      PROJECT_LOAD: 'project:load',
+      PROJECT_IMPORT: 'project:import',
+      PROJECT_EXPORT: 'project:export',
+      
+      // Config events
+      CONFIG_UPDATE: 'config:update',
+      INITIAL_SCENE_CHANGE: 'config:initialSceneChange',
+      
+      // Preview events
+      PREVIEW_START: 'preview:start',
+      PREVIEW_STOP: 'preview:stop',
+      PREVIEW_SCENE_CHANGE: 'preview:sceneChange',
+      
+      // UI events
+      UI_RENDER: 'ui:render',
+      UI_LOADING_START: 'ui:loadingStart',
+      UI_LOADING_END: 'ui:loadingEnd',
+      MODAL_OPEN: 'ui:modalOpen',
+      MODAL_CLOSE: 'ui:modalClose',
+      
+      // Data events
+      DATA_CHANGE: 'data:change',      // Fires when any data changes
+      UNSAVED_CHANGES: 'data:unsavedChanges',
+      
+      // Unified change event - fires for ANY modification
+      CHANGE: 'change'
+    };
+
+    /**
+     * Event Emitter class
+     * Provides pub/sub functionality for editor events
+     */
+    class EventEmitter {
+      constructor() {
+        this.listeners = new Map();
+        this.onceListeners = new Map();
+      }
+
+      /**
+       * Register an event listener
+       * @param {string} event - Event name or 'change' for all changes
+       * @param {Function} callback - Function to call when event fires
+       * @returns {Function} Unsubscribe function
+       */
+      on(event, callback) {
+        if (!this.listeners.has(event)) {
+          this.listeners.set(event, new Set());
+        }
+        this.listeners.get(event).add(callback);
+        
+        // Return unsubscribe function
+        return () => this.off(event, callback);
+      }
+
+      /**
+       * Register a one-time event listener
+       * @param {string} event - Event name
+       * @param {Function} callback - Function to call once when event fires
+       * @returns {Function} Unsubscribe function
+       */
+      once(event, callback) {
+        if (!this.onceListeners.has(event)) {
+          this.onceListeners.set(event, new Set());
+        }
+        this.onceListeners.get(event).add(callback);
+        
+        return () => {
+          if (this.onceListeners.has(event)) {
+            this.onceListeners.get(event).delete(callback);
+          }
+        };
+      }
+
+      /**
+       * Remove an event listener
+       * @param {string} event - Event name
+       * @param {Function} callback - Function to remove
+       */
+      off(event, callback) {
+        if (this.listeners.has(event)) {
+          this.listeners.get(event).delete(callback);
+        }
+        if (this.onceListeners.has(event)) {
+          this.onceListeners.get(event).delete(callback);
+        }
+      }
+
+      /**
+       * Remove all listeners for an event, or all listeners if no event specified
+       * @param {string} [event] - Optional event name
+       */
+      removeAllListeners(event) {
+        if (event) {
+          this.listeners.delete(event);
+          this.onceListeners.delete(event);
+        } else {
+          this.listeners.clear();
+          this.onceListeners.clear();
+        }
+      }
+
+      /**
+       * Emit an event
+       * @param {string} event - Event name
+       * @param {Object} data - Event data
+       */
+      emit(event, data = {}) {
+        const eventData = {
+          type: event,
+          timestamp: Date.now(),
+          ...data
+        };
+
+        // Call specific event listeners
+        if (this.listeners.has(event)) {
+          this.listeners.get(event).forEach(callback => {
+            try {
+              callback(eventData);
+            } catch (error) {
+              console.error(`Error in event listener for "${event}":`, error);
+            }
+          });
+        }
+
+        // Call once listeners and remove them
+        if (this.onceListeners.has(event)) {
+          const onceCallbacks = this.onceListeners.get(event);
+          this.onceListeners.delete(event);
+          onceCallbacks.forEach(callback => {
+            try {
+              callback(eventData);
+            } catch (error) {
+              console.error(`Error in once listener for "${event}":`, error);
+            }
+          });
+        }
+
+        // Also emit to wildcard listeners (namespace:*)
+        const namespace = event.split(':')[0];
+        const wildcardEvent = `${namespace}:*`;
+        if (this.listeners.has(wildcardEvent)) {
+          this.listeners.get(wildcardEvent).forEach(callback => {
+            try {
+              callback(eventData);
+            } catch (error) {
+              console.error(`Error in wildcard listener for "${wildcardEvent}":`, error);
+            }
+          });
+        }
+
+        // Emit unified 'change' event for data-modifying events
+        if (this.isDataModifyingEvent(event) && event !== EditorEvents.CHANGE) {
+          this.emit(EditorEvents.CHANGE, {
+            originalEvent: event,
+            ...data
+          });
+        }
+      }
+
+      /**
+       * Check if an event modifies data (should trigger 'change' event)
+       * @param {string} event - Event name
+       * @returns {boolean}
+       */
+      isDataModifyingEvent(event) {
+        const dataEvents = [
+          EditorEvents.SCENE_ADD,
+          EditorEvents.SCENE_REMOVE,
+          EditorEvents.SCENE_UPDATE,
+          EditorEvents.SCENE_REORDER,
+          EditorEvents.SCENE_CLEAR,
+          EditorEvents.SCENE_IMAGE_CHANGE,
+          EditorEvents.SCENE_STARTING_POSITION_SET,
+          EditorEvents.SCENE_STARTING_POSITION_CLEAR,
+          EditorEvents.HOTSPOT_ADD,
+          EditorEvents.HOTSPOT_REMOVE,
+          EditorEvents.HOTSPOT_UPDATE,
+          EditorEvents.HOTSPOT_DUPLICATE,
+          EditorEvents.HOTSPOT_POSITION_CHANGE,
+          EditorEvents.CONFIG_UPDATE,
+          EditorEvents.INITIAL_SCENE_CHANGE,
+          EditorEvents.PROJECT_LOAD,
+          EditorEvents.PROJECT_IMPORT,
+          EditorEvents.PROJECT_NEW,
+          EditorEvents.DATA_CHANGE
+        ];
+        return dataEvents.includes(event);
+      }
+
+      /**
+       * Get the number of listeners for an event
+       * @param {string} event - Event name
+       * @returns {number}
+       */
+      listenerCount(event) {
+        let count = 0;
+        if (this.listeners.has(event)) {
+          count += this.listeners.get(event).size;
+        }
+        if (this.onceListeners.has(event)) {
+          count += this.onceListeners.get(event).size;
+        }
+        return count;
+      }
+
+      /**
+       * Get all event names that have listeners
+       * @returns {string[]}
+       */
+      eventNames() {
+        const names = new Set([...this.listeners.keys(), ...this.onceListeners.keys()]);
+        return Array.from(names);
+      }
+    }
+
     // Export Manager - Handles JSON generation for SWT library
 
     let ExportManager$1 = class ExportManager {
@@ -4642,6 +4898,51 @@
         const config = this.editor.config;
 
         return buildTourConfig(config, scenes);
+      }
+
+      /**
+       * Load tour data from JSON (inverse of generateJSON)
+       * This loads the entire tour configuration including initialScene and all scenes
+       * @param {Object} tourData - Tour configuration object with initialScene and scenes
+       * @param {string} tourData.initialScene - Initial scene ID
+       * @param {Array} tourData.scenes - Array of scene objects
+       * @returns {boolean} Success status
+       */
+      loadJSON(tourData) {
+        try {
+          if (!tourData || typeof tourData !== 'object') {
+            console.error('Invalid tour data: expected object');
+            return false;
+          }
+
+          // Load scenes into scene manager
+          const scenes = tourData.scenes || [];
+          this.editor.sceneManager.loadScenes(scenes);
+
+          // Set initial scene in config
+          if (tourData.initialScene) {
+            this.editor.config.initialSceneId = tourData.initialScene;
+          } else if (scenes.length > 0) {
+            this.editor.config.initialSceneId = scenes[0].id;
+          }
+
+          // Mark as having unsaved changes
+          this.editor.hasUnsavedChanges = true;
+
+          // Re-render the editor UI
+          this.editor.render();
+
+          showToast('Tour loaded successfully', 'success');
+          
+          // Emit event
+          this.editor.emit(EditorEvents.PROJECT_LOAD, { tourData, source: 'loadJSON' });
+          
+          return true;
+        } catch (error) {
+          console.error('Failed to load tour data:', error);
+          showToast('Failed to load tour', 'error');
+          return false;
+        }
       }
 
       /**
@@ -4834,6 +5135,47 @@
             this.hasUnsavedChanges = false;
             this.lastRenderedSceneIndex = -1;
             this.listenersSetup = false;
+            
+            // Initialize event emitter
+            this.events = new EventEmitter();
+        }
+
+        /**
+         * Subscribe to editor events
+         * @param {string} event - Event name (use EditorEvents constants)
+         * @param {Function} callback - Callback function
+         * @returns {Function} Unsubscribe function
+         */
+        on(event, callback) {
+            return this.events.on(event, callback);
+        }
+
+        /**
+         * Subscribe to an event once
+         * @param {string} event - Event name
+         * @param {Function} callback - Callback function
+         * @returns {Function} Unsubscribe function
+         */
+        once(event, callback) {
+            return this.events.once(event, callback);
+        }
+
+        /**
+         * Unsubscribe from an event
+         * @param {string} event - Event name
+         * @param {Function} callback - Callback to remove
+         */
+        off(event, callback) {
+            this.events.off(event, callback);
+        }
+
+        /**
+         * Emit an event
+         * @param {string} event - Event name
+         * @param {Object} data - Event data
+         */
+        emit(event, data = {}) {
+            this.events.emit(event, data);
         }
 
         /**
@@ -4853,7 +5195,7 @@
             const previewInit = await this.previewController.init();
             if (!previewInit) {
                 console.error('Failed to initialize preview controller');
-                showToast$1('Failed to initialize preview', 'error');
+                showToast('Failed to initialize preview', 'error');
                 return false;
             }
             
@@ -4892,7 +5234,10 @@
                 this.render();
             }
             
-            showToast$1('Editor ready', 'success');
+            showToast('Editor ready', 'success');
+            
+            // Emit ready event
+            this.emit(EditorEvents.READY, { config: this.options });
             
             return true;
         }
@@ -5094,11 +5439,14 @@
 
             for (const file of files) {
                 if (!file.type.startsWith('image/')) {
-                    showToast$1(`${file.name} is not an image`, 'error');
+                    showToast(`${file.name} is not an image`, 'error');
                     continue;
                 }
 
-                await this.sceneManager.addScene(file);
+                const scene = await this.sceneManager.addScene(file);
+                if (scene) {
+                    this.emit(EditorEvents.SCENE_ADD, { scene, file });
+                }
             }
             this.uiController.setLoading(false);
             this.render();
@@ -5132,6 +5480,11 @@
                 this.lastRenderedSceneIndex = -1;
                 this.render();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.HOTSPOT_ADD, { 
+                    hotspot, 
+                    position, 
+                    sceneId: this.sceneManager.getCurrentScene()?.id 
+                });
             } else {
                 console.error('Failed to add hotspot');
             }
@@ -5144,13 +5497,13 @@
         addHotspotAtCursor() {
             const scene = this.sceneManager.getCurrentScene();
             if (!scene) {
-                showToast$1('Please select a scene first', 'error');
+                showToast('Please select a scene first', 'error');
                 return;
             }
 
             const position = this.previewController.getCursorIntersection();
             if (!position) {
-                showToast$1('Could not get cursor position. Please ensure the preview is loaded.', 'error');
+                showToast('Could not get cursor position. Please ensure the preview is loaded.', 'error');
                 return;
             }
 
@@ -5177,6 +5530,8 @@
                 this.uiController.updateHotspotProperties(null);
                 this.uiController.updateInitialSceneOptions();
                 this.uiController.updateTargetSceneOptions();
+                
+                this.emit(EditorEvents.SCENE_SELECT, { scene, index });
             }
         }
 
@@ -5195,6 +5550,8 @@
                 if (hotspot) {
                     this.previewController.pointCameraToHotspot(hotspot);
                 }
+                
+                this.emit(EditorEvents.HOTSPOT_SELECT, { hotspot, index });
             }
         }
 
@@ -5202,9 +5559,11 @@
          * Remove scene
          */
         removeScene(index) {
+            const scene = this.sceneManager.getScene(index);
             if (this.sceneManager.removeScene(index)) {
                 this.render();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.SCENE_REMOVE, { scene, index });
             }
         }
 
@@ -5212,10 +5571,12 @@
          * Remove hotspot
          */
         removeHotspot(index) {
+            const hotspot = this.hotspotEditor.getHotspot(index);
             if (this.hotspotEditor.removeHotspot(index)) {
                 this.lastRenderedSceneIndex = -1;
                 this.render();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.HOTSPOT_REMOVE, { hotspot, index });
             }
         }
 
@@ -5228,6 +5589,7 @@
                 this.lastRenderedSceneIndex = -1;
                 this.render();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.HOTSPOT_DUPLICATE, { hotspot, originalIndex: index });
             }
         }
 
@@ -5238,6 +5600,7 @@
             if (this.sceneManager.reorderScenes(fromIndex, toIndex)) {
                 this.render();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.SCENE_REORDER, { fromIndex, toIndex });
             }
         }
 
@@ -5250,6 +5613,12 @@
                 await this.previewController.updateHotspotMarker(index);
                 this.uiController.renderHotspotList();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.HOTSPOT_UPDATE, { 
+                    hotspot: this.hotspotEditor.getHotspot(index), 
+                    index, 
+                    property, 
+                    value 
+                });
             }
         }
 
@@ -5280,12 +5649,19 @@
                     pos.z *= scale;
                     
                     document.getElementById(`hotspotPos${axis.toUpperCase()}`).value = pos[axis].toFixed(2);
-                    showToast$1('Position clamped to 10-unit radius', 'info');
+                    showToast('Position clamped to 10-unit radius', 'info');
                 }
                 
                 await this.previewController.updateHotspotMarker(index);
                 this.uiController.renderHotspotList();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.HOTSPOT_POSITION_CHANGE, { 
+                    hotspot, 
+                    index, 
+                    axis, 
+                    value, 
+                    position: hotspot.position 
+                });
             }
         }
 
@@ -5297,6 +5673,12 @@
             if (this.sceneManager.updateScene(index, property, value)) {
                 this.uiController.renderSceneList();
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.SCENE_UPDATE, { 
+                    scene: this.sceneManager.getScene(index), 
+                    index, 
+                    property, 
+                    value 
+                });
             }
         }
 
@@ -5320,9 +5702,10 @@
                 if (scene) {
                     await this.previewController.loadScene(scene);
                     this.lastRenderedSceneIndex = index;
-                    showToast$1('Scene image updated', 'success');
+                    showToast('Scene image updated', 'success');
                 }
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.SCENE_IMAGE_CHANGE, { scene, index, imageUrl });
             }
         }
 
@@ -5332,13 +5715,13 @@
         setSceneStartingPosition() {
             const scene = this.sceneManager.getCurrentScene();
             if (!scene) {
-                showToast$1('No scene selected', 'error');
+                showToast('No scene selected', 'error');
                 return;
             }
             
             const rotation = this.previewController.getCameraRotation();
             if (!rotation) {
-                showToast$1('Could not get camera rotation', 'error');
+                showToast('Could not get camera rotation', 'error');
                 return;
             }
             
@@ -5349,7 +5732,8 @@
             
             this.uiController.updateSceneProperties(scene);
             this.markUnsavedChanges();
-            showToast$1('Starting position set', 'success');
+            showToast('Starting position set', 'success');
+            this.emit(EditorEvents.SCENE_STARTING_POSITION_SET, { scene, startingPosition: scene.startingPosition });
         }
 
         /**
@@ -5358,7 +5742,7 @@
         clearSceneStartingPosition() {
             const scene = this.sceneManager.getCurrentScene();
             if (!scene) {
-                showToast$1('No scene selected', 'error');
+                showToast('No scene selected', 'error');
                 return;
             }
             
@@ -5366,7 +5750,8 @@
             
             this.uiController.updateSceneProperties(scene);
             this.markUnsavedChanges();
-            showToast$1('Starting position cleared', 'success');
+            showToast('Starting position cleared', 'success');
+            this.emit(EditorEvents.SCENE_STARTING_POSITION_CLEAR, { scene });
         }
 
         /**
@@ -5408,6 +5793,8 @@
                 }
                 this.lastRenderedSceneIndex = -1;
             }
+            
+            this.emit(EditorEvents.UI_RENDER);
         }
 
         /**
@@ -5421,7 +5808,8 @@
 
             if (this.storageManager.saveProject(projectData)) {
                 this.hasUnsavedChanges = false;
-                showToast$1('Project saved', 'success');
+                showToast('Project saved', 'success');
+                this.emit(EditorEvents.PROJECT_SAVE, { projectData });
                 return true;
             }
             return false;
@@ -5437,7 +5825,8 @@
                 this.sceneManager.loadScenes(projectData.scenes || []);
                 this.hasUnsavedChanges = false;
                 this.render();
-                showToast$1('Project loaded', 'success');
+                showToast('Project loaded', 'success');
+                this.emit(EditorEvents.PROJECT_LOAD, { projectData });
                 return true;
             }
             return false;
@@ -5463,7 +5852,8 @@
             this.hasUnsavedChanges = false;
             this.render();
             
-            showToast$1('New project created', 'success');
+            showToast('New project created', 'success');
+            this.emit(EditorEvents.PROJECT_NEW, { config: this.config });
             return true;
         }
 
@@ -5493,7 +5883,8 @@
                 this.render();
                 this.uiController.setLoading(false);
                 
-                showToast$1('Project imported successfully', 'success');
+                showToast('Project imported successfully', 'success');
+                this.emit(EditorEvents.PROJECT_IMPORT, { projectData, file });
             } catch (error) {
                 this.uiController.setLoading(false);
                 console.error('Import failed:', error);

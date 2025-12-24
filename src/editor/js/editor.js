@@ -1,5 +1,6 @@
 // Main Editor Controller
 import { debounce, showModal, showToast } from './utils.js';
+import EventEmitter, { EditorEvents } from './event-emitter.js';
 
 class TourEditor {
     constructor(options = {}) {
@@ -29,6 +30,47 @@ class TourEditor {
         this.hasUnsavedChanges = false;
         this.lastRenderedSceneIndex = -1;
         this.listenersSetup = false;
+        
+        // Initialize event emitter
+        this.events = new EventEmitter();
+    }
+
+    /**
+     * Subscribe to editor events
+     * @param {string} event - Event name (use EditorEvents constants)
+     * @param {Function} callback - Callback function
+     * @returns {Function} Unsubscribe function
+     */
+    on(event, callback) {
+        return this.events.on(event, callback);
+    }
+
+    /**
+     * Subscribe to an event once
+     * @param {string} event - Event name
+     * @param {Function} callback - Callback function
+     * @returns {Function} Unsubscribe function
+     */
+    once(event, callback) {
+        return this.events.once(event, callback);
+    }
+
+    /**
+     * Unsubscribe from an event
+     * @param {string} event - Event name
+     * @param {Function} callback - Callback to remove
+     */
+    off(event, callback) {
+        this.events.off(event, callback);
+    }
+
+    /**
+     * Emit an event
+     * @param {string} event - Event name
+     * @param {Object} data - Event data
+     */
+    emit(event, data = {}) {
+        this.events.emit(event, data);
     }
 
     /**
@@ -88,6 +130,9 @@ class TourEditor {
         }
         
         showToast('Editor ready', 'success');
+        
+        // Emit ready event
+        this.emit(EditorEvents.READY, { config: this.options });
         
         return true;
     }
@@ -294,6 +339,9 @@ class TourEditor {
             }
 
             const scene = await this.sceneManager.addScene(file);
+            if (scene) {
+                this.emit(EditorEvents.SCENE_ADD, { scene, file });
+            }
         }
         this.uiController.setLoading(false);
         this.render();
@@ -327,6 +375,11 @@ class TourEditor {
             this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.HOTSPOT_ADD, { 
+                hotspot, 
+                position, 
+                sceneId: this.sceneManager.getCurrentScene()?.id 
+            });
         } else {
             console.error('Failed to add hotspot');
         }
@@ -372,6 +425,8 @@ class TourEditor {
             this.uiController.updateHotspotProperties(null);
             this.uiController.updateInitialSceneOptions();
             this.uiController.updateTargetSceneOptions();
+            
+            this.emit(EditorEvents.SCENE_SELECT, { scene, index });
         }
     }
 
@@ -390,6 +445,8 @@ class TourEditor {
             if (hotspot) {
                 this.previewController.pointCameraToHotspot(hotspot);
             }
+            
+            this.emit(EditorEvents.HOTSPOT_SELECT, { hotspot, index });
         }
     }
 
@@ -397,9 +454,11 @@ class TourEditor {
      * Remove scene
      */
     removeScene(index) {
+        const scene = this.sceneManager.getScene(index);
         if (this.sceneManager.removeScene(index)) {
             this.render();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.SCENE_REMOVE, { scene, index });
         }
     }
 
@@ -407,10 +466,12 @@ class TourEditor {
      * Remove hotspot
      */
     removeHotspot(index) {
+        const hotspot = this.hotspotEditor.getHotspot(index);
         if (this.hotspotEditor.removeHotspot(index)) {
             this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.HOTSPOT_REMOVE, { hotspot, index });
         }
     }
 
@@ -423,6 +484,7 @@ class TourEditor {
             this.lastRenderedSceneIndex = -1;
             this.render();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.HOTSPOT_DUPLICATE, { hotspot, originalIndex: index });
         }
     }
 
@@ -433,6 +495,7 @@ class TourEditor {
         if (this.sceneManager.reorderScenes(fromIndex, toIndex)) {
             this.render();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.SCENE_REORDER, { fromIndex, toIndex });
         }
     }
 
@@ -445,6 +508,12 @@ class TourEditor {
             await this.previewController.updateHotspotMarker(index);
             this.uiController.renderHotspotList();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.HOTSPOT_UPDATE, { 
+                hotspot: this.hotspotEditor.getHotspot(index), 
+                index, 
+                property, 
+                value 
+            });
         }
     }
 
@@ -481,6 +550,13 @@ class TourEditor {
             await this.previewController.updateHotspotMarker(index);
             this.uiController.renderHotspotList();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.HOTSPOT_POSITION_CHANGE, { 
+                hotspot, 
+                index, 
+                axis, 
+                value, 
+                position: hotspot.position 
+            });
         }
     }
 
@@ -492,6 +568,12 @@ class TourEditor {
         if (this.sceneManager.updateScene(index, property, value)) {
             this.uiController.renderSceneList();
             this.markUnsavedChanges();
+            this.emit(EditorEvents.SCENE_UPDATE, { 
+                scene: this.sceneManager.getScene(index), 
+                index, 
+                property, 
+                value 
+            });
         }
     }
 
@@ -518,6 +600,7 @@ class TourEditor {
                 showToast('Scene image updated', 'success');
             }
             this.markUnsavedChanges();
+            this.emit(EditorEvents.SCENE_IMAGE_CHANGE, { scene, index, imageUrl });
         }
     }
 
@@ -545,6 +628,7 @@ class TourEditor {
         this.uiController.updateSceneProperties(scene);
         this.markUnsavedChanges();
         showToast('Starting position set', 'success');
+        this.emit(EditorEvents.SCENE_STARTING_POSITION_SET, { scene, startingPosition: scene.startingPosition });
     }
 
     /**
@@ -562,6 +646,7 @@ class TourEditor {
         this.uiController.updateSceneProperties(scene);
         this.markUnsavedChanges();
         showToast('Starting position cleared', 'success');
+        this.emit(EditorEvents.SCENE_STARTING_POSITION_CLEAR, { scene });
     }
 
     /**
@@ -603,6 +688,8 @@ class TourEditor {
             }
             this.lastRenderedSceneIndex = -1;
         }
+        
+        this.emit(EditorEvents.UI_RENDER);
     }
 
     /**
@@ -617,6 +704,7 @@ class TourEditor {
         if (this.storageManager.saveProject(projectData)) {
             this.hasUnsavedChanges = false;
             showToast('Project saved', 'success');
+            this.emit(EditorEvents.PROJECT_SAVE, { projectData });
             return true;
         }
         return false;
@@ -633,6 +721,7 @@ class TourEditor {
             this.hasUnsavedChanges = false;
             this.render();
             showToast('Project loaded', 'success');
+            this.emit(EditorEvents.PROJECT_LOAD, { projectData });
             return true;
         }
         return false;
@@ -659,6 +748,7 @@ class TourEditor {
         this.render();
         
         showToast('New project created', 'success');
+        this.emit(EditorEvents.PROJECT_NEW, { config: this.config });
         return true;
     }
 
@@ -689,6 +779,7 @@ const importUpload = document.getElementById('importUpload');
             this.uiController.setLoading(false);
             
             showToast('Project imported successfully', 'success');
+            this.emit(EditorEvents.PROJECT_IMPORT, { projectData, file });
         } catch (error) {
             this.uiController.setLoading(false);
             console.error('Import failed:', error);
@@ -714,3 +805,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 export default TourEditor;
+export { EditorEvents } from './event-emitter.js';

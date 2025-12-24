@@ -325,7 +325,7 @@ class UIController {
       grid.appendChild(btn);
     });
 
-    console.log(`Loaded ${iconsData.length} icons`);
+    // console.log(`Loaded ${iconsData.length} icons`);
   }
 
   /**

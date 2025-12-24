@@ -1,7 +1,8 @@
 // Export Manager - Handles JSON generation for SWT library
-import { downloadTextAsFile, showModal, copyToClipboard } from "./utils.js";
+import { downloadTextAsFile, showModal, copyToClipboard, showToast } from "./utils.js";
 import { IconRenderer } from "../../IconRenderer.js";
 import { buildTourConfig } from "./data-transform.js";
+import { EditorEvents } from "./event-emitter.js";
 
 class ExportManager {
   constructor(editor) {
@@ -19,6 +20,51 @@ class ExportManager {
     const config = this.editor.config;
 
     return buildTourConfig(config, scenes);
+  }
+
+  /**
+   * Load tour data from JSON (inverse of generateJSON)
+   * This loads the entire tour configuration including initialScene and all scenes
+   * @param {Object} tourData - Tour configuration object with initialScene and scenes
+   * @param {string} tourData.initialScene - Initial scene ID
+   * @param {Array} tourData.scenes - Array of scene objects
+   * @returns {boolean} Success status
+   */
+  loadJSON(tourData) {
+    try {
+      if (!tourData || typeof tourData !== 'object') {
+        console.error('Invalid tour data: expected object');
+        return false;
+      }
+
+      // Load scenes into scene manager
+      const scenes = tourData.scenes || [];
+      this.editor.sceneManager.loadScenes(scenes);
+
+      // Set initial scene in config
+      if (tourData.initialScene) {
+        this.editor.config.initialSceneId = tourData.initialScene;
+      } else if (scenes.length > 0) {
+        this.editor.config.initialSceneId = scenes[0].id;
+      }
+
+      // Mark as having unsaved changes
+      this.editor.hasUnsavedChanges = true;
+
+      // Re-render the editor UI
+      this.editor.render();
+
+      showToast('Tour loaded successfully', 'success');
+      
+      // Emit event
+      this.editor.emit(EditorEvents.PROJECT_LOAD, { tourData, source: 'loadJSON' });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to load tour data:', error);
+      showToast('Failed to load tour', 'error');
+      return false;
+    }
   }
 
   /**
