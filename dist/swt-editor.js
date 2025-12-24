@@ -4669,9 +4669,11 @@
       PROJECT_IMPORT: 'project:import',
       PROJECT_EXPORT: 'project:export',
       
-      // Config events
+      // Config/Tour events
       CONFIG_UPDATE: 'config:update',
       INITIAL_SCENE_CHANGE: 'config:initialSceneChange',
+      TOUR_TITLE_CHANGE: 'tour:titleChange',
+      TOUR_DESCRIPTION_CHANGE: 'tour:descriptionChange',
       
       // Preview events
       PREVIEW_START: 'preview:start',
@@ -4833,6 +4835,7 @@
         const dataEvents = [
           EditorEvents.SCENE_ADD,
           EditorEvents.SCENE_REMOVE,
+          EditorEvents.SCENE_SELECT,
           EditorEvents.SCENE_UPDATE,
           EditorEvents.SCENE_REORDER,
           EditorEvents.SCENE_CLEAR,
@@ -4841,11 +4844,14 @@
           EditorEvents.SCENE_STARTING_POSITION_CLEAR,
           EditorEvents.HOTSPOT_ADD,
           EditorEvents.HOTSPOT_REMOVE,
+          EditorEvents.HOTSPOT_SELECT,
           EditorEvents.HOTSPOT_UPDATE,
           EditorEvents.HOTSPOT_DUPLICATE,
           EditorEvents.HOTSPOT_POSITION_CHANGE,
           EditorEvents.CONFIG_UPDATE,
           EditorEvents.INITIAL_SCENE_CHANGE,
+          EditorEvents.TOUR_TITLE_CHANGE,
+          EditorEvents.TOUR_DESCRIPTION_CHANGE,
           EditorEvents.PROJECT_LOAD,
           EditorEvents.PROJECT_IMPORT,
           EditorEvents.PROJECT_NEW,
@@ -5362,6 +5368,7 @@
             document.getElementById('tourTitle')?.addEventListener('input', debounce((e) => {
                 this.config.title = e.target.value;
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.TOUR_TITLE_CHANGE, { title: e.target.value });
                 const projectName = document.getElementById('project-name');
                 if (projectName && projectName.value !== e.target.value) {
                     projectName.value = e.target.value;
@@ -5371,6 +5378,7 @@
             document.getElementById('project-name')?.addEventListener('input', debounce((e) => {
                 this.config.title = e.target.value;
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.TOUR_TITLE_CHANGE, { title: e.target.value });
                 const tourTitle = document.getElementById('tourTitle');
                 if (tourTitle && tourTitle.value !== e.target.value) {
                     tourTitle.value = e.target.value;
@@ -5380,11 +5388,13 @@
             document.getElementById('tourDescription')?.addEventListener('input', debounce((e) => {
                 this.config.description = e.target.value;
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.TOUR_DESCRIPTION_CHANGE, { description: e.target.value });
             }, 300));
             
             document.getElementById('tourInitialScene')?.addEventListener('change', (e) => {
                 this.config.initialSceneId = e.target.value;
                 this.markUnsavedChanges();
+                this.emit(EditorEvents.INITIAL_SCENE_CHANGE, { initialSceneId: e.target.value });
             });
 
             document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
@@ -6087,6 +6097,7 @@
     window.UIController = UIController$1;
     window.ExportManager = ExportManager$1;
     window.TourEditor = TourEditor$1;
+    window.EditorEvents = EventEmitter;
 
     return TourEditor$1;
 

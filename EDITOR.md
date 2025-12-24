@@ -371,35 +371,47 @@ editor.on('hotspot:*', (event) => {
 
 ### Available Events
 
-| Event | When Fired | Event Data |
-|-------|------------|------------|
+All event constants are available via `window.EditorEvents`:
+
+```javascript
+// Access event constants
+console.log(EditorEvents.SCENE_ADD);  // 'scene:add'
+console.log(EditorEvents.CHANGE);     // 'change'
+```
+
+| Event Constant | Event String | When Fired | Event Data |
+|----------------|--------------|------------|------------|
 | **Lifecycle** |
-| `ready` | Editor initialized | `{ config }` |
+| `READY` | `ready` | Editor initialized | `{ config }` |
 | **Scene Events** |
-| `scene:add` | Scene added | `{ scene, file }` |
-| `scene:remove` | Scene deleted | `{ scene, index }` |
-| `scene:select` | Scene selected | `{ scene, index }` |
-| `scene:update` | Scene property changed | `{ scene, index, property, value }` |
-| `scene:reorder` | Scenes reordered | `{ fromIndex, toIndex }` |
-| `scene:imageChange` | Scene image updated | `{ scene, index, imageUrl }` |
-| `scene:startingPositionSet` | Starting position set | `{ scene, startingPosition }` |
-| `scene:startingPositionClear` | Starting position cleared | `{ scene }` |
+| `SCENE_ADD` | `scene:add` | Scene added | `{ scene, file }` |
+| `SCENE_REMOVE` | `scene:remove` | Scene deleted | `{ scene, index }` |
+| `SCENE_SELECT` | `scene:select` | Scene selected | `{ scene, index }` |
+| `SCENE_UPDATE` | `scene:update` | Scene property changed | `{ scene, index, property, value }` |
+| `SCENE_REORDER` | `scene:reorder` | Scenes reordered | `{ fromIndex, toIndex }` |
+| `SCENE_IMAGE_CHANGE` | `scene:imageChange` | Scene image updated | `{ scene, index, imageUrl }` |
+| `SCENE_STARTING_POSITION_SET` | `scene:startingPositionSet` | Starting position set | `{ scene, startingPosition }` |
+| `SCENE_STARTING_POSITION_CLEAR` | `scene:startingPositionClear` | Starting position cleared | `{ scene }` |
 | **Hotspot Events** |
-| `hotspot:add` | Hotspot placed | `{ hotspot, position, sceneId }` |
-| `hotspot:remove` | Hotspot deleted | `{ hotspot, index }` |
-| `hotspot:select` | Hotspot selected | `{ hotspot, index }` |
-| `hotspot:update` | Hotspot property changed | `{ hotspot, index, property, value }` |
-| `hotspot:duplicate` | Hotspot duplicated | `{ hotspot, originalIndex }` |
-| `hotspot:positionChange` | Hotspot moved | `{ hotspot, index, axis, value, position }` |
+| `HOTSPOT_ADD` | `hotspot:add` | Hotspot placed | `{ hotspot, position, sceneId }` |
+| `HOTSPOT_REMOVE` | `hotspot:remove` | Hotspot deleted | `{ hotspot, index }` |
+| `HOTSPOT_SELECT` | `hotspot:select` | Hotspot selected | `{ hotspot, index }` |
+| `HOTSPOT_UPDATE` | `hotspot:update` | Hotspot property changed | `{ hotspot, index, property, value }` |
+| `HOTSPOT_DUPLICATE` | `hotspot:duplicate` | Hotspot duplicated | `{ hotspot, originalIndex }` |
+| `HOTSPOT_POSITION_CHANGE` | `hotspot:positionChange` | Hotspot moved | `{ hotspot, index, axis, value, position }` |
+| **Tour/Config Events** |
+| `TOUR_TITLE_CHANGE` | `tour:titleChange` | Tour title changed | `{ title }` |
+| `TOUR_DESCRIPTION_CHANGE` | `tour:descriptionChange` | Tour description changed | `{ description }` |
+| `INITIAL_SCENE_CHANGE` | `config:initialSceneChange` | Initial scene changed | `{ initialSceneId }` |
 | **Project Events** |
-| `project:new` | New project created | `{ config }` |
-| `project:save` | Project saved | `{ projectData }` |
-| `project:load` | Project loaded | `{ projectData }` |
-| `project:import` | Project imported | `{ projectData, file }` |
+| `PROJECT_NEW` | `project:new` | New project created | `{ config }` |
+| `PROJECT_SAVE` | `project:save` | Project saved | `{ projectData }` |
+| `PROJECT_LOAD` | `project:load` | Project loaded | `{ projectData }` |
+| `PROJECT_IMPORT` | `project:import` | Project imported | `{ projectData, file }` |
 | **UI Events** |
-| `ui:render` | UI re-rendered | `{}` |
+| `UI_RENDER` | `ui:render` | UI re-rendered | `{}` |
 | **Unified** |
-| `change` | Any data modification | `{ originalEvent, ...originalData }` |
+| `CHANGE` | `change` | Any modification (scene, hotspot, tour, project) | `{ originalEvent, ...originalData }` |
 
 ### Event Handler Example
 

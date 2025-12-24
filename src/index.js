@@ -92,8 +92,7 @@ class Tour {
       let cursor = camera.querySelector("[cursor]");
       if (!cursor) {
         cursor = document.createElement("a-cursor");
-        cursor.setAttribute("fuse", "true");
-        cursor.setAttribute("fuse-timeout", "1500");
+        cursor.setAttribute("fuse", "false");
         camera.appendChild(cursor);
       }
     }

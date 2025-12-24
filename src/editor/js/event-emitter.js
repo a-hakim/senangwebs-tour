@@ -43,9 +43,11 @@ export const EditorEvents = {
   PROJECT_IMPORT: 'project:import',
   PROJECT_EXPORT: 'project:export',
   
-  // Config events
+  // Config/Tour events
   CONFIG_UPDATE: 'config:update',
   INITIAL_SCENE_CHANGE: 'config:initialSceneChange',
+  TOUR_TITLE_CHANGE: 'tour:titleChange',
+  TOUR_DESCRIPTION_CHANGE: 'tour:descriptionChange',
   
   // Preview events
   PREVIEW_START: 'preview:start',
@@ -207,6 +209,7 @@ class EventEmitter {
     const dataEvents = [
       EditorEvents.SCENE_ADD,
       EditorEvents.SCENE_REMOVE,
+      EditorEvents.SCENE_SELECT,
       EditorEvents.SCENE_UPDATE,
       EditorEvents.SCENE_REORDER,
       EditorEvents.SCENE_CLEAR,
@@ -215,11 +218,14 @@ class EventEmitter {
       EditorEvents.SCENE_STARTING_POSITION_CLEAR,
       EditorEvents.HOTSPOT_ADD,
       EditorEvents.HOTSPOT_REMOVE,
+      EditorEvents.HOTSPOT_SELECT,
       EditorEvents.HOTSPOT_UPDATE,
       EditorEvents.HOTSPOT_DUPLICATE,
       EditorEvents.HOTSPOT_POSITION_CHANGE,
       EditorEvents.CONFIG_UPDATE,
       EditorEvents.INITIAL_SCENE_CHANGE,
+      EditorEvents.TOUR_TITLE_CHANGE,
+      EditorEvents.TOUR_DESCRIPTION_CHANGE,
       EditorEvents.PROJECT_LOAD,
       EditorEvents.PROJECT_IMPORT,
       EditorEvents.PROJECT_NEW,

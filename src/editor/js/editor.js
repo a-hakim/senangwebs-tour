@@ -257,6 +257,7 @@ class TourEditor {
         document.getElementById('tourTitle')?.addEventListener('input', debounce((e) => {
             this.config.title = e.target.value;
             this.markUnsavedChanges();
+            this.emit(EditorEvents.TOUR_TITLE_CHANGE, { title: e.target.value });
             const projectName = document.getElementById('project-name');
             if (projectName && projectName.value !== e.target.value) {
                 projectName.value = e.target.value;
@@ -266,6 +267,7 @@ class TourEditor {
         document.getElementById('project-name')?.addEventListener('input', debounce((e) => {
             this.config.title = e.target.value;
             this.markUnsavedChanges();
+            this.emit(EditorEvents.TOUR_TITLE_CHANGE, { title: e.target.value });
             const tourTitle = document.getElementById('tourTitle');
             if (tourTitle && tourTitle.value !== e.target.value) {
                 tourTitle.value = e.target.value;
@@ -275,11 +277,13 @@ class TourEditor {
         document.getElementById('tourDescription')?.addEventListener('input', debounce((e) => {
             this.config.description = e.target.value;
             this.markUnsavedChanges();
+            this.emit(EditorEvents.TOUR_DESCRIPTION_CHANGE, { description: e.target.value });
         }, 300));
         
         document.getElementById('tourInitialScene')?.addEventListener('change', (e) => {
             this.config.initialSceneId = e.target.value;
             this.markUnsavedChanges();
+            this.emit(EditorEvents.INITIAL_SCENE_CHANGE, { initialSceneId: e.target.value });
         });
 
         document.getElementById('exportJsonBtn')?.addEventListener('click', () => {

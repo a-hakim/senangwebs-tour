@@ -13,6 +13,7 @@ import PreviewController from './js/preview-controller.js';
 import UIController from './js/ui-controller.js';
 import ExportManager from './js/export-manager.js';
 import TourEditor from './js/editor.js';
+import EditorEvents from './js/event-emitter.js';
 
 // Attach classes to window for global access
 window.ProjectStorageManager = ProjectStorageManager;
@@ -22,6 +23,7 @@ window.PreviewController = PreviewController;
 window.UIController = UIController;
 window.ExportManager = ExportManager;
 window.TourEditor = TourEditor;
+window.EditorEvents = EditorEvents;
 
 // Import and execute UI initialization
 import './js/ui-init.js';
