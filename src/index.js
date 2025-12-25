@@ -80,7 +80,8 @@ class Tour {
    * @returns {Object|undefined} - Scene data or undefined if not found
    */
   getSceneById(sceneId) {
-    return this.scenesArray.find((scene) => scene.id === sceneId);
+    const targetId = String(sceneId);
+    return this.scenesArray.find((scene) => String(scene.id) === targetId);
   }
 
   /**
