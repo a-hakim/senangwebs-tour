@@ -55850,6 +55850,7 @@ void main() {
 	    return new Promise((resolve, reject) => {
 	      const imgEl = document.createElement('img');
 	      imgEl.setAttribute('id', id);
+	      imgEl.setAttribute('crossorigin', 'anonymous');
 	      imgEl.setAttribute('src', url);
 
 	      imgEl.addEventListener('load', () => {
