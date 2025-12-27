@@ -77,8 +77,8 @@ export class AssetManager {
     return new Promise((resolve, reject) => {
       const imgEl = document.createElement('img');
       imgEl.setAttribute('id', id);
-      imgEl.setAttribute('src', url);
       imgEl.setAttribute('crossorigin', 'anonymous');
+      imgEl.setAttribute('src', url);
 
       imgEl.addEventListener('load', () => {
         this.loadedAssets.set(id, imgEl);
@@ -111,8 +111,8 @@ export class AssetManager {
     return new Promise((resolve, reject) => {
       const videoEl = document.createElement('video');
       videoEl.setAttribute('id', id);
-      videoEl.setAttribute('src', url);
       videoEl.setAttribute('crossorigin', 'anonymous');
+      videoEl.setAttribute('src', url);
       videoEl.setAttribute('preload', 'auto');
       videoEl.setAttribute('playsinline', '');
       videoEl.setAttribute('loop', '');

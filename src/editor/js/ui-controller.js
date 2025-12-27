@@ -55,6 +55,7 @@ class UIController {
 
     // Thumbnail - use thumbnail, panorama, or imageUrl (backward compatibility)
     const thumbnail = document.createElement("img");
+    thumbnail.crossOrigin = "anonymous";
     thumbnail.src = scene.thumbnail || scene.panorama || scene.imageUrl;
     thumbnail.alt = scene.name;
 
