@@ -60,7 +60,9 @@ export class AssetManager {
     const existingAsset = this.loadedAssets.get(id);
     if (existingAsset) {
       const existingSrc = existingAsset.getAttribute('src');
-      if (existingSrc === url) {
+      // Compare base URL without cache buster
+      const baseUrl = existingSrc.replace(/[?&]_cors=\d+/, '');
+      if (baseUrl === url) {
         // Same URL, return cached asset
         return Promise.resolve(existingAsset);
       }
@@ -78,7 +80,12 @@ export class AssetManager {
       const imgEl = document.createElement('img');
       imgEl.setAttribute('id', id);
       imgEl.setAttribute('crossorigin', 'anonymous');
-      imgEl.setAttribute('src', url);
+      
+      // Add cache-busting parameter to force fresh fetch with CORS headers
+      // This prevents browser from using cached non-CORS responses
+      const separator = url.includes('?') ? '&' : '?';
+      const corsUrl = `${url}${separator}_cors=1`;
+      imgEl.setAttribute('src', corsUrl);
 
       imgEl.addEventListener('load', () => {
         this.loadedAssets.set(id, imgEl);
