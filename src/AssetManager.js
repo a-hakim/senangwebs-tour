@@ -83,9 +83,13 @@ export class AssetManager {
       
       // Add cache-busting parameter to force fresh fetch with CORS headers
       // This prevents browser from using cached non-CORS responses
-      const separator = url.includes('?') ? '&' : '?';
-      const corsUrl = `${url}${separator}_cors=1`;
-      imgEl.setAttribute('src', corsUrl);
+      // Skip for data URLs since they don't support query parameters
+      let finalUrl = url;
+      if (!url.startsWith('data:')) {
+        const separator = url.includes('?') ? '&' : '?';
+        finalUrl = `${url}${separator}_cors=1`;
+      }
+      imgEl.setAttribute('src', finalUrl);
 
       imgEl.addEventListener('load', () => {
         this.loadedAssets.set(id, imgEl);
