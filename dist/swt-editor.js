@@ -414,6 +414,268 @@
       }
     };
 
+    /**
+     * Event Emitter for TourEditor
+     * 
+     * Provides a comprehensive event system for the editor with:
+     * - Specific events for all editor operations
+     * - A unified 'change' event that fires for any modification
+     * - Support for wildcards and namespaced events
+     */
+
+    /**
+     * Event types for the Tour Editor
+     * These are the available events that can be listened to
+     */
+    const EditorEvents = {
+      // Lifecycle
+      INIT: 'init',
+      READY: 'ready',
+      DESTROY: 'destroy',
+      
+      // Scene events
+      SCENE_ADD: 'scene:add',
+      SCENE_REMOVE: 'scene:remove',
+      SCENE_SELECT: 'scene:select',
+      SCENE_UPDATE: 'scene:update',
+      SCENE_REORDER: 'scene:reorder',
+      SCENE_CLEAR: 'scene:clear',
+      SCENE_IMAGE_CHANGE: 'scene:imageChange',
+      SCENE_STARTING_POSITION_SET: 'scene:startingPositionSet',
+      SCENE_STARTING_POSITION_CLEAR: 'scene:startingPositionClear',
+      
+      // Hotspot events
+      HOTSPOT_ADD: 'hotspot:add',
+      HOTSPOT_REMOVE: 'hotspot:remove',
+      HOTSPOT_SELECT: 'hotspot:select',
+      HOTSPOT_UPDATE: 'hotspot:update',
+      HOTSPOT_DUPLICATE: 'hotspot:duplicate',
+      HOTSPOT_POSITION_CHANGE: 'hotspot:positionChange',
+      
+      // Project events
+      PROJECT_NEW: 'project:new',
+      PROJECT_SAVE: 'project:save',
+      PROJECT_LOAD: 'project:load',
+      PROJECT_IMPORT: 'project:import',
+      PROJECT_EXPORT: 'project:export',
+      
+      // Config/Tour events
+      CONFIG_UPDATE: 'config:update',
+      INITIAL_SCENE_CHANGE: 'config:initialSceneChange',
+      TOUR_TITLE_CHANGE: 'tour:titleChange',
+      TOUR_DESCRIPTION_CHANGE: 'tour:descriptionChange',
+      
+      // Preview events
+      PREVIEW_START: 'preview:start',
+      PREVIEW_STOP: 'preview:stop',
+      PREVIEW_SCENE_CHANGE: 'preview:sceneChange',
+      
+      // UI events
+      UI_RENDER: 'ui:render',
+      UI_LOADING_START: 'ui:loadingStart',
+      UI_LOADING_END: 'ui:loadingEnd',
+      MODAL_OPEN: 'ui:modalOpen',
+      MODAL_CLOSE: 'ui:modalClose',
+      
+      // Data events
+      DATA_CHANGE: 'data:change',      // Fires when any data changes
+      UNSAVED_CHANGES: 'data:unsavedChanges',
+      
+      // Unified change event - fires for ANY modification
+      CHANGE: 'change'
+    };
+
+    /**
+     * Event Emitter class
+     * Provides pub/sub functionality for editor events
+     */
+    class EventEmitter {
+      constructor() {
+        this.listeners = new Map();
+        this.onceListeners = new Map();
+      }
+
+      /**
+       * Register an event listener
+       * @param {string} event - Event name or 'change' for all changes
+       * @param {Function} callback - Function to call when event fires
+       * @returns {Function} Unsubscribe function
+       */
+      on(event, callback) {
+        if (!this.listeners.has(event)) {
+          this.listeners.set(event, new Set());
+        }
+        this.listeners.get(event).add(callback);
+        
+        // Return unsubscribe function
+        return () => this.off(event, callback);
+      }
+
+      /**
+       * Register a one-time event listener
+       * @param {string} event - Event name
+       * @param {Function} callback - Function to call once when event fires
+       * @returns {Function} Unsubscribe function
+       */
+      once(event, callback) {
+        if (!this.onceListeners.has(event)) {
+          this.onceListeners.set(event, new Set());
+        }
+        this.onceListeners.get(event).add(callback);
+        
+        return () => {
+          if (this.onceListeners.has(event)) {
+            this.onceListeners.get(event).delete(callback);
+          }
+        };
+      }
+
+      /**
+       * Remove an event listener
+       * @param {string} event - Event name
+       * @param {Function} callback - Function to remove
+       */
+      off(event, callback) {
+        if (this.listeners.has(event)) {
+          this.listeners.get(event).delete(callback);
+        }
+        if (this.onceListeners.has(event)) {
+          this.onceListeners.get(event).delete(callback);
+        }
+      }
+
+      /**
+       * Remove all listeners for an event, or all listeners if no event specified
+       * @param {string} [event] - Optional event name
+       */
+      removeAllListeners(event) {
+        if (event) {
+          this.listeners.delete(event);
+          this.onceListeners.delete(event);
+        } else {
+          this.listeners.clear();
+          this.onceListeners.clear();
+        }
+      }
+
+      /**
+       * Emit an event
+       * @param {string} event - Event name
+       * @param {Object} data - Event data
+       */
+      emit(event, data = {}) {
+        const eventData = {
+          type: event,
+          timestamp: Date.now(),
+          ...data
+        };
+
+        // Call specific event listeners
+        if (this.listeners.has(event)) {
+          this.listeners.get(event).forEach(callback => {
+            try {
+              callback(eventData);
+            } catch (error) {
+              console.error(`Error in event listener for "${event}":`, error);
+            }
+          });
+        }
+
+        // Call once listeners and remove them
+        if (this.onceListeners.has(event)) {
+          const onceCallbacks = this.onceListeners.get(event);
+          this.onceListeners.delete(event);
+          onceCallbacks.forEach(callback => {
+            try {
+              callback(eventData);
+            } catch (error) {
+              console.error(`Error in once listener for "${event}":`, error);
+            }
+          });
+        }
+
+        // Also emit to wildcard listeners (namespace:*)
+        const namespace = event.split(':')[0];
+        const wildcardEvent = `${namespace}:*`;
+        if (this.listeners.has(wildcardEvent)) {
+          this.listeners.get(wildcardEvent).forEach(callback => {
+            try {
+              callback(eventData);
+            } catch (error) {
+              console.error(`Error in wildcard listener for "${wildcardEvent}":`, error);
+            }
+          });
+        }
+
+        // Emit unified 'change' event for data-modifying events
+        if (this.isDataModifyingEvent(event) && event !== EditorEvents.CHANGE) {
+          this.emit(EditorEvents.CHANGE, {
+            originalEvent: event,
+            ...data
+          });
+        }
+      }
+
+      /**
+       * Check if an event modifies data (should trigger 'change' event)
+       * @param {string} event - Event name
+       * @returns {boolean}
+       */
+      isDataModifyingEvent(event) {
+        const dataEvents = [
+          EditorEvents.SCENE_ADD,
+          EditorEvents.SCENE_REMOVE,
+          EditorEvents.SCENE_SELECT,
+          EditorEvents.SCENE_UPDATE,
+          EditorEvents.SCENE_REORDER,
+          EditorEvents.SCENE_CLEAR,
+          EditorEvents.SCENE_IMAGE_CHANGE,
+          EditorEvents.SCENE_STARTING_POSITION_SET,
+          EditorEvents.SCENE_STARTING_POSITION_CLEAR,
+          EditorEvents.HOTSPOT_ADD,
+          EditorEvents.HOTSPOT_REMOVE,
+          EditorEvents.HOTSPOT_SELECT,
+          EditorEvents.HOTSPOT_UPDATE,
+          EditorEvents.HOTSPOT_DUPLICATE,
+          EditorEvents.HOTSPOT_POSITION_CHANGE,
+          EditorEvents.CONFIG_UPDATE,
+          EditorEvents.INITIAL_SCENE_CHANGE,
+          EditorEvents.TOUR_TITLE_CHANGE,
+          EditorEvents.TOUR_DESCRIPTION_CHANGE,
+          EditorEvents.PROJECT_LOAD,
+          EditorEvents.PROJECT_IMPORT,
+          EditorEvents.PROJECT_NEW,
+          EditorEvents.DATA_CHANGE
+        ];
+        return dataEvents.includes(event);
+      }
+
+      /**
+       * Get the number of listeners for an event
+       * @param {string} event - Event name
+       * @returns {number}
+       */
+      listenerCount(event) {
+        let count = 0;
+        if (this.listeners.has(event)) {
+          count += this.listeners.get(event).size;
+        }
+        if (this.onceListeners.has(event)) {
+          count += this.onceListeners.get(event).size;
+        }
+        return count;
+      }
+
+      /**
+       * Get all event names that have listeners
+       * @returns {string[]}
+       */
+      eventNames() {
+        const names = new Set([...this.listeners.keys(), ...this.onceListeners.keys()]);
+        return Array.from(names);
+      }
+    }
+
     // Scene Manager - Handles scene operations
 
     let SceneManagerEditor$1 = class SceneManagerEditor {
@@ -519,6 +781,13 @@
       }
 
       /**
+       * Get scene index by ID
+       */
+      getSceneIndexById(id) {
+        return this.scenes.findIndex((s) => s.id === id);
+      }
+
+      /**
        * Update scene property
        */
       updateScene(index, property, value) {
@@ -619,6 +888,7 @@
 
         this.scenes = [];
         this.currentSceneIndex = -1;
+        this.editor.emit(EditorEvents.SCENE_CLEAR);
         return true;
       }
 
@@ -1023,9 +1293,16 @@
           this.tour = new SWT.Tour(aframeScene, tourConfig);
 
           // Set up event listeners
-          this.tour.addEventListener("tour-started", (e) => {});
+          this.tour.addEventListener("tour-started", (e) => {
+            this.editor.emit(EditorEvents.PREVIEW_START, { config: e.detail.config });
+          });
 
-          this.tour.addEventListener("scene-loaded", (e) => {});
+          this.tour.addEventListener("scene-loaded", (e) => {
+            this.editor.emit(EditorEvents.PREVIEW_SCENE_CHANGE, { 
+                sceneId: e.detail.sceneId,
+                sceneName: e.detail.sceneName
+            });
+          });
 
           this.tour.addEventListener("hotspot-activated", (e) => {
             // Find the hotspot index by ID and select it
@@ -4193,7 +4470,16 @@
         
         // If hotspot has an icon, show it with the color applied
         if (icon) {
-          colorIndicator.innerHTML = `<ss-icon icon="${icon}" thickness="2.2" style="color: ${color}; width: 20px; height: 20px;"></ss-icon>`;
+          const iconEl = document.createElement('ss-icon');
+          iconEl.setAttribute('icon', icon);
+          iconEl.setAttribute('thickness', '2.2');
+          iconEl.style.color = color;
+          iconEl.style.width = '20px';
+          iconEl.style.height = '20px';
+          
+          colorIndicator.innerHTML = '';
+          colorIndicator.appendChild(iconEl);
+          
           colorIndicator.style.backgroundColor = "transparent";
           colorIndicator.style.display = "flex";
           colorIndicator.style.alignItems = "center";
@@ -4482,6 +4768,12 @@
         if (indicator) {
           indicator.style.display = isLoading ? "block" : "none";
         }
+        
+        if (isLoading) {
+            this.editor.emit(EditorEvents.UI_LOADING_START);
+        } else {
+            this.editor.emit(EditorEvents.UI_LOADING_END);
+        }
       }
 
       /**
@@ -4624,268 +4916,6 @@
       }
     }
 
-    /**
-     * Event Emitter for TourEditor
-     * 
-     * Provides a comprehensive event system for the editor with:
-     * - Specific events for all editor operations
-     * - A unified 'change' event that fires for any modification
-     * - Support for wildcards and namespaced events
-     */
-
-    /**
-     * Event types for the Tour Editor
-     * These are the available events that can be listened to
-     */
-    const EditorEvents = {
-      // Lifecycle
-      INIT: 'init',
-      READY: 'ready',
-      DESTROY: 'destroy',
-      
-      // Scene events
-      SCENE_ADD: 'scene:add',
-      SCENE_REMOVE: 'scene:remove',
-      SCENE_SELECT: 'scene:select',
-      SCENE_UPDATE: 'scene:update',
-      SCENE_REORDER: 'scene:reorder',
-      SCENE_CLEAR: 'scene:clear',
-      SCENE_IMAGE_CHANGE: 'scene:imageChange',
-      SCENE_STARTING_POSITION_SET: 'scene:startingPositionSet',
-      SCENE_STARTING_POSITION_CLEAR: 'scene:startingPositionClear',
-      
-      // Hotspot events
-      HOTSPOT_ADD: 'hotspot:add',
-      HOTSPOT_REMOVE: 'hotspot:remove',
-      HOTSPOT_SELECT: 'hotspot:select',
-      HOTSPOT_UPDATE: 'hotspot:update',
-      HOTSPOT_DUPLICATE: 'hotspot:duplicate',
-      HOTSPOT_POSITION_CHANGE: 'hotspot:positionChange',
-      
-      // Project events
-      PROJECT_NEW: 'project:new',
-      PROJECT_SAVE: 'project:save',
-      PROJECT_LOAD: 'project:load',
-      PROJECT_IMPORT: 'project:import',
-      PROJECT_EXPORT: 'project:export',
-      
-      // Config/Tour events
-      CONFIG_UPDATE: 'config:update',
-      INITIAL_SCENE_CHANGE: 'config:initialSceneChange',
-      TOUR_TITLE_CHANGE: 'tour:titleChange',
-      TOUR_DESCRIPTION_CHANGE: 'tour:descriptionChange',
-      
-      // Preview events
-      PREVIEW_START: 'preview:start',
-      PREVIEW_STOP: 'preview:stop',
-      PREVIEW_SCENE_CHANGE: 'preview:sceneChange',
-      
-      // UI events
-      UI_RENDER: 'ui:render',
-      UI_LOADING_START: 'ui:loadingStart',
-      UI_LOADING_END: 'ui:loadingEnd',
-      MODAL_OPEN: 'ui:modalOpen',
-      MODAL_CLOSE: 'ui:modalClose',
-      
-      // Data events
-      DATA_CHANGE: 'data:change',      // Fires when any data changes
-      UNSAVED_CHANGES: 'data:unsavedChanges',
-      
-      // Unified change event - fires for ANY modification
-      CHANGE: 'change'
-    };
-
-    /**
-     * Event Emitter class
-     * Provides pub/sub functionality for editor events
-     */
-    class EventEmitter {
-      constructor() {
-        this.listeners = new Map();
-        this.onceListeners = new Map();
-      }
-
-      /**
-       * Register an event listener
-       * @param {string} event - Event name or 'change' for all changes
-       * @param {Function} callback - Function to call when event fires
-       * @returns {Function} Unsubscribe function
-       */
-      on(event, callback) {
-        if (!this.listeners.has(event)) {
-          this.listeners.set(event, new Set());
-        }
-        this.listeners.get(event).add(callback);
-        
-        // Return unsubscribe function
-        return () => this.off(event, callback);
-      }
-
-      /**
-       * Register a one-time event listener
-       * @param {string} event - Event name
-       * @param {Function} callback - Function to call once when event fires
-       * @returns {Function} Unsubscribe function
-       */
-      once(event, callback) {
-        if (!this.onceListeners.has(event)) {
-          this.onceListeners.set(event, new Set());
-        }
-        this.onceListeners.get(event).add(callback);
-        
-        return () => {
-          if (this.onceListeners.has(event)) {
-            this.onceListeners.get(event).delete(callback);
-          }
-        };
-      }
-
-      /**
-       * Remove an event listener
-       * @param {string} event - Event name
-       * @param {Function} callback - Function to remove
-       */
-      off(event, callback) {
-        if (this.listeners.has(event)) {
-          this.listeners.get(event).delete(callback);
-        }
-        if (this.onceListeners.has(event)) {
-          this.onceListeners.get(event).delete(callback);
-        }
-      }
-
-      /**
-       * Remove all listeners for an event, or all listeners if no event specified
-       * @param {string} [event] - Optional event name
-       */
-      removeAllListeners(event) {
-        if (event) {
-          this.listeners.delete(event);
-          this.onceListeners.delete(event);
-        } else {
-          this.listeners.clear();
-          this.onceListeners.clear();
-        }
-      }
-
-      /**
-       * Emit an event
-       * @param {string} event - Event name
-       * @param {Object} data - Event data
-       */
-      emit(event, data = {}) {
-        const eventData = {
-          type: event,
-          timestamp: Date.now(),
-          ...data
-        };
-
-        // Call specific event listeners
-        if (this.listeners.has(event)) {
-          this.listeners.get(event).forEach(callback => {
-            try {
-              callback(eventData);
-            } catch (error) {
-              console.error(`Error in event listener for "${event}":`, error);
-            }
-          });
-        }
-
-        // Call once listeners and remove them
-        if (this.onceListeners.has(event)) {
-          const onceCallbacks = this.onceListeners.get(event);
-          this.onceListeners.delete(event);
-          onceCallbacks.forEach(callback => {
-            try {
-              callback(eventData);
-            } catch (error) {
-              console.error(`Error in once listener for "${event}":`, error);
-            }
-          });
-        }
-
-        // Also emit to wildcard listeners (namespace:*)
-        const namespace = event.split(':')[0];
-        const wildcardEvent = `${namespace}:*`;
-        if (this.listeners.has(wildcardEvent)) {
-          this.listeners.get(wildcardEvent).forEach(callback => {
-            try {
-              callback(eventData);
-            } catch (error) {
-              console.error(`Error in wildcard listener for "${wildcardEvent}":`, error);
-            }
-          });
-        }
-
-        // Emit unified 'change' event for data-modifying events
-        if (this.isDataModifyingEvent(event) && event !== EditorEvents.CHANGE) {
-          this.emit(EditorEvents.CHANGE, {
-            originalEvent: event,
-            ...data
-          });
-        }
-      }
-
-      /**
-       * Check if an event modifies data (should trigger 'change' event)
-       * @param {string} event - Event name
-       * @returns {boolean}
-       */
-      isDataModifyingEvent(event) {
-        const dataEvents = [
-          EditorEvents.SCENE_ADD,
-          EditorEvents.SCENE_REMOVE,
-          EditorEvents.SCENE_SELECT,
-          EditorEvents.SCENE_UPDATE,
-          EditorEvents.SCENE_REORDER,
-          EditorEvents.SCENE_CLEAR,
-          EditorEvents.SCENE_IMAGE_CHANGE,
-          EditorEvents.SCENE_STARTING_POSITION_SET,
-          EditorEvents.SCENE_STARTING_POSITION_CLEAR,
-          EditorEvents.HOTSPOT_ADD,
-          EditorEvents.HOTSPOT_REMOVE,
-          EditorEvents.HOTSPOT_SELECT,
-          EditorEvents.HOTSPOT_UPDATE,
-          EditorEvents.HOTSPOT_DUPLICATE,
-          EditorEvents.HOTSPOT_POSITION_CHANGE,
-          EditorEvents.CONFIG_UPDATE,
-          EditorEvents.INITIAL_SCENE_CHANGE,
-          EditorEvents.TOUR_TITLE_CHANGE,
-          EditorEvents.TOUR_DESCRIPTION_CHANGE,
-          EditorEvents.PROJECT_LOAD,
-          EditorEvents.PROJECT_IMPORT,
-          EditorEvents.PROJECT_NEW,
-          EditorEvents.DATA_CHANGE
-        ];
-        return dataEvents.includes(event);
-      }
-
-      /**
-       * Get the number of listeners for an event
-       * @param {string} event - Event name
-       * @returns {number}
-       */
-      listenerCount(event) {
-        let count = 0;
-        if (this.listeners.has(event)) {
-          count += this.listeners.get(event).size;
-        }
-        if (this.onceListeners.has(event)) {
-          count += this.onceListeners.get(event).size;
-        }
-        return count;
-      }
-
-      /**
-       * Get all event names that have listeners
-       * @returns {string[]}
-       */
-      eventNames() {
-        const names = new Set([...this.listeners.keys(), ...this.onceListeners.keys()]);
-        return Array.from(names);
-      }
-    }
-
     // Export Manager - Handles JSON generation for SWT library
 
     let ExportManager$1 = class ExportManager {
@@ -4958,16 +4988,15 @@
       async generateJSONWithBakedIcons() {
         const jsonData = this.generateJSON();
         
-        // Process all scenes and convert icon names to data URLs
-        // Scenes are an array in unified format
-        for (const scene of jsonData.scenes) {
-          for (let i = 0; i < scene.hotspots.length; i++) {
-            const hotspot = scene.hotspots[i];
+        // Process all scenes in parallel
+        const scenePromises = jsonData.scenes.map(async (scene) => {
+          // Process all hotspots in this scene in parallel
+          const hotspotPromises = scene.hotspots.map(async (hotspot) => {
             const icon = hotspot.appearance?.icon;
             
             // Skip if no icon or if it's already a data URL or URL
-            if (!icon) continue;
-            if (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/')) continue;
+            if (!icon) return;
+            if (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/')) return;
             
             // Generate SVG data URL from icon name
             try {
@@ -4979,9 +5008,12 @@
             } catch (err) {
               console.warn(`Failed to bake icon "${icon}" for export:`, err);
             }
-          }
-        }
+          });
+          
+          await Promise.all(hotspotPromises);
+        });
         
+        await Promise.all(scenePromises);
         return jsonData;
       }
 
@@ -5269,7 +5301,7 @@
             document.getElementById('saveBtn')?.addEventListener('click', () => this.saveProject());
             document.getElementById('exportBtn')?.addEventListener('click', () => this.exportManager.showExportPreview());
             document.getElementById('importBtn')?.addEventListener('click', () => this.importProject());
-            document.getElementById('helpBtn')?.addEventListener('click', () => showModal('helpModal'));
+            document.getElementById('helpBtn')?.addEventListener('click', () => this.openModal('helpModal'));
 
             document.getElementById('addSceneBtn')?.addEventListener('click', () => {
                 const sceneUpload = document.getElementById('sceneUpload');
@@ -5413,7 +5445,7 @@
                 btn.addEventListener('click', () => {
                     const modal = btn.closest('.modal');
                     if (modal) {
-                        hideModal(modal.id);
+                        this.closeModal(modal.id);
                     }
                 });
             });
@@ -5431,6 +5463,13 @@
                 if (this.hasUnsavedChanges) {
                     e.preventDefault();
                     e.returnValue = '';
+                }
+            });
+
+            // Listen for preview scene changes (sync UI without reloading preview)
+            this.on(EditorEvents.PREVIEW_SCENE_CHANGE, (data) => {
+                if (data && data.sceneId) {
+                    this.syncSceneSelection(data.sceneId);
                 }
             });
             
@@ -5563,6 +5602,34 @@
                 
                 this.emit(EditorEvents.HOTSPOT_SELECT, { hotspot, index });
             }
+        }
+
+        /**
+         * Sync UI selection with preview navigation (without reloading preview)
+         */
+        syncSceneSelection(sceneId) {
+            const index = this.sceneManager.getSceneIndexById(sceneId);
+            if (index === -1 || index === this.sceneManager.currentSceneIndex) {
+                return;
+            }
+
+            // Silent update of current scene index
+            this.sceneManager.currentSceneIndex = index;
+            this.lastRenderedSceneIndex = index;
+            this.hotspotEditor.currentHotspotIndex = -1;
+            
+            const scene = this.sceneManager.getCurrentScene();
+            
+            // Update UI components
+            this.uiController.renderSceneList();
+            this.uiController.updateSceneProperties(scene);
+            this.uiController.renderHotspotList();
+            this.uiController.updateHotspotProperties(null);
+            this.uiController.updateTargetSceneOptions();
+            
+            // We do NOT call previewController.loadScene here to avoid reload loop
+            
+            this.emit(EditorEvents.SCENE_SELECT, { scene, index, synced: true });
         }
 
         /**
@@ -5902,10 +5969,27 @@
         }
 
         /**
+         * Open modal and emit event
+         */
+        openModal(modalId) {
+            showModal(modalId);
+            this.emit(EditorEvents.MODAL_OPEN, { modalId });
+        }
+
+        /**
+         * Close modal and emit event
+         */
+        closeModal(modalId) {
+            hideModal(modalId);
+            this.emit(EditorEvents.MODAL_CLOSE, { modalId });
+        }
+
+        /**
          * Mark unsaved changes
          */
         markUnsavedChanges() {
             this.hasUnsavedChanges = true;
+            this.emit(EditorEvents.UNSAVED_CHANGES);
         }
     };
 

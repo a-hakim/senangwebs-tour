@@ -285,6 +285,7 @@ Both the editor and viewer use the same data format. Scenes are stored as an **a
 ```javascript
 {
   initialScene: "scene-id",       // Required: Starting scene ID
+  cursor: ".custom-cursor",        // Optional: Cursor selector or false to disable
   scenes: [                        // Required: Array of scenes
     {
       id: "scene-id",              // Required: Scene identifier

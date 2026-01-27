@@ -2,6 +2,7 @@
 
 // Import icons list from SenangStart icons package (baked into bundle at build time)
 import iconsData from "@bookklik/senangstart-icons/src/icons.json";
+import { EditorEvents } from "./event-emitter.js";
 
 class UIController {
   constructor(editor) {
@@ -205,7 +206,16 @@ class UIController {
     
     // If hotspot has an icon, show it with the color applied
     if (icon) {
-      colorIndicator.innerHTML = `<ss-icon icon="${icon}" thickness="2.2" style="color: ${color}; width: 20px; height: 20px;"></ss-icon>`;
+      const iconEl = document.createElement('ss-icon');
+      iconEl.setAttribute('icon', icon);
+      iconEl.setAttribute('thickness', '2.2');
+      iconEl.style.color = color;
+      iconEl.style.width = '20px';
+      iconEl.style.height = '20px';
+      
+      colorIndicator.innerHTML = '';
+      colorIndicator.appendChild(iconEl);
+      
       colorIndicator.style.backgroundColor = "transparent";
       colorIndicator.style.display = "flex";
       colorIndicator.style.alignItems = "center";
@@ -493,6 +503,12 @@ class UIController {
     const indicator = document.querySelector(".loading-indicator");
     if (indicator) {
       indicator.style.display = isLoading ? "block" : "none";
+    }
+    
+    if (isLoading) {
+        this.editor.emit(EditorEvents.UI_LOADING_START);
+    } else {
+        this.editor.emit(EditorEvents.UI_LOADING_END);
     }
   }
 

@@ -158,7 +158,7 @@ class TourEditor {
         document.getElementById('saveBtn')?.addEventListener('click', () => this.saveProject());
         document.getElementById('exportBtn')?.addEventListener('click', () => this.exportManager.showExportPreview());
         document.getElementById('importBtn')?.addEventListener('click', () => this.importProject());
-        document.getElementById('helpBtn')?.addEventListener('click', () => showModal('helpModal'));
+        document.getElementById('helpBtn')?.addEventListener('click', () => this.openModal('helpModal'));
 
         document.getElementById('addSceneBtn')?.addEventListener('click', () => {
             const sceneUpload = document.getElementById('sceneUpload');
@@ -302,7 +302,7 @@ class TourEditor {
             btn.addEventListener('click', () => {
                 const modal = btn.closest('.modal');
                 if (modal) {
-                    hideModal(modal.id);
+                    this.closeModal(modal.id);
                 }
             });
         });
@@ -320,6 +320,13 @@ class TourEditor {
             if (this.hasUnsavedChanges) {
                 e.preventDefault();
                 e.returnValue = '';
+            }
+        });
+
+        // Listen for preview scene changes (sync UI without reloading preview)
+        this.on(EditorEvents.PREVIEW_SCENE_CHANGE, (data) => {
+            if (data && data.sceneId) {
+                this.syncSceneSelection(data.sceneId);
             }
         });
         
@@ -452,6 +459,34 @@ class TourEditor {
             
             this.emit(EditorEvents.HOTSPOT_SELECT, { hotspot, index });
         }
+    }
+
+    /**
+     * Sync UI selection with preview navigation (without reloading preview)
+     */
+    syncSceneSelection(sceneId) {
+        const index = this.sceneManager.getSceneIndexById(sceneId);
+        if (index === -1 || index === this.sceneManager.currentSceneIndex) {
+            return;
+        }
+
+        // Silent update of current scene index
+        this.sceneManager.currentSceneIndex = index;
+        this.lastRenderedSceneIndex = index;
+        this.hotspotEditor.currentHotspotIndex = -1;
+        
+        const scene = this.sceneManager.getCurrentScene();
+        
+        // Update UI components
+        this.uiController.renderSceneList();
+        this.uiController.updateSceneProperties(scene);
+        this.uiController.renderHotspotList();
+        this.uiController.updateHotspotProperties(null);
+        this.uiController.updateTargetSceneOptions();
+        
+        // We do NOT call previewController.loadScene here to avoid reload loop
+        
+        this.emit(EditorEvents.SCENE_SELECT, { scene, index, synced: true });
     }
 
     /**
@@ -791,10 +826,27 @@ const importUpload = document.getElementById('importUpload');
     }
 
     /**
+     * Open modal and emit event
+     */
+    openModal(modalId) {
+        showModal(modalId);
+        this.emit(EditorEvents.MODAL_OPEN, { modalId });
+    }
+
+    /**
+     * Close modal and emit event
+     */
+    closeModal(modalId) {
+        hideModal(modalId);
+        this.emit(EditorEvents.MODAL_CLOSE, { modalId });
+    }
+
+    /**
      * Mark unsaved changes
      */
     markUnsavedChanges() {
         this.hasUnsavedChanges = true;
+        this.emit(EditorEvents.UNSAVED_CHANGES);
     }
 }
 

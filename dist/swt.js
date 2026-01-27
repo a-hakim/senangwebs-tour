@@ -56590,8 +56590,23 @@ void main() {
 	   * Ensure the scene has a cursor for interaction
 	   */
 	  ensureCursor() {
+	    // Check config for cursor settings (default to true if undefined)
+	    // Supports: false (disable), true (default), or selector string
+	    const cursorConfig = this.config.cursor !== undefined ? this.config.cursor : true;
+	    
+	    if (cursorConfig === false) {
+	        return; // Cursor disabled
+	    }
+
 	    const camera = this.sceneEl.querySelector("[camera]");
 	    if (camera) {
+	      // If config is a selector string, try to find it
+	      if (typeof cursorConfig === 'string') {
+	        if (document.querySelector(cursorConfig) || camera.querySelector(cursorConfig)) {
+	            return; // Custom cursor exists
+	        }
+	      }
+
 	      let cursor = camera.querySelector("[cursor]");
 	      if (!cursor) {
 	        cursor = document.createElement("a-cursor");
@@ -56607,8 +56622,11 @@ void main() {
 	   */
 	  async start() {
 	    if (this.isStarted) {
-	      console.warn("Tour has already been started");
-	      return Promise.resolve();
+	      console.warn("Tour already started, cleaning up and restarting...");
+	      this.destroy();
+	      // Re-initialize necessary parts that destroy() cleaned up
+	      this.isStarted = false;
+	      // We don't return here, we proceed to start again
 	    }
 
 	    const initialSceneId = this.config.initialScene;

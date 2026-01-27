@@ -74,16 +74,15 @@ class ExportManager {
   async generateJSONWithBakedIcons() {
     const jsonData = this.generateJSON();
     
-    // Process all scenes and convert icon names to data URLs
-    // Scenes are an array in unified format
-    for (const scene of jsonData.scenes) {
-      for (let i = 0; i < scene.hotspots.length; i++) {
-        const hotspot = scene.hotspots[i];
+    // Process all scenes in parallel
+    const scenePromises = jsonData.scenes.map(async (scene) => {
+      // Process all hotspots in this scene in parallel
+      const hotspotPromises = scene.hotspots.map(async (hotspot) => {
         const icon = hotspot.appearance?.icon;
         
         // Skip if no icon or if it's already a data URL or URL
-        if (!icon) continue;
-        if (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/')) continue;
+        if (!icon) return;
+        if (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/')) return;
         
         // Generate SVG data URL from icon name
         try {
@@ -95,9 +94,12 @@ class ExportManager {
         } catch (err) {
           console.warn(`Failed to bake icon "${icon}" for export:`, err);
         }
-      }
-    }
+      });
+      
+      await Promise.all(hotspotPromises);
+    });
     
+    await Promise.all(scenePromises);
     return jsonData;
   }
 

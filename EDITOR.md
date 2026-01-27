@@ -383,8 +383,14 @@ console.log(EditorEvents.CHANGE);     // 'change'
 |----------------|--------------|------------|------------|
 | **Lifecycle** |
 | `READY` | `ready` | Editor initialized | `{ config }` |
+| `UI_LOADING_START` | `ui:loadingStart` | Loading started | `{}` |
+| `UI_LOADING_END` | `ui:loadingEnd` | Loading finished | `{}` |
+| `MODAL_OPEN` | `ui:modalOpen` | Modal opened | `{ modalId }` |
+| `MODAL_CLOSE` | `ui:modalClose` | Modal closed | `{ modalId }` |
+| `UNSAVED_CHANGES` | `ui:unsavedChanges` | Unsaved changes detected | `{}` |
 | **Scene Events** |
 | `SCENE_ADD` | `scene:add` | Scene added | `{ scene, file }` |
+| `SCENE_CLEAR` | `scene:clear` | All scenes cleared | `{}` |
 | `SCENE_REMOVE` | `scene:remove` | Scene deleted | `{ scene, index }` |
 | `SCENE_SELECT` | `scene:select` | Scene selected | `{ scene, index }` |
 | `SCENE_UPDATE` | `scene:update` | Scene property changed | `{ scene, index, property, value }` |
@@ -408,8 +414,12 @@ console.log(EditorEvents.CHANGE);     // 'change'
 | `PROJECT_SAVE` | `project:save` | Project saved | `{ projectData }` |
 | `PROJECT_LOAD` | `project:load` | Project loaded | `{ projectData }` |
 | `PROJECT_IMPORT` | `project:import` | Project imported | `{ projectData, file }` |
+| `PROJECT_EXPORT` | `project:export` | Project exported | `{}` |
 | **UI Events** |
 | `UI_RENDER` | `ui:render` | UI re-rendered | `{}` |
+| **Preview Events** |
+| `PREVIEW_START` | `preview:start` | Preview tour started | `{ config }` |
+| `PREVIEW_SCENE_CHANGE` | `preview:sceneChange` | Preview scene changed | `{ sceneId, sceneName }` |
 | **Unified** |
 | `CHANGE` | `change` | Any modification (scene, hotspot, tour, project) | `{ originalEvent, ...originalData }` |
 

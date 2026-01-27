@@ -1,6 +1,7 @@
 // Preview Controller - Manages A-Frame preview integration using SWT library
 import { showToast } from "./utils.js";
 import { buildPreviewTourConfig } from "./data-transform.js";
+import { EditorEvents } from "./event-emitter.js";
 
 class PreviewController {
   constructor(editor) {
@@ -135,9 +136,16 @@ class PreviewController {
       this.tour = new SWT.Tour(aframeScene, tourConfig);
 
       // Set up event listeners
-      this.tour.addEventListener("tour-started", (e) => {});
+      this.tour.addEventListener("tour-started", (e) => {
+        this.editor.emit(EditorEvents.PREVIEW_START, { config: e.detail.config });
+      });
 
-      this.tour.addEventListener("scene-loaded", (e) => {});
+      this.tour.addEventListener("scene-loaded", (e) => {
+        this.editor.emit(EditorEvents.PREVIEW_SCENE_CHANGE, { 
+            sceneId: e.detail.sceneId,
+            sceneName: e.detail.sceneName
+        });
+      });
 
       this.tour.addEventListener("hotspot-activated", (e) => {
         // Find the hotspot index by ID and select it

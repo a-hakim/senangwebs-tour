@@ -5,6 +5,7 @@ import {
   sanitizeId,
   showToast,
 } from "./utils.js";
+import { EditorEvents } from "./event-emitter.js";
 
 class SceneManagerEditor {
   constructor(editor) {
@@ -109,6 +110,13 @@ class SceneManagerEditor {
   }
 
   /**
+   * Get scene index by ID
+   */
+  getSceneIndexById(id) {
+    return this.scenes.findIndex((s) => s.id === id);
+  }
+
+  /**
    * Update scene property
    */
   updateScene(index, property, value) {
@@ -209,6 +217,7 @@ class SceneManagerEditor {
 
     this.scenes = [];
     this.currentSceneIndex = -1;
+    this.editor.emit(EditorEvents.SCENE_CLEAR);
     return true;
   }
 
